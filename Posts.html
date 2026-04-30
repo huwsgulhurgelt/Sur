@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Нийтлэлүүд — ОМС</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="page-header">
+  <a href="index.html" class="back-link">← Нүүр хуудас</a>
+  <h1>📝 Оюутны нийтлэлүүд</h1>
+</div>
+
+<div class="posts-page">
+
+  <div class="posts-toolbar">
+    <input type="text" id="posts-search" placeholder="Нийтлэл хайх..." oninput="filterPosts()" />
+    <a href="add-posts.html" class="btn btn-primary">+ Нийтлэл нэмэх</a>
+    <a href="topics.html" class="btn">📚 Зөвлөмжүүд</a>
+  </div>
+
+  <div id="posts-count" style="font-size:12px;margin-bottom:8px;"></div>
+  <div id="posts-list"></div>
+
+</div>
+
+<script src="js/data.js"></script>
+<script>
+let allPosts = [];
+
+function renderPosts(list) {
+  const el = document.getElementById("posts-list");
+  const count = document.getElementById("posts-count");
+  count.textContent = list.length + " нийтлэл";
+
+  if (!list.length) {
+    el.innerHTML = '<div class="no-posts">Нийтлэл байхгүй байна. <a href="add-posts.html">Анхных нь бай!</a></div>';
+    return;
+  }
+
+  el.innerHTML = "";
+  [...list].reverse().forEach(p => {
+    const item = document.createElement("div");
+    item.className = "post-item";
+    item.innerHTML = `
+      <div class="post-meta">${escHtml(p.name)} &nbsp;|&nbsp; ${escHtml(p.date)} &nbsp;|&nbsp; ${escHtml(p.subject)}</div>
+      <div class="post-title">${escHtml(p.title)}</div>
+      <div class="post-body">${escHtml(p.body)}</div>
+    `;
+    el.appendChild(item);
+  });
+}
+
+function filterPosts() {
+  const q = document.getElementById("posts-search").value.toLowerCase().trim();
+  if (!q) { renderPosts(allPosts); return; }
+  renderPosts(allPosts.filter(p =>
+    p.title.toLowerCase().includes(q) ||
+    p.body.toLowerCase().includes(q) ||
+    p.subject.toLowerCase().includes(q) ||
+    p.name.toLowerCase().includes(q)
+  ));
+}
+
+allPosts = getPosts();
+renderPosts(allPosts);
+</script>
+</body>
+</html>
