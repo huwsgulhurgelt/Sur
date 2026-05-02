@@ -19,7 +19,7 @@
         <li><a href="advices.html">Advices</a></li>
         <li><a href="teachers.html">For Teachers</a></li>
       </ul>
-      <a href="#" class="nav-profile" title="Account">A</a>
+      <a href="add-post.html" class="nav-add">+ Add post</a>
       <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -31,56 +31,42 @@
     <a href="tips.html">Tips</a>
     <a href="advices.html">Advices</a>
     <a href="teachers.html">For Teachers</a>
+    <a href="add-post.html">+ Add post</a>
   </div>
+
   <div class="page-wrap">
-    <div class="page-hero">
-      <h1>Student Knowledge</h1>
+    <div class="home-hero">
+      <h1>Student<br>Knowledge</h1>
       <p>A space where students share what they know — tips, advice, information, and resources for everyone.</p>
     </div>
-    <div class="home-sections" id="homeSections"></div>
-  </div>
-  <div class="modal-overlay" id="postModal">
-    <div class="modal">
-      <div class="modal-header">
-        <span class="modal-header-cat" id="modalCat"></span>
-        <button class="modal-close" id="modalClose">&#x2715;</button>
-      </div>
-      <div class="modal-body">
-        <h2 class="modal-title" id="modalTitle"></h2>
-        <div class="modal-meta" id="modalMeta"></div>
-        <div class="modal-content" id="modalContent"></div>
-      </div>
-      <div class="comments-section">
-        <div class="comments-title">Comments</div>
-        <div class="comments-list" id="commentsList"></div>
-        <form class="comment-form" id="commentForm">
-          <input class="comment-input" id="commentName" placeholder="Your name" required>
-          <textarea class="comment-textarea" id="commentText" placeholder="Write a comment..." required></textarea>
-          <button class="comment-submit" type="submit">Post comment</button>
-        </form>
-      </div>
+    <div class="home-grid">
+      <a href="informations.html" class="home-cat-card">
+        <div class="home-cat-label">Section</div>
+        <div class="home-cat-title">Informations</div>
+        <div class="home-cat-desc">General knowledge and information shared by students.</div>
+        <div class="home-cat-arrow">Browse posts &rarr;</div>
+      </a>
+      <a href="tips.html" class="home-cat-card">
+        <div class="home-cat-label">Section</div>
+        <div class="home-cat-title">Tips</div>
+        <div class="home-cat-desc">Study techniques, productivity strategies, and methods that work.</div>
+        <div class="home-cat-arrow">Browse posts &rarr;</div>
+      </a>
+      <a href="advices.html" class="home-cat-card">
+        <div class="home-cat-label">Section</div>
+        <div class="home-cat-title">Advices</div>
+        <div class="home-cat-desc">Advice on managing school life, stress, habits, and growth.</div>
+        <div class="home-cat-arrow">Browse posts &rarr;</div>
+      </a>
+      <a href="teachers.html" class="home-cat-card">
+        <div class="home-cat-label">Section</div>
+        <div class="home-cat-title">For Teachers</div>
+        <div class="home-cat-desc">Resources, strategies, and ideas for educators.</div>
+        <div class="home-cat-arrow">Browse posts &rarr;</div>
+      </a>
     </div>
   </div>
+
   <script src="posts.js"></script>
-  <script>
-    var CATS   = ['informations','tips','advices','teachers'];
-    var LABELS = {informations:'Informations',tips:'Tips',advices:'Advices',teachers:'For Teachers'};
-    var HREFS  = {informations:'informations.html',tips:'tips.html',advices:'advices.html',teachers:'teachers.html'};
-    var container = document.getElementById('homeSections');
-    CATS.forEach(function(cat) {
-      var posts = getPostsByCategory(cat).slice(0,3);
-      if (!posts.length) return;
-      var section = document.createElement('section');
-      var header = document.createElement('div');
-      header.className = 'section-header';
-      header.innerHTML = '<h2>'+LABELS[cat]+'</h2><a href="'+HREFS[cat]+'">See all</a>';
-      section.appendChild(header);
-      var grid = document.createElement('div');
-      grid.className = 'posts-grid';
-      posts.forEach(function(p){ grid.appendChild(buildCard(p, openModal)); });
-      section.appendChild(grid);
-      container.appendChild(section);
-    });
-  </script>
 </body>
 </html>
