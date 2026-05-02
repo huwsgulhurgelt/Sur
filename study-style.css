@@ -197,3 +197,9 @@ a { color: inherit; text-decoration: none; }
 @media (min-width: 769px) {
   .nav-hamburger, .nav-drawer { display: none !important; }
 }
+img.nav-logo {
+  height: 36px;
+  width: auto;
+  border: none;
+  padding: 0;
+}
