@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community — Student Knowledge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="study-style.css">
+  <style>
+    /* ── Write post box ── */
+    .write-box {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .write-box-top {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .write-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 800; color: var(--muted);
+      flex-shrink: 0;
+    }
+    .write-inputs {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .write-name {
+      width: 100%; padding: 8px 12px;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 0.88rem;
+      font-family: inherit; color: var(--text);
+      transition: border-color 0.18s;
+    }
+    .write-name:focus { outline: none; border-color: var(--accent); }
+
+    .write-textarea {
+      width: 100%; padding: 10px 12px;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 0.92rem;
+      font-family: inherit; color: var(--text);
+      resize: none; min-height: 80px;
+      transition: border-color 0.18s;
+      line-height: 1.6;
+    }
+    .write-textarea:focus { outline: none; border-color: var(--accent); }
+
+    .write-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .write-char {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .write-submit {
+      padding: 9px 20px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: opacity 0.18s;
+    }
+    .write-submit:hover    { opacity: 0.8; }
+    .write-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Community post card ── */
+    .comm-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .comm-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.07); border-color: #ccc; }
+
+    .comm-card-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .comm-author-dot {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--bg); border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 800; color: var(--muted);
+      flex-shrink: 0;
+    }
+    .comm-author-info { flex: 1; min-width: 0; }
+    .comm-author-name { font-size: 0.88rem; font-weight: 800; }
+    .comm-author-date { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+
+    .comm-content {
+      font-size: 0.95rem;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Comments toggle */
+    .comm-footer {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .comm-comment-btn {
+      background: none; border: none;
+      font-size: 0.82rem; font-weight: 700; color: var(--muted);
+      cursor: pointer; font-family: inherit;
+      transition: color 0.18s; padding: 0;
+    }
+    .comm-comment-btn:hover { color: var(--text); }
+
+    .comm-comments {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .comm-comments.open { display: flex; }
+
+    .comm-comment-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .comm-comment-name { font-size: 0.78rem; font-weight: 800; margin-bottom: 3px; }
+    .comm-comment-text { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+
+    .comm-comment-form {
+      display: flex; gap: 8px; align-items: flex-end;
+    }
+    .comm-comment-input {
+      flex: 1; padding: 9px 12px;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 0.88rem;
+      font-family: inherit; color: var(--text);
+      transition: border-color 0.18s; resize: none; min-height: 40px;
+    }
+    .comm-comment-input:focus { outline: none; border-color: var(--accent); }
+    .comm-comment-send {
+      padding: 9px 16px; background: var(--accent); color: #fff;
+      border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0;
+    }
+    .comm-comment-send:hover { opacity: 0.8; }
+
+    .no-posts {
+      text-align: center; padding: 52px 20px;
+      color: var(--muted); font-size: 0.95rem;
+      border: 1.5px dashed var(--border); border-radius: var(--radius);
+    }
+
+    /* Sort bar */
+    .sort-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .sort-btn {
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 6px; padding: 5px 12px;
+      font-size: 0.78rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; color: var(--muted);
+      transition: all 0.18s;
+    }
+    .sort-btn:hover  { border-color: #aaa; color: var(--text); }
+    .sort-btn.active { border-color: var(--accent); color: var(--text); background: var(--bg); }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Logo</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="informations.html">Informations</a></li>
+        <li><a href="tips.html">Tips</a></li>
+        <li><a href="advices.html">Advices</a></li>
+        <li><a href="teachers.html">For Teachers</a></li>
+        <li><a href="community.html" class="active">Community</a></li>
+      </ul>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+  <div class="nav-drawer" id="navDrawer">
+    <a href="index.html">Home</a>
+    <a href="informations.html">Informations</a>
+    <a href="tips.html">Tips</a>
+    <a href="advices.html">Advices</a>
+    <a href="teachers.html">For Teachers</a>
+    <a href="community.html" class="active">Community</a>
+  </div>
+
+  <div class="page-wrap">
+    <div class="page-hero">
+      <h1>Community</h1>
+      <p>Share something you learned. Ask a question. Help someone out.</p>
+    </div>
+
+    <!-- Write box -->
+    <div class="write-box">
+      <div class="write-box-top">
+        <div class="write-avatar" id="writeAvatar">?</div>
+        <div class="write-inputs">
+          <input class="write-name" id="writeName" placeholder="Your name (or leave blank for Anonymous)" maxlength="60">
+          <textarea class="write-textarea" id="writeText" placeholder="Share something you learned..." maxlength="2000"></textarea>
+        </div>
+      </div>
+      <div class="write-bottom">
+        <span class="write-char" id="writeChar">0 / 2000</span>
+        <button class="write-submit" id="writeSubmit">Post</button>
+      </div>
+    </div>
+
+    <!-- Sort -->
+    <div class="sort-bar">
+      <span>Sort:</span>
+      <button class="sort-btn active" data-sort="new">Newest</button>
+      <button class="sort-btn"        data-sort="old">Oldest</button>
+    </div>
+
+    <!-- Posts feed -->
+    <div id="commFeed" style="display:flex;flex-direction:column;gap:16px;"></div>
+  </div>
+
+  <script src="posts.js"></script>
+  <script>
+    /* ── Storage ── */
+    var STORE_KEY = 'community_posts';
+
+    function loadPosts() {
+      try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
+      catch(e) { return []; }
+    }
+    function savePosts(posts) {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); } catch(e) {}
+    }
+
+    function getPostComments(pid) {
+      try { return JSON.parse(localStorage.getItem('comm_comments_' + pid) || '[]'); }
+      catch(e) { return []; }
+    }
+    function savePostComments(pid, comments) {
+      try { localStorage.setItem('comm_comments_' + pid, JSON.stringify(comments)); } catch(e) {}
+    }
+
+    /* ── Helpers ── */
+    function escH(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function timeAgo(ts) {
+      var diff = Date.now() - ts;
+      var m = Math.floor(diff / 60000);
+      if (m < 1)  return 'Just now';
+      if (m < 60) return m + 'm ago';
+      var h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      var d = Math.floor(h / 24);
+      if (d < 30) return d + 'd ago';
+      return new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+    function initials(name) {
+      if (!name || name === 'Anonymous') return '?';
+      return name.trim().split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+    }
+
+    /* ── Render feed ── */
+    var currentSort = 'new';
+    var feed = document.getElementById('commFeed');
+
+    function renderFeed() {
+      var posts = loadPosts();
+      if (currentSort === 'new') posts = posts.slice().reverse();
+
+      feed.innerHTML = '';
+      if (!posts.length) {
+        feed.innerHTML = '<div class="no-posts">No posts yet. Be the first to share something.</div>';
+        return;
+      }
+
+      posts.forEach(function(p) {
+        var card = buildCommCard(p);
+        feed.appendChild(card);
+      });
+    }
+
+    function buildCommCard(p) {
+      var card = document.createElement('div');
+      card.className = 'comm-card';
+      card.dataset.id = p.id;
+
+      var comments = getPostComments(p.id);
+      var commentCount = comments.length;
+
+      card.innerHTML =
+        '<div class="comm-card-top">' +
+          '<div class="comm-author-dot">' + escH(initials(p.author)) + '</div>' +
+          '<div class="comm-author-info">' +
+            '<div class="comm-author-name">' + escH(p.author || 'Anonymous') + '</div>' +
+            '<div class="comm-author-date">' + timeAgo(p.ts) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="comm-content">' + escH(p.text) + '</div>' +
+        '<div class="comm-footer">' +
+          '<button class="comm-comment-btn" data-toggle="' + p.id + '">' +
+            (commentCount > 0 ? commentCount + ' comment' + (commentCount > 1 ? 's' : '') : 'Comment') +
+          '</button>' +
+        '</div>' +
+        '<div class="comm-comments" id="comments-' + p.id + '">' +
+          renderCommentsHtml(comments) +
+          '<div class="comm-comment-form">' +
+            '<textarea class="comm-comment-input" placeholder="Write a comment..." maxlength="500" rows="1"></textarea>' +
+            '<button class="comm-comment-send" data-post="' + p.id + '">Send</button>' +
+          '</div>' +
+        '</div>';
+
+      // Toggle comments
+      card.querySelector('[data-toggle]').addEventListener('click', function() {
+        var section = document.getElementById('comments-' + p.id);
+        section.classList.toggle('open');
+      });
+
+      // Send comment
+      card.querySelector('.comm-comment-send').addEventListener('click', function() {
+        var ta = this.closest('.comm-comment-form').querySelector('.comm-comment-input');
+        var text = ta.value.trim();
+        if (!text) return;
+        var comments = getPostComments(p.id);
+        comments.push({ text: text, ts: Date.now() });
+        savePostComments(p.id, comments);
+        ta.value = '';
+        // Re-render comments in card
+        var section = document.getElementById('comments-' + p.id);
+        var form = section.querySelector('.comm-comment-form');
+        section.innerHTML = renderCommentsHtml(comments);
+        section.appendChild(form);
+        section.classList.add('open');
+        // Update count on button
+        var btn = card.querySelector('[data-toggle]');
+        btn.textContent = comments.length + ' comment' + (comments.length > 1 ? 's' : '');
+      });
+
+      return card;
+    }
+
+    function renderCommentsHtml(comments) {
+      if (!comments.length) return '';
+      return comments.map(function(c) {
+        return '<div class="comm-comment-item">' +
+          '<div class="comm-comment-text">' + escH(c.text) + '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    /* ── Write box ── */
+    var writeText = document.getElementById('writeText');
+    var writeName = document.getElementById('writeName');
+    var writeChar = document.getElementById('writeChar');
+    var writeAvatar = document.getElementById('writeAvatar');
+
+    writeText.addEventListener('input', function() {
+      writeChar.textContent = writeText.value.length + ' / 2000';
+    });
+
+    writeName.addEventListener('input', function() {
+      writeAvatar.textContent = initials(writeName.value) || '?';
+    });
+
+    document.getElementById('writeSubmit').addEventListener('click', function() {
+      var text = writeText.value.trim();
+      if (!text) { writeText.focus(); return; }
+
+      var posts = loadPosts();
+      posts.push({
+        id:     'p-' + Date.now(),
+        author: writeName.value.trim() || 'Anonymous',
+        text:   text,
+        ts:     Date.now(),
+      });
+      savePosts(posts);
+
+      writeText.value = '';
+      writeName.value = '';
+      writeChar.textContent = '0 / 2000';
+      writeAvatar.textContent = '?';
+
+      renderFeed();
+      // Scroll to top of feed
+      feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    /* ── Sort ── */
+    document.querySelectorAll('.sort-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.sort-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        currentSort = btn.dataset.sort;
+        renderFeed();
+      });
+    });
+
+    /* ── Init ── */
+    renderFeed();
+  </script>
+</body>
+</html>
