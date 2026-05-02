@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For Teachers — Student Knowledge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="study-style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Logo</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="informations.html" >Informations</a></li>
+        <li><a href="tips.html" >Tips</a></li>
+        <li><a href="advices.html" >Advices</a></li>
+        <li><a href="teachers.html" class="active">For Teachers</a></li>
+      </ul>
+      <a href="#" class="nav-profile" title="Account">A</a>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+  <div class="nav-drawer" id="navDrawer">
+    <a href="index.html">Home</a>
+    <a href="informations.html" >Informations</a>
+    <a href="tips.html" >Tips</a>
+    <a href="advices.html" >Advices</a>
+    <a href="teachers.html" class="active">For Teachers</a>
+  </div>
+  <div class="page-wrap">
+    <div class="page-hero">
+      <h1>For Teachers</h1>
+      <p id="pageDesc"></p>
+    </div>
+    <div class="posts-grid" id="postsGrid"></div>
+  </div>
+  <div class="modal-overlay" id="postModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-header-cat" id="modalCat"></span>
+        <button class="modal-close" id="modalClose">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <div class="modal-meta" id="modalMeta"></div>
+        <div class="modal-content" id="modalContent"></div>
+      </div>
+      <div class="comments-section">
+        <div class="comments-title">Comments</div>
+        <div class="comments-list" id="commentsList"></div>
+        <form class="comment-form" id="commentForm">
+          <input class="comment-input" id="commentName" placeholder="Your name" required>
+          <textarea class="comment-textarea" id="commentText" placeholder="Write a comment..." required></textarea>
+          <button class="comment-submit" type="submit">Post comment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="posts.js"></script>
+  <script>
+    var DESCS = {
+      informations: 'General knowledge and information for students.',
+      tips:         'Study techniques, productivity tips, and strategies that actually work.',
+      advices:      'Advice on managing school life, stress, habits, and growth.',
+      teachers:     'Resources, strategies, and ideas for educators.'
+    };
+    var CAT  = 'teachers';
+    var grid = document.getElementById('postsGrid');
+    document.getElementById('pageDesc').textContent = DESCS[CAT] || '';
+    var posts = getPostsByCategory(CAT);
+    if (!posts.length) {
+      grid.innerHTML = '<div class="no-posts">No posts yet in this section.</div>';
+    } else {
+      posts.forEach(function(p){ grid.appendChild(buildCard(p, openModal)); });
+    }
+  </script>
+</body>
+</html>
