@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Post — Student Knowledge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="study-style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Logo</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="informations.html">Informations</a></li>
+        <li><a href="tips.html">Tips</a></li>
+        <li><a href="advices.html">Advices</a></li>
+        <li><a href="teachers.html">For Teachers</a></li>
+      </ul>
+      <a href="add-post.html" class="nav-add active" style="background:#000;">+ Add post</a>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+  <div class="nav-drawer" id="navDrawer">
+    <a href="index.html">Home</a>
+    <a href="informations.html">Informations</a>
+    <a href="tips.html">Tips</a>
+    <a href="advices.html">Advices</a>
+    <a href="teachers.html">For Teachers</a>
+    <a href="add-post.html">+ Add post</a>
+  </div>
+
+  <div class="page-wrap">
+    <div class="page-hero">
+      <h1>Add a post</h1>
+      <p>Share something useful — a tip, advice, or information — with other students.</p>
+    </div>
+
+    <div class="form-wrap">
+
+      <!-- Success screen -->
+      <div class="success-box" id="successBox">
+        <h2>Post submitted</h2>
+        <p>Your post has been added to the site. Thank you for sharing.</p>
+        <a href="index.html">Back to home</a>
+        &nbsp;&nbsp;
+        <a href="add-post.html" onclick="location.reload();return false;">Add another</a>
+      </div>
+
+      <!-- Form -->
+      <div class="form-block" id="formBlock">
+        <form id="postForm">
+
+          <div class="form-group">
+            <label for="postCategory">Section</label>
+            <select id="postCategory" required>
+              <option value="" disabled selected>Choose a section</option>
+              <option value="informations">Informations</option>
+              <option value="tips">Tips</option>
+              <option value="advices">Advices</option>
+              <option value="teachers">For Teachers</option>
+            </select>
+            <span class="form-hint">Your post will appear in that section.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="postTitle">Title</label>
+            <input type="text" id="postTitle" placeholder="A short, clear headline" maxlength="100" required>
+          </div>
+
+          <div class="form-group">
+            <label for="postAuthor">Your name <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+            <input type="text" id="postAuthor" placeholder="Anonymous" maxlength="60">
+          </div>
+
+          <div class="form-group">
+            <label for="postContent">Content</label>
+            <textarea id="postContent" placeholder="Write your full post here. You can use blank lines to separate paragraphs." maxlength="4000" required></textarea>
+            <span class="form-hint" id="charCount">0 / 4000</span>
+          </div>
+
+          <button type="submit" class="form-submit" id="submitBtn">Submit post</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="posts.js"></script>
+  <script>
+    /* ==========================================================================
+       HOW SUBMITTED POSTS WORK RIGHT NOW (no Firebase yet):
+       - Posts submitted here are saved to localStorage on this device
+       - They show up on the category pages immediately on this device
+       - When Firebase is added later, they'll be saved to the database instead
+
+       The posts you hard-code in posts.js always show for everyone.
+    ========================================================================== */
+
+    var textarea  = document.getElementById('postContent');
+    var charCount = document.getElementById('charCount');
+    textarea.addEventListener('input', function() {
+      charCount.textContent = textarea.value.length + ' / 4000';
+    });
+
+    // Load locally submitted posts into POSTS array so they show on category pages
+    function loadLocalPosts() {
+      try {
+        var local = JSON.parse(localStorage.getItem('local_posts') || '[]');
+        local.forEach(function(p) {
+          // Only add if not already in array (avoid duplicates on page reload)
+          var exists = POSTS.some(function(existing) { return existing.id === p.id; });
+          if (!exists) POSTS.push(p);
+        });
+      } catch(e) {}
+    }
+    loadLocalPosts();
+
+    document.getElementById('postForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var category = document.getElementById('postCategory').value;
+      var title    = document.getElementById('postTitle').value.trim();
+      var author   = document.getElementById('postAuthor').value.trim() || 'Anonymous';
+      var content  = document.getElementById('postContent').value.trim();
+
+      if (!category || !title || !content) return;
+
+      var newPost = {
+        id:          'local-' + Date.now(),
+        category:    category,
+        title:       title,
+        author:      author,
+        date:        new Date().toISOString().split('T')[0],
+        description: content,
+      };
+
+      // Save to localStorage
+      try {
+        var existing = JSON.parse(localStorage.getItem('local_posts') || '[]');
+        existing.push(newPost);
+        localStorage.setItem('local_posts', JSON.stringify(existing));
+      } catch(e) {}
+
+      // Show success
+      document.getElementById('formBlock').style.display = 'none';
+      document.getElementById('successBox').style.display = 'block';
+    });
+  </script>
+</body>
+</html>
