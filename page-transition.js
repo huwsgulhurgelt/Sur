@@ -82,9 +82,19 @@
     return wrap;
   }
 
+  function saveBg() {
+    try {
+      var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      var t  = JSON.parse(localStorage.getItem('site-theme') || '{}');
+      t.bg   = bg;
+      localStorage.setItem('site-theme', JSON.stringify(t));
+    } catch (e) {}
+  }
+
   function doExit(href) {
     if (transitioning) return;
     transitioning = true;
+    saveBg();
     createOverlay('exit');
     setTimeout(function () { window.location.href = href; }, 500);
   }
