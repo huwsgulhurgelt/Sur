@@ -3,41 +3,150 @@
    =============================================================================
 
    HOW TO ADD A POST:
-   Copy the template at the bottom of POSTS, fill it in, done.
+   Copy the template at the bottom, fill it in, done.
 
    FIELDS:
-     id          — unique string, no spaces (e.g. "tips-003")        REQUIRED
-     category    — "informations" | "tips" | "advices" | "teachers"  REQUIRED
-     title       — headline                                           REQUIRED
-     description — full content. Use \n for line breaks              REQUIRED
-     author      — name shown on the card                            optional
-     date        — "YYYY-MM-DD"                                      optional
-
-   HOW TO DELETE:  Remove the whole { ... }, block.
-   HOW TO EDIT:    Just change the text inside the quotes.
+     id          — unique string, no spaces (e.g. "tips-003")          REQUIRED
+     category    — "informations" | "tips" | "advices" | "teachers"    REQUIRED
+     sub         — subcategory for informations page (see list below)   optional
+                   "scholarship-mongolia" | "scholarship-abroad"
+                   "career-path" | "anti-bullying-bad" | "anti-bullying-stop"
+     title       — headline                                             REQUIRED
+     description — full content. Use \n for line breaks                REQUIRED
+     author      — name shown on the card                              optional
+     date        — "YYYY-MM-DD"                                        optional
    ============================================================================= */
 
 var POSTS = [
 
-  /* ── INFORMATIONS ──────────────────────────────────────────────────────── */
+  /* ── SCHOLARSHIP IN MONGOLIA ────────────────────────────────────────────── */
   {
-    id:          "info-001",
+    id:          "info-schol-mn-001",
     category:    "informations",
-    title:       "herhen sain surah ve",
-    description: "idn try to memorize some stuff.\n\nTechniques include:\n- Summarising in your own words\n- Teaching the concept to someone else\n- Practice problems and quizzes\n- Group discussion\n\nResearch consistently shows active learning leads to better long-term retention compared to re-reading notes.",
-    author:      "team",
+    sub:         "scholarship-mongolia",
+    title:       "Ерөнхийлөгчийн тэтгэлэг",
+    description: "Монгол Улсын Ерөнхийлөгчийн нэрэмжит тэтгэлэг нь онцгой амжилт гаргасан оюутнуудад олгогддог.\n\nШалгуур:\n- ЭЕШ-д өндөр оноо авсан байх\n- Нийгмийн идэвхтэй оролцоо\n- Санхүүгийн хэрэгцээ\n\nДэлгэрэнгүй мэдээллийг Боловсролын яамны веб сайтаас авна уу.",
+    author:      "Team",
+    date:        "2025-02-01",
+  },
+  {
+    id:          "info-schol-mn-002",
+    category:    "informations",
+    sub:         "scholarship-mongolia",
+    title:       "Засгийн газрын тэтгэлэг",
+    description: "Монгол Улсын Засгийн газраас санхүүждэг тэтгэлэг нь дараах чиглэлийн оюутнуудад зориулагдсан.\n\nЧиглэлүүд:\n- Инженер технологи\n- Анагаах ухаан\n- Хөдөө аж ахуй\n- Багш мэргэжил\n\nЖил бүр элсэлт авдаг тул хугацааг алдалгүй бүртгүүлнэ үү.",
+    author:      "Team",
+    date:        "2025-02-05",
+  },
+  {
+    id:          "info-schol-mn-003",
+    category:    "informations",
+    sub:         "scholarship-mongolia",
+    title:       "Аймаг, нийслэлийн тэтгэлэг",
+    description: "Орон нутгийн засаг захиргааны байгууллагуудаас тухайн аймаг, дүүргийнхнээ дэмжих зорилгоор олгодог тэтгэлэгүүд.\n\nДавуу тал:\n- Өрсөлдөөн бага\n- Орон нутгийн оюутнуудад давуу эрх\n\nАймгийнхаа Засаг даргын тамгын газарт хандана уу.",
+    author:      "Team",
+    date:        "2025-02-08",
+  },
+
+  /* ── SCHOLARSHIP ABROAD ─────────────────────────────────────────────────── */
+  {
+    id:          "info-schol-ab-001",
+    category:    "informations",
+    sub:         "scholarship-abroad",
+    title:       "Солонгос улсын тэтгэлэг (GKS)",
+    description: "Korean Government Scholarship Program нь Монгол оюутнуудад нээлттэй.\n\nДэлгэрэнгүй:\n- Бүрэн тэтгэлэг: сургалтын төлбөр + амьдрах зардал\n- Солонгос хэлний сургалт багтана\n- Хугацаа: Жил бүрийн 9-р сарын сүүлчээр\n\nЭлсэлтийн шалгалт болон ярилцлагад бэлдэж эхлэ.",
+    author:      "Team",
+    date:        "2025-02-10",
+  },
+  {
+    id:          "info-schol-ab-002",
+    category:    "informations",
+    sub:         "scholarship-abroad",
+    title:       "MEXT — Японы засгийн газрын тэтгэлэг",
+    description: "Японы Боловсролын яамны (MEXT) тэтгэлэг нь дэлхийн хамгийн нэр хүндтэй тэтгэлгүүдийн нэг.\n\nОнцлог:\n- Бүрэн тэтгэлэг\n- Японы хэлний дагалдах сургалт\n- Суурь болон магистрын түвшин\n\nЭлсэлтийн материалыг Монгол дахь Японы элчин сайдын яамнаас авна.",
+    author:      "Team",
+    date:        "2025-02-14",
+  },
+  {
+    id:          "info-schol-ab-003",
+    category:    "informations",
+    sub:         "scholarship-abroad",
+    title:       "Чехийн засгийн газрын тэтгэлэг",
+    description: "Чехийн Засгийн газраас хөгжиж буй орнуудын оюутнуудад олгодог тэтгэлэг.\n\nДавуу тал:\n- Европт суралцах боломж\n- Англи болон Чех хэл дээрх хөтөлбөрүүд\n- Хагас болон бүрэн тэтгэлэгтэй сонголтууд\n\nДэлгэрэнгүй: mzv.gov.cz",
+    author:      "Team",
+    date:        "2025-02-18",
+  },
+
+  /* ── CAREER PATH ────────────────────────────────────────────────────────── */
+  {
+    id:          "info-career-001",
+    category:    "informations",
+    sub:         "career-path",
+    title:       "How to determine your future career and the factors you should consider when choosing",
+    description: "Choosing a career is one of the biggest decisions you will make. Consider these key factors:\n\n1. Your genuine interests — what do you do when nobody is watching?\n2. Your natural strengths — what comes easy to you that others find difficult?\n3. Market demand — will this field have jobs in 5-10 years?\n4. Lifestyle fit — does the career match the life you want?\n5. Values alignment — does the work feel meaningful to you?\n\nTake your time. It is okay to change direction as you learn more about yourself.",
+    author:      "Team",
     date:        "2025-01-05",
   },
   {
-    id:          "info-002",
+    id:          "info-career-002",
     category:    "informations",
-    title:       "herhen ium sain cheejleh ve",
-    description: "nom sain unsh\n\nThe transfer from short-term to long-term memory is strengthened by:\n- Repetition over time (spaced practice)\n- Connecting new information to existing knowledge\n- Emotion and personal relevance\n\nUnderstanding this helps you study smarter, not harder.",
+    sub:         "career-path",
+    title:       "Хичээл сонголт хэрхэн хийх вэ",
+    description: "Зөв хичээл сонгох нь таны карьерын замд чухал үүрэг гүйцэтгэнэ.\n\nАнхаарах зүйлс:\n- Мэргэжлийнхээ үндсэн хичээлүүдийг заавал судлаарай\n- Хажуугийн ур чадвар (нягтлан, програмчлал) нэмэлт давуу тал болно\n- Дадлагын байгууллагуудтай холбоо барина уу\n- Менторийн зөвлөгөөг чухалчлаарай",
     author:      "Team",
     date:        "2025-01-10",
   },
+  {
+    id:          "info-career-003",
+    category:    "informations",
+    sub:         "career-path",
+    title:       "Why it is okay to choose non popular careers despite the society's expectations",
+    description: "Society often pushes students toward a narrow list of 'acceptable' careers. But the world needs people in every field.\n\nThink about it:\n- Every popular career field will eventually become overcrowded\n- Unusual careers often pay very well precisely because few people pursue them\n- Passion and skill in an unpopular field beats disinterest in a popular one\n- Your happiness matters more than what sounds impressive at dinner\n\nDo your research. Make a plan. Trust yourself.",
+    author:      "Team",
+    date:        "2025-01-15",
+  },
 
-  /* ── TIPS ──────────────────────────────────────────────────────────────── */
+  /* ── ANTI BULLYING — BAD RESULTS ────────────────────────────────────────── */
+  {
+    id:          "info-bully-bad-001",
+    category:    "informations",
+    sub:         "anti-bullying-bad",
+    title:       "Mental health consequences",
+    description: "Bullying causes serious and lasting mental health damage to victims.\n\nCommon effects:\n- Anxiety and chronic stress\n- Depression and low self-worth\n- Social withdrawal and isolation\n- Post-traumatic stress symptoms\n- Difficulty trusting others\n\nThese effects can persist well into adulthood if not addressed. Taking bullying seriously is not optional.",
+    author:      "Team",
+    date:        "2025-03-01",
+  },
+  {
+    id:          "info-bully-bad-002",
+    category:    "informations",
+    sub:         "anti-bullying-bad",
+    title:       "Impact on academic performance",
+    description: "Students who experience bullying consistently perform worse academically.\n\nResearch shows:\n- Difficulty concentrating in class\n- Increased absenteeism to avoid bullies\n- Reduced participation and engagement\n- Long-term disruption to educational attainment\n\nSchools have a responsibility to create safe environments. If you are struggling, talk to a trusted adult.",
+    author:      "Team",
+    date:        "2025-03-05",
+  },
+
+  /* ── ANTI BULLYING — HOW TO STOP ────────────────────────────────────────── */
+  {
+    id:          "info-bully-stop-001",
+    category:    "informations",
+    sub:         "anti-bullying-stop",
+    title:       "Speak up and report",
+    description: "Silence allows bullying to continue. Speaking up is the most powerful first step.\n\nWhat you can do:\n- Tell a teacher, counselor, or trusted adult immediately\n- Document incidents with dates and details\n- Encourage bystanders to report what they see\n- Use anonymous reporting systems if available\n\nYou are not a snitch. You are protecting someone.",
+    author:      "Team",
+    date:        "2025-03-08",
+  },
+  {
+    id:          "info-bully-stop-002",
+    category:    "informations",
+    sub:         "anti-bullying-stop",
+    title:       "Build a supportive community",
+    description: "The best prevention for bullying is a culture where everyone feels they belong.\n\nPractical steps:\n- Include classmates who seem isolated\n- Celebrate differences instead of mocking them\n- Be the person who steps in when you see something wrong\n- Build friendships across different social groups\n\nOne kind action can change someone's day — or their life.",
+    author:      "Team",
+    date:        "2025-03-12",
+  },
+
+  /* ── TIPS ───────────────────────────────────────────────────────────────── */
   {
     id:          "tips-001",
     category:    "tips",
@@ -55,7 +164,7 @@ var POSTS = [
     date:        "2025-01-12",
   },
 
-  /* ── ADVICES ───────────────────────────────────────────────────────────── */
+  /* ── ADVICES ────────────────────────────────────────────────────────────── */
   {
     id:          "adv-001",
     category:    "advices",
@@ -73,7 +182,7 @@ var POSTS = [
     date:        "2025-01-20",
   },
 
-  /* ── FOR TEACHERS ──────────────────────────────────────────────────────── */
+  /* ── FOR TEACHERS ───────────────────────────────────────────────────────── */
   {
     id:          "teach-001",
     category:    "teachers",
@@ -84,11 +193,14 @@ var POSTS = [
   },
 
   /*
-  ── ADD A NEW POST — copy this block and fill it in ─────────────────────────
+  ── ADD A NEW POST — copy this block ────────────────────────────────────────
 
   {
-    id:          "",        // unique, no spaces  e.g. "tips-003"
+    id:          "",        // unique, no spaces   e.g. "tips-003"
     category:    "",        // informations | tips | advices | teachers
+    sub:         "",        // for informations only:
+                            //   scholarship-mongolia | scholarship-abroad
+                            //   career-path | anti-bullying-bad | anti-bullying-stop
     title:       "",
     description: "",        // use \n for line breaks
     author:      "",
@@ -118,6 +230,11 @@ var CAT_DESCS = {
 
 function getPostsByCategory(cat) {
   return POSTS.filter(function(p) { return p.category === cat; });
+}
+
+/* Filter by category AND subcategory */
+function getPostsBySub(cat, sub) {
+  return POSTS.filter(function(p) { return p.category === cat && p.sub === sub; });
 }
 
 function escHtml(s) {
@@ -197,7 +314,7 @@ function openModal(post) {
 }
 
 function renderComments(postId) {
-  var list     = document.getElementById('commentsList');
+  var list = document.getElementById('commentsList');
   if (!list) return;
   var comments = getComments(postId);
   if (!comments.length) {
