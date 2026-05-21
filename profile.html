@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg)document.documentElement.style.background=_t.bg;}catch(e){}</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — Suraguuli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="study-style.css">
+  <style>
+
+    .profile-wrap {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 52px 24px 100px;
+      position: relative; z-index: 1;
+    }
+
+    /* ── Header card ── */
+    .profile-header {
+      background: var(--hero-bg, var(--surface));
+      border: var(--bw) solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px 28px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+      position: relative; overflow: hidden;
+    }
+    .profile-header::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
+    }
+
+    /* avatar */
+    .avatar-wrap {
+      position: relative; flex-shrink: 0;
+      width: 90px; height: 90px;
+    }
+    .avatar-img {
+      width: 90px; height: 90px; border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--accent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; font-weight: 900; color: var(--accent);
+      overflow: hidden;
+    }
+    .avatar-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .avatar-edit-btn {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      border: 2px solid var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; cursor: pointer; transition: transform 200ms;
+    }
+    .avatar-edit-btn:hover { transform: scale(1.15); }
+    #avatarFileInput { display: none; }
+
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-display-name { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .profile-email { font-size: 0.84rem; color: var(--muted); margin-bottom: 8px; }
+    .profile-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      color: var(--accent); padding: 3px 10px; border-radius: 999px;
+    }
+
+    /* ── Edit card ── */
+    .edit-card {
+      background: var(--surface);
+      border: var(--bw) solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+    .edit-card-header {
+      padding: 18px 24px 14px;
+      border-bottom: var(--bw) solid var(--border);
+      background: var(--surface2);
+      font-size: 0.78rem; font-weight: 800;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    }
+    .edit-card-body {
+      padding: 24px;
+      display: flex; flex-direction: column; gap: 18px;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group label { font-size: 0.84rem; font-weight: 700; }
+    .field-group input {
+      width: 100%; padding: 12px 14px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      font: inherit; outline: none;
+      transition: border-color 200ms, box-shadow 200ms;
+    }
+    .field-group input:focus { border-color: var(--accent); box-shadow: var(--ring); }
+    .field-group input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .field-hint { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+    .field-group input.error-border { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.14); }
+
+    .edit-error {
+      font-size: 0.82rem; color: #ef4444;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px; padding: 10px 14px; display: none;
+    }
+    .edit-error.show { display: block; }
+
+    .edit-success {
+      font-size: 0.82rem; color: #22c55e;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 8px; padding: 10px 14px; display: none; text-align: center;
+    }
+    .edit-success.show { display: block; }
+
+    /* change limit pill */
+    .limit-row {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .changes-left {
+      font-size: 0.72rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      color: var(--accent);
+    }
+    .changes-left.zero {
+      background: rgba(239,68,68,0.1); color: #ef4444;
+    }
+
+    .save-btn {
+      width: 100%; padding: 13px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius);
+      font: inherit; font-size: 0.95rem; font-weight: 800;
+      cursor: pointer; letter-spacing: 0.02em;
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent);
+      transition: all 200ms ease;
+    }
+    .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent); }
+    .save-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Danger zone ── */
+    .danger-card {
+      background: var(--surface);
+      border: var(--bw) solid rgba(239,68,68,0.2);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .danger-card-header {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid rgba(239,68,68,0.15);
+      background: rgba(239,68,68,0.04);
+      font-size: 0.78rem; font-weight: 800;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: #ef4444;
+    }
+    .danger-card-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+    .danger-text { font-size: 0.86rem; color: var(--muted); line-height: 1.6; }
+    .sign-out-btn {
+      padding: 11px 20px; background: none;
+      border: var(--bw) solid rgba(239,68,68,0.3);
+      color: #ef4444; border-radius: var(--radius);
+      font: inherit; font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; transition: all 200ms; align-self: flex-start;
+    }
+    .sign-out-btn:hover { background: rgba(239,68,68,0.08); border-color: #ef4444; }
+
+    /* ── Not logged in state ── */
+    .not-logged-in {
+      text-align: center; padding: 60px 24px;
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow);
+    }
+    .not-logged-in h2 { font-size: 1.2rem; font-weight: 900; margin-bottom: 10px; }
+    .not-logged-in p  { color: var(--muted); font-size: 0.9rem; margin-bottom: 22px; }
+    .go-auth-btn {
+      display: inline-block; padding: 12px 28px;
+      background: var(--accent); color: #fff;
+      border-radius: 999px; font-weight: 800; font-size: 0.9rem;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+      transition: all 200ms;
+    }
+    .go-auth-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 45%, transparent); }
+
+    /* upload progress bar */
+    .upload-bar { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; display: none; }
+    .upload-bar.show { display: block; }
+    .upload-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 0; transition: width 200ms; }
+
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <img src="pictures/e25ff237663f4c0e1a03faa1e7bfc2c2.jpg" class="nav-logo" alt="Logo">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="informations.html">Informations</a></li>
+        <li><a href="tips.html">Tips</a></li>
+        <li><a href="advices.html">Advices</a></li>
+        <li><a href="teachers.html">For Teachers</a></li>
+        <li><a href="community.html">Community</a></li>
+      </ul>
+      <script src="theme-switcher.js"></script>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+  <div class="nav-drawer" id="navDrawer">
+    <a href="index.html">Home</a>
+    <a href="informations.html">Informations</a>
+    <a href="tips.html">Tips</a>
+    <a href="advices.html">Advices</a>
+    <a href="teachers.html">For Teachers</a>
+    <a href="community.html">Community</a>
+    <a href="profile.html" class="active">My Profile</a>
+  </div>
+
+  <div class="profile-wrap">
+
+    <!-- not logged in -->
+    <div class="not-logged-in" id="notLoggedIn" style="display:none">
+      <h2>You're not signed in</h2>
+      <p>Sign in or create an account to manage your profile.</p>
+      <a href="auth.html" class="go-auth-btn">Sign In / Create Account</a>
+    </div>
+
+    <!-- logged in view -->
+    <div id="loggedInView" style="display:none">
+
+      <!-- header -->
+      <div class="profile-header">
+        <div class="avatar-wrap">
+          <div class="avatar-img" id="headerAvatar"></div>
+          <div class="avatar-edit-btn" id="avatarEditBtn" title="Change photo">✎</div>
+          <input type="file" id="avatarFileInput" accept="image/*">
+        </div>
+        <div class="profile-info">
+          <div class="profile-display-name" id="headerName">—</div>
+          <div class="profile-email"        id="headerEmail">—</div>
+          <span class="profile-badge">✦ Member</span>
+        </div>
+      </div>
+
+      <!-- edit card -->
+      <div class="edit-card">
+        <div class="edit-card-header">Edit Profile</div>
+        <div class="edit-card-body">
+
+          <div class="edit-error"   id="editError"></div>
+          <div class="edit-success" id="editSuccess"></div>
+          <div class="upload-bar"   id="uploadBar"><div class="upload-fill" id="uploadFill"></div></div>
+
+          <!-- nickname -->
+          <div class="field-group">
+            <label for="nickInput">Display name</label>
+            <input type="text" id="nickInput" maxlength="40" placeholder="Your name">
+            <div class="limit-row">
+              <div class="field-hint">This is the name everyone sees.</div>
+              <span class="changes-left" id="changesLeft">— changes left this week</span>
+            </div>
+          </div>
+
+          <button class="save-btn" id="saveBtn">Save changes</button>
+
+        </div>
+      </div>
+
+      <!-- danger zone -->
+      <div class="danger-card">
+        <div class="danger-card-header">Account</div>
+        <div class="danger-card-body">
+          <div class="danger-text">Signing out will return you to guest mode. Your posts and profile are saved.</div>
+          <button class="sign-out-btn" id="signOutBtn">Sign out</button>
+        </div>
+      </div>
+
+    </div><!-- /#loggedInView -->
+
+  </div><!-- /.profile-wrap -->
+
+  <script type="module">
+    import { auth, db, storage } from './firebase-config.js';
+    import { onAuthStateChanged, updateProfile, signOut }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { doc, getDoc, setDoc, updateDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { ref, uploadBytesResumable, getDownloadURL }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    /* ── limits ── */
+    const MAX_CHANGES_PER_WEEK = 3;
+
+    /* ── helpers ── */
+    function initials(name) {
+      if (!name) return '?';
+      return name.trim().split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    }
+    function showErr(msg) {
+      const el = document.getElementById('editError');
+      el.textContent = msg; el.classList.add('show');
+      document.getElementById('editSuccess').classList.remove('show');
+    }
+    function showOk(msg) {
+      const el = document.getElementById('editSuccess');
+      el.textContent = msg; el.classList.add('show');
+      document.getElementById('editError').classList.remove('show');
+    }
+
+    /* ── render header ── */
+    function renderHeader(user, nick) {
+      document.getElementById('headerName').textContent  = nick || user.displayName || 'No name set';
+      document.getElementById('headerEmail').textContent = user.email || '';
+      const av = document.getElementById('headerAvatar');
+      if (user.photoURL) {
+        av.innerHTML = `<img src="${user.photoURL}" alt="">`;
+      } else {
+        av.textContent = initials(nick || user.displayName);
+      }
+    }
+
+    /* ── get/create user doc ── */
+    async function getUserDoc(uid) {
+      const ref2 = doc(db, 'users', uid);
+      const snap = await getDoc(ref2);
+      if (snap.exists()) return snap.data();
+      // create on first visit
+      const data = { nameChanges: [], createdAt: serverTimestamp() };
+      await setDoc(ref2, data);
+      return data;
+    }
+
+    /* ── count changes in last 7 days ── */
+    function changesThisWeek(changeTimestamps) {
+      if (!Array.isArray(changeTimestamps)) return 0;
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      return changeTimestamps.filter(ts => ts > weekAgo).length;
+    }
+
+    /* ── upload avatar ── */
+    async function uploadAvatar(uid, file) {
+      return new Promise((resolve, reject) => {
+        const storageRef = ref(storage, `avatars/${uid}/${file.name}`);
+        const task = uploadBytesResumable(storageRef, file);
+        const bar  = document.getElementById('uploadBar');
+        const fill = document.getElementById('uploadFill');
+        bar.classList.add('show');
+        task.on('state_changed',
+          snap => { fill.style.width = (snap.bytesTransferred / snap.totalBytes * 100) + '%'; },
+          err  => reject(err),
+          async () => { bar.classList.remove('show'); resolve(await getDownloadURL(task.snapshot.ref)); }
+        );
+      });
+    }
+
+    /* ── main ── */
+    onAuthStateChanged(auth, async user => {
+      document.getElementById('notLoggedIn').style.display  = user ? 'none'  : 'block';
+      document.getElementById('loggedInView').style.display = user ? 'block' : 'none';
+      if (!user) return;
+
+      const userDoc = await getUserDoc(user.uid);
+      const used    = changesThisWeek(userDoc.nameChanges || []);
+      const left    = Math.max(0, MAX_CHANGES_PER_WEEK - used);
+
+      /* fill inputs */
+      const nickInput = document.getElementById('nickInput');
+      nickInput.value = user.displayName || '';
+
+      const pill = document.getElementById('changesLeft');
+      pill.textContent = left + ' name change' + (left !== 1 ? 's' : '') + ' left this week';
+      pill.classList.toggle('zero', left === 0);
+
+      renderHeader(user, user.displayName);
+
+      /* ── avatar file input ── */
+      document.getElementById('avatarEditBtn').addEventListener('click', () => {
+        document.getElementById('avatarFileInput').click();
+      });
+      document.getElementById('avatarFileInput').addEventListener('change', async function() {
+        const file = this.files[0];
+        if (!file) return;
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true; saveBtn.textContent = 'Uploading…';
+        try {
+          const url = await uploadAvatar(user.uid, file);
+          await updateProfile(user, { photoURL: url });
+          await updateDoc(doc(db, 'users', user.uid), { photoURL: url });
+          renderHeader(user, nickInput.value.trim() || user.displayName);
+          showOk('Profile picture updated!');
+        } catch(e) {
+          showErr('Upload failed: ' + e.message);
+        }
+        saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
+      });
+
+      /* ── save name ── */
+      document.getElementById('saveBtn').addEventListener('click', async () => {
+        const nick = nickInput.value.trim();
+        if (!nick) { showErr('Name cannot be empty.'); return; }
+        if (nick === (user.displayName || '')) { showOk('No changes to save.'); return; }
+
+        const latestDoc  = await getUserDoc(user.uid);
+        const usedNow    = changesThisWeek(latestDoc.nameChanges || []);
+        const leftNow    = MAX_CHANGES_PER_WEEK - usedNow;
+        if (leftNow <= 0) {
+          showErr('You\'ve used all ' + MAX_CHANGES_PER_WEEK + ' name changes for this week. Try again next week.');
+          return;
+        }
+
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+
+        try {
+          await updateProfile(user, { displayName: nick });
+          const newTs = [...(latestDoc.nameChanges || []), Date.now()];
+          await updateDoc(doc(db, 'users', user.uid), { displayName: nick, nameChanges: newTs });
+          renderHeader(user, nick);
+
+          const newLeft = Math.max(0, leftNow - 1);
+          pill.textContent = newLeft + ' name change' + (newLeft !== 1 ? 's' : '') + ' left this week';
+          pill.classList.toggle('zero', newLeft === 0);
+          showOk('Name updated to "' + nick + '"!');
+        } catch(e) {
+          showErr('Failed to save: ' + e.message);
+        }
+        saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
+      });
+
+      /* ── sign out ── */
+      document.getElementById('signOutBtn').addEventListener('click', async () => {
+        await signOut(auth);
+        window.location.href = 'index.html';
+      });
+    });
+  </script>
+
+  <script src="page-transition.js"></script>
+  <script src="nav.js"></script>
+</body>
+</html>
