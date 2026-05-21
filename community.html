@@ -9,192 +9,222 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="study-style.css">
   <style>
-    /* ── Write post box ── */
+
+    /* ── Write box ── */
     .write-box {
       background: var(--surface);
-      border: 1.5px solid var(--border);
+      border: var(--bw) solid var(--border);
       border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      padding: 22px;
+      margin-bottom: 28px;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: var(--shadow);
+      position: relative; overflow: hidden;
+    }
+    .write-box::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
     }
     .write-box-top {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
+      display: flex; gap: 12px; align-items: flex-start;
     }
     .write-avatar {
-      width: 38px; height: 38px;
-      border-radius: 50%;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--surface2); border: var(--bw) solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.8rem; font-weight: 800; color: var(--muted);
-      flex-shrink: 0;
+      font-size: 0.82rem; font-weight: 800; color: var(--muted);
+      flex-shrink: 0; overflow: hidden;
     }
-    .write-inputs {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .write-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .write-inputs { flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .write-name {
-      width: 100%; padding: 8px 12px;
-      background: var(--bg); border: 1.5px solid var(--border);
-      border-radius: 8px; font-size: 0.88rem;
+      width: 100%; padding: 9px 13px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.88rem;
       font-family: inherit; color: var(--text);
-      transition: border-color 0.18s;
+      transition: border-color 200ms, box-shadow 200ms; outline: none;
     }
-    .write-name:focus { outline: none; border-color: var(--accent); }
-
+    .write-name:focus { border-color: var(--accent); box-shadow: var(--ring); }
     .write-textarea {
-      width: 100%; padding: 10px 12px;
-      background: var(--bg); border: 1.5px solid var(--border);
-      border-radius: 8px; font-size: 0.92rem;
+      width: 100%; padding: 11px 13px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.93rem;
       font-family: inherit; color: var(--text);
-      resize: none; min-height: 80px;
-      transition: border-color 0.18s;
-      line-height: 1.6;
+      resize: none; min-height: 88px; line-height: 1.6;
+      transition: border-color 200ms, box-shadow 200ms; outline: none;
     }
-    .write-textarea:focus { outline: none; border-color: var(--accent); }
-
+    .write-textarea:focus { border-color: var(--accent); box-shadow: var(--ring); }
     .write-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
-    .write-char {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
+    .write-char { font-size: 0.74rem; color: var(--muted); }
     .write-submit {
-      padding: 9px 20px;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: 8px;
-      font-size: 0.88rem; font-weight: 700;
+      padding: 10px 22px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 999px; font-size: 0.88rem; font-weight: 800;
       cursor: pointer; font-family: inherit;
-      transition: opacity 0.18s;
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb),0.35);
+      transition: all 200ms ease;
     }
-    .write-submit:hover    { opacity: 0.8; }
-    .write-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .write-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(var(--accent-rgb),0.45); }
+    .write-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* sign in prompt */
+    .sign-in-prompt {
+      text-align: center; padding: 14px;
+      font-size: 0.86rem; color: var(--muted);
+      border-top: var(--bw) solid var(--border);
+    }
+    .sign-in-prompt a { color: var(--accent); font-weight: 700; }
+    .sign-in-prompt a:hover { text-decoration: underline; }
+
+    /* ── Sort bar ── */
+    .sort-bar {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 18px; font-size: 0.82rem; color: var(--muted);
+    }
+    .sort-btn {
+      background: none; border: var(--bw) solid var(--border);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 0.78rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; color: var(--muted);
+      transition: all 200ms ease;
+    }
+    .sort-btn:hover  { border-color: var(--border-strong); color: var(--text); }
+    .sort-btn.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
 
     /* ── Community post card ── */
     .comm-card {
       background: var(--surface);
-      border: 1.5px solid var(--border);
+      border: var(--bw) solid var(--border);
       border-radius: var(--radius);
       padding: 20px 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: box-shadow 0.2s, border-color 0.2s;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 200ms, border-color 200ms, transform 200ms;
     }
-    .comm-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.07); border-color: #ccc; }
+    .comm-card:hover { box-shadow: var(--shadow-hover); border-color: var(--border-strong); transform: translateY(-2px); }
 
     .comm-card-top {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
     }
     .comm-author-dot {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: var(--bg); border: 1.5px solid var(--border);
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--surface2); border: var(--bw) solid var(--border);
       display: flex; align-items: center; justify-content: center;
       font-size: 0.82rem; font-weight: 800; color: var(--muted);
-      flex-shrink: 0;
+      flex-shrink: 0; overflow: hidden;
     }
-    .comm-author-info { flex: 1; min-width: 0; }
-    .comm-author-name { font-size: 0.88rem; font-weight: 800; }
-    .comm-author-date { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+    .comm-author-dot img { width: 100%; height: 100%; object-fit: cover; }
+    .comm-author-info    { flex: 1; min-width: 0; }
+    .comm-author-name    { font-size: 0.88rem; font-weight: 800; }
+    .comm-author-meta    { font-size: 0.74rem; color: var(--muted); margin-top: 1px; display: flex; align-items: center; gap: 6px; }
+
+    /* expiry pill */
+    .expiry-pill {
+      font-size: 0.66rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      color: var(--accent);
+    }
+    .expiry-pill.soon {
+      background: rgba(239,68,68,0.1);
+      color: #ef4444;
+    }
 
     .comm-content {
-      font-size: 0.95rem;
-      line-height: 1.75;
-      color: var(--text);
-      white-space: pre-wrap;
-      word-break: break-word;
+      font-size: 0.95rem; line-height: 1.75;
+      color: var(--text); white-space: pre-wrap; word-break: break-word;
     }
 
-    /* Comments toggle */
+    /* comments toggle */
     .comm-footer {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 14px;
+      padding-top: 10px; border-top: var(--bw) solid var(--border);
     }
     .comm-comment-btn {
       background: none; border: none;
       font-size: 0.82rem; font-weight: 700; color: var(--muted);
-      cursor: pointer; font-family: inherit;
-      transition: color 0.18s; padding: 0;
+      cursor: pointer; font-family: inherit; transition: color 200ms; padding: 0;
     }
-    .comm-comment-btn:hover { color: var(--text); }
+    .comm-comment-btn:hover { color: var(--accent); }
+    .comm-delete-btn {
+      background: none; border: none;
+      font-size: 0.78rem; font-weight: 700; color: var(--muted);
+      cursor: pointer; font-family: inherit; transition: color 200ms;
+      padding: 0; margin-left: auto;
+    }
+    .comm-delete-btn:hover { color: #ef4444; }
 
-    .comm-comments {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .comm-comments { display: none; flex-direction: column; gap: 8px; }
     .comm-comments.open { display: flex; }
 
     .comm-comment-item {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
+      background: var(--surface2); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 10px 14px;
     }
     .comm-comment-name { font-size: 0.78rem; font-weight: 800; margin-bottom: 3px; }
-    .comm-comment-text { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+    .comm-comment-text { font-size: 0.85rem; color: var(--muted); line-height: 1.55; }
 
-    .comm-comment-form {
-      display: flex; gap: 8px; align-items: flex-end;
-    }
+    .comm-comment-form { display: flex; gap: 8px; align-items: flex-end; margin-top: 4px; }
     .comm-comment-input {
-      flex: 1; padding: 9px 12px;
-      background: var(--surface); border: 1.5px solid var(--border);
-      border-radius: 8px; font-size: 0.88rem;
+      flex: 1; padding: 9px 13px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.88rem;
       font-family: inherit; color: var(--text);
-      transition: border-color 0.18s; resize: none; min-height: 40px;
+      transition: border-color 200ms; resize: none; min-height: 40px; outline: none;
     }
-    .comm-comment-input:focus { outline: none; border-color: var(--accent); }
+    .comm-comment-input:focus { border-color: var(--accent); box-shadow: var(--ring); }
     .comm-comment-send {
-      padding: 9px 16px; background: var(--accent); color: #fff;
-      border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 700;
-      cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0;
+      padding: 9px 18px; background: var(--accent); color: #fff;
+      border: none; border-radius: 999px; font-size: 0.82rem; font-weight: 800;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+      transition: all 200ms ease;
     }
-    .comm-comment-send:hover { opacity: 0.8; }
+    .comm-comment-send:hover { transform: translateY(-1px); }
 
     .no-posts {
-      text-align: center; padding: 52px 20px;
-      color: var(--muted); font-size: 0.95rem;
-      border: 1.5px dashed var(--border); border-radius: var(--radius);
+      text-align: center; padding: 56px 20px;
+      color: var(--muted); font-size: 0.92rem;
+      border: var(--bw) dashed var(--border-strong);
+      border-radius: var(--radius); background: var(--surface2);
     }
 
-    /* Sort bar */
-    .sort-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* loading skeleton */
+    .skeleton {
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 20px 22px;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: var(--shadow);
+    }
+    .skeleton-line {
+      height: 12px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skeleton-line.short { width: 40%; }
+    .skeleton-line.long  { width: 100%; }
+    .skeleton-line.mid   { width: 70%; }
+
+    /* expiry notice banner */
+    .expiry-notice {
+      background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+      border: var(--bw) solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      font-size: 0.82rem; color: var(--muted);
       margin-bottom: 20px;
-      font-size: 0.82rem;
-      color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
     }
-    .sort-btn {
-      background: none; border: 1.5px solid var(--border);
-      border-radius: 6px; padding: 5px 12px;
-      font-size: 0.78rem; font-weight: 700; cursor: pointer;
-      font-family: inherit; color: var(--muted);
-      transition: all 0.18s;
-    }
-    .sort-btn:hover  { border-color: #aaa; color: var(--text); }
-    .sort-btn.active { border-color: var(--accent); color: var(--text); background: var(--bg); }
+    .expiry-notice strong { color: var(--text); }
+
   </style>
 </head>
 <body>
+
   <nav class="nav">
     <div class="nav-inner">
       <img src="pictures/e25ff237663f4c0e1a03faa1e7bfc2c2.jpg" class="nav-logo" alt="Logo">
@@ -238,8 +268,16 @@
       </div>
       <div class="write-bottom">
         <span class="write-char" id="writeChar">0 / 2000</span>
-        <button class="write-submit" id="writeSubmit">Post</button>
+        <button class="write-submit" id="writeSubmit" disabled>Post</button>
       </div>
+      <div class="sign-in-prompt" id="signInPrompt" style="display:none">
+        <a href="auth.html">Sign in</a> to post — or post as a guest above
+      </div>
+    </div>
+
+    <!-- Expiry notice -->
+    <div class="expiry-notice">
+      ⏳ <span>Posts are automatically deleted after <strong>30 days</strong> to keep things fresh.</span>
     </div>
 
     <!-- Sort -->
@@ -249,190 +287,249 @@
       <button class="sort-btn"        data-sort="old">Oldest</button>
     </div>
 
-    <!-- Posts feed -->
-    <div id="commFeed" style="display:flex;flex-direction:column;gap:16px;"></div>
+    <!-- Feed -->
+    <div id="commFeed" style="display:flex;flex-direction:column;gap:14px;">
+      <!-- skeletons while loading -->
+      <div class="skeleton">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line long"></div>
+        <div class="skeleton-line mid"></div>
+      </div>
+      <div class="skeleton">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line long"></div>
+        <div class="skeleton-line mid"></div>
+      </div>
+    </div>
   </div>
 
-  <script src="posts.js"></script>
-  <script>
-    /* ── Storage ── */
-    var STORE_KEY = 'community_posts';
+  <script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      collection, addDoc, getDocs, deleteDoc,
+      doc, query, orderBy, serverTimestamp, Timestamp,
+      onSnapshot, updateDoc, arrayUnion
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    function loadPosts() {
-      try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
-      catch(e) { return []; }
-    }
-    function savePosts(posts) {
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); } catch(e) {}
-    }
+    const THIRTY_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+    const POSTS_COL    = collection(db, 'community_posts');
+    let   currentUser  = null;
+    let   currentSort  = 'new';
 
-    function getPostComments(pid) {
-      try { return JSON.parse(localStorage.getItem('comm_comments_' + pid) || '[]'); }
-      catch(e) { return []; }
-    }
-    function savePostComments(pid, comments) {
-      try { localStorage.setItem('comm_comments_' + pid, JSON.stringify(comments)); } catch(e) {}
-    }
-
-    /* ── Helpers ── */
+    /* ── helpers ── */
     function escH(s) {
       return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function timeAgo(ts) {
-      var diff = Date.now() - ts;
-      var m = Math.floor(diff / 60000);
+      if (!ts) return '';
+      const diff = Date.now() - ts;
+      const m = Math.floor(diff / 60000);
       if (m < 1)  return 'Just now';
       if (m < 60) return m + 'm ago';
-      var h = Math.floor(m / 60);
+      const h = Math.floor(m / 60);
       if (h < 24) return h + 'h ago';
-      var d = Math.floor(h / 24);
-      if (d < 30) return d + 'd ago';
-      return new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+      return Math.floor(h / 24) + 'd ago';
+    }
+    function daysLeft(expiresAt) {
+      if (!expiresAt) return 14;
+      return Math.max(0, Math.ceil((expiresAt - Date.now()) / (24*60*60*1000)));
     }
     function initials(name) {
       if (!name || name === 'Anonymous') return '?';
-      return name.trim().split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+      return name.trim().split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     }
 
-    /* ── Render feed ── */
-    var currentSort = 'new';
-    var feed = document.getElementById('commFeed');
+    /* ── auth state ── */
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      const btn    = document.getElementById('writeSubmit');
+      const avatar = document.getElementById('writeAvatar');
+      const name   = document.getElementById('writeName');
 
-    function renderFeed() {
-      var posts = loadPosts();
-      if (currentSort === 'new') posts = posts.slice().reverse();
+      btn.disabled = false;
 
-      feed.innerHTML = '';
-      if (!posts.length) {
-        feed.innerHTML = '<div class="no-posts">No posts yet. Be the first to share something.</div>';
-        return;
+      if (user) {
+        name.value = user.displayName || '';
+        name.disabled = true;
+        if (user.photoURL) {
+          avatar.innerHTML = `<img src="${escH(user.photoURL)}" alt="">`;
+        } else {
+          avatar.textContent = initials(user.displayName);
+        }
+      } else {
+        name.disabled = false;
+        avatar.textContent = '?';
+      }
+    });
+
+    /* ── write box char count ── */
+    const writeText = document.getElementById('writeText');
+    writeText.addEventListener('input', () => {
+      document.getElementById('writeChar').textContent = writeText.value.length + ' / 2000';
+    });
+
+    /* ── submit post ── */
+    document.getElementById('writeSubmit').addEventListener('click', async () => {
+      const text   = writeText.value.trim();
+      const author = currentUser
+        ? (currentUser.displayName || 'Anonymous')
+        : (document.getElementById('writeName').value.trim() || 'Anonymous');
+
+      if (!text) { writeText.focus(); return; }
+
+      const btn = document.getElementById('writeSubmit');
+      btn.disabled = true; btn.textContent = 'Posting…';
+
+      try {
+        const now       = Date.now();
+        const expiresAt = new Timestamp(Math.floor((now + THIRTY_DAYS_MS) / 1000), 0);
+
+        await addDoc(POSTS_COL, {
+          author,
+          authorId:    currentUser ? currentUser.uid : null,
+          authorPhoto: currentUser ? (currentUser.photoURL || null) : null,
+          text,
+          comments:    [],
+          createdAt:   serverTimestamp(),
+          expiresAt,                    // ← Firestore TTL field
+        });
+
+        writeText.value = '';
+        document.getElementById('writeChar').textContent = '0 / 2000';
+      } catch(e) {
+        alert('Failed to post. Please try again.');
+        console.error(e);
+      }
+      btn.disabled = false; btn.textContent = 'Post';
+    });
+
+    /* ── live feed via onSnapshot ── */
+    function subscribe() {
+      const q = query(POSTS_COL, orderBy('createdAt', currentSort === 'new' ? 'desc' : 'asc'));
+
+      onSnapshot(q, snap => {
+        const feed = document.getElementById('commFeed');
+        feed.innerHTML = '';
+
+        const now  = Date.now();
+        const docs = snap.docs.filter(d => {
+          const exp = d.data().expiresAt;
+          return !exp || exp.toMillis() > now;   // hide already-expired on client
+        });
+
+        if (!docs.length) {
+          feed.innerHTML = '<div class="no-posts">No posts yet. Be the first to share something.</div>';
+          return;
+        }
+
+        docs.forEach(d => {
+          const card = buildCard(d.id, d.data());
+          feed.appendChild(card);
+        });
+      });
+    }
+
+    /* ── build card ── */
+    function buildCard(id, data) {
+      const card = document.createElement('div');
+      card.className = 'comm-card';
+      card.dataset.id = id;
+
+      const createdMs   = data.createdAt ? data.createdAt.toMillis() : Date.now();
+      const expiresMs   = data.expiresAt ? data.expiresAt.toMillis() : (createdMs + THIRTY_DAYS_MS);
+      const left        = daysLeft(expiresMs);
+      const soonClass   = left <= 2 ? 'expiry-pill soon' : 'expiry-pill';
+      const expiryLabel = left === 0 ? 'expires today' : left === 1 ? '1 day left' : `${left}d left`;
+
+      const isOwner = currentUser && currentUser.uid === data.authorId;
+      const comments = (data.comments || []);
+
+      /* avatar html */
+      let avatarHtml = '';
+      if (data.authorPhoto) {
+        avatarHtml = `<div class="comm-author-dot"><img src="${escH(data.authorPhoto)}" alt=""></div>`;
+      } else {
+        avatarHtml = `<div class="comm-author-dot">${escH(initials(data.author))}</div>`;
       }
 
-      posts.forEach(function(p) {
-        var card = buildCommCard(p);
-        feed.appendChild(card);
-      });
-    }
+      card.innerHTML = `
+        <div class="comm-card-top">
+          ${avatarHtml}
+          <div class="comm-author-info">
+            <div class="comm-author-name">${escH(data.author || 'Anonymous')}</div>
+            <div class="comm-author-meta">
+              ${timeAgo(createdMs)}
+              <span class="${soonClass}">${expiryLabel}</span>
+            </div>
+          </div>
+        </div>
+        <div class="comm-content">${escH(data.text)}</div>
+        <div class="comm-footer">
+          <button class="comm-comment-btn" data-toggle="${id}">
+            ${comments.length ? comments.length + ' comment' + (comments.length > 1 ? 's' : '') : 'Comment'}
+          </button>
+          ${isOwner ? `<button class="comm-delete-btn" data-delete="${id}">Delete</button>` : ''}
+        </div>
+        <div class="comm-comments" id="comments-${id}">
+          ${comments.map(c => `
+            <div class="comm-comment-item">
+              <div class="comm-comment-name">${escH(c.author || 'Anonymous')}</div>
+              <div class="comm-comment-text">${escH(c.text)}</div>
+            </div>
+          `).join('')}
+          <div class="comm-comment-form">
+            <textarea class="comm-comment-input" placeholder="Write a comment…" maxlength="500" rows="1"></textarea>
+            <button class="comm-comment-send" data-post="${id}">Send</button>
+          </div>
+        </div>`;
 
-    function buildCommCard(p) {
-      var card = document.createElement('div');
-      card.className = 'comm-card';
-      card.dataset.id = p.id;
-
-      var comments = getPostComments(p.id);
-      var commentCount = comments.length;
-
-      card.innerHTML =
-        '<div class="comm-card-top">' +
-          '<div class="comm-author-dot">' + escH(initials(p.author)) + '</div>' +
-          '<div class="comm-author-info">' +
-            '<div class="comm-author-name">' + escH(p.author || 'Anonymous') + '</div>' +
-            '<div class="comm-author-date">' + timeAgo(p.ts) + '</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="comm-content">' + escH(p.text) + '</div>' +
-        '<div class="comm-footer">' +
-          '<button class="comm-comment-btn" data-toggle="' + p.id + '">' +
-            (commentCount > 0 ? commentCount + ' comment' + (commentCount > 1 ? 's' : '') : 'Comment') +
-          '</button>' +
-        '</div>' +
-        '<div class="comm-comments" id="comments-' + p.id + '">' +
-          renderCommentsHtml(comments) +
-          '<div class="comm-comment-form">' +
-            '<textarea class="comm-comment-input" placeholder="Write a comment..." maxlength="500" rows="1"></textarea>' +
-            '<button class="comm-comment-send" data-post="' + p.id + '">Send</button>' +
-          '</div>' +
-        '</div>';
-
-      // Toggle comments
-      card.querySelector('[data-toggle]').addEventListener('click', function() {
-        var section = document.getElementById('comments-' + p.id);
-        section.classList.toggle('open');
+      /* toggle comments */
+      card.querySelector('[data-toggle]').addEventListener('click', () => {
+        document.getElementById('comments-' + id).classList.toggle('open');
       });
 
-      // Send comment
-      card.querySelector('.comm-comment-send').addEventListener('click', function() {
-        var ta = this.closest('.comm-comment-form').querySelector('.comm-comment-input');
-        var text = ta.value.trim();
+      /* send comment */
+      card.querySelector('.comm-comment-send').addEventListener('click', async () => {
+        const ta     = card.querySelector('.comm-comment-input');
+        const text   = ta.value.trim();
         if (!text) return;
-        var comments = getPostComments(p.id);
-        comments.push({ text: text, ts: Date.now() });
-        savePostComments(p.id, comments);
-        ta.value = '';
-        // Re-render comments in card
-        var section = document.getElementById('comments-' + p.id);
-        var form = section.querySelector('.comm-comment-form');
-        section.innerHTML = renderCommentsHtml(comments);
-        section.appendChild(form);
-        section.classList.add('open');
-        // Update count on button
-        var btn = card.querySelector('[data-toggle]');
-        btn.textContent = comments.length + ' comment' + (comments.length > 1 ? 's' : '');
+        const author = currentUser ? (currentUser.displayName || 'Anonymous') : 'Anonymous';
+        try {
+          await updateDoc(doc(db, 'community_posts', id), {
+            comments: arrayUnion({ author, text, ts: Date.now() })
+          });
+          ta.value = '';
+        } catch(e) { alert('Could not send comment.'); }
       });
+
+      /* delete post */
+      const delBtn = card.querySelector('[data-delete]');
+      if (delBtn) {
+        delBtn.addEventListener('click', async () => {
+          if (!confirm('Delete this post?')) return;
+          await deleteDoc(doc(db, 'community_posts', id));
+        });
+      }
 
       return card;
     }
 
-    function renderCommentsHtml(comments) {
-      if (!comments.length) return '';
-      return comments.map(function(c) {
-        return '<div class="comm-comment-item">' +
-          '<div class="comm-comment-text">' + escH(c.text) + '</div>' +
-          '</div>';
-      }).join('');
-    }
-
-    /* ── Write box ── */
-    var writeText = document.getElementById('writeText');
-    var writeName = document.getElementById('writeName');
-    var writeChar = document.getElementById('writeChar');
-    var writeAvatar = document.getElementById('writeAvatar');
-
-    writeText.addEventListener('input', function() {
-      writeChar.textContent = writeText.value.length + ' / 2000';
-    });
-
-    writeName.addEventListener('input', function() {
-      writeAvatar.textContent = initials(writeName.value) || '?';
-    });
-
-    document.getElementById('writeSubmit').addEventListener('click', function() {
-      var text = writeText.value.trim();
-      if (!text) { writeText.focus(); return; }
-
-      var posts = loadPosts();
-      posts.push({
-        id:     'p-' + Date.now(),
-        author: writeName.value.trim() || 'Anonymous',
-        text:   text,
-        ts:     Date.now(),
-      });
-      savePosts(posts);
-
-      writeText.value = '';
-      writeName.value = '';
-      writeChar.textContent = '0 / 2000';
-      writeAvatar.textContent = '?';
-
-      renderFeed();
-      // Scroll to top of feed
-      feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
-    /* ── Sort ── */
-    document.querySelectorAll('.sort-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.sort-btn').forEach(function(b) { b.classList.remove('active'); });
+    /* ── sort buttons ── */
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentSort = btn.dataset.sort;
-        renderFeed();
+        subscribe();
       });
     });
 
-    /* ── Init ── */
-    renderFeed();
+    /* ── start ── */
+    subscribe();
   </script>
+
   <script src="page-transition.js"></script>
-          <script src="nav.js"></script>   
+  <script src="nav.js"></script>
 </body>
 </html>
