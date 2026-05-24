@@ -281,6 +281,31 @@
         </div>
       </div>
 
+      <!-- slash text editor -->
+      <div class="edit-card" id="slashCard" style="display:none">
+        <div class="edit-card-header">📢 Message of the Day</div>
+        <div class="edit-card-body">
+          <div class="edit-error"   id="slashError"></div>
+          <div class="edit-success" id="slashSuccess"></div>
+          <div class="field-group">
+            <label for="slashInput">Banner text</label>
+            <input type="text" id="slashInput" maxlength="120"
+              placeholder="e.g. 🎉 Welcome back everyone!">
+            <div class="field-hint">
+              Shows as a coloured banner at the top of every page.
+              Leave empty and save to hide it.
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="save-btn" id="slashSaveBtn" style="flex:1">Save banner</button>
+            <button class="save-btn" id="slashClearBtn"
+              style="flex:0 0 auto;width:auto;padding:13px 20px;background:var(--muted);box-shadow:none">
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- danger zone -->
       <div class="danger-card">
         <div class="danger-card-header">Account</div>
@@ -375,6 +400,7 @@
       if (!user) return;
 
       const userDoc = await getUserDoc(user.uid);
+      loadSlashCard(user);
       const used    = changesThisWeek(userDoc.nameChanges || []);
       const left    = Math.max(0, MAX_CHANGES_PER_WEEK - used);
 
@@ -442,7 +468,44 @@
         saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
       });
 
-      /* ── sign out ── */
+      /* ── slash text ── */
+      async function loadSlashCard(user) {
+        const card = document.getElementById('slashCard');
+        if (!card) return;
+        card.style.display = 'block';
+        try {
+          const snap = await getDoc(doc(db, 'site_config', 'slash_text'));
+          if (snap.exists() && snap.data().text) {
+            document.getElementById('slashInput').value = snap.data().text;
+          }
+        } catch(e) {}
+      }
+
+      async function saveSlash(text) {
+        const err = document.getElementById('slashError');
+        const suc = document.getElementById('slashSuccess');
+        err.classList.remove('show'); suc.classList.remove('show');
+        try {
+          await setDoc(doc(db, 'site_config', 'slash_text'), {
+            text:      text.trim(),
+            active:    text.trim().length > 0,
+            updatedAt: serverTimestamp()
+          });
+          suc.textContent = text.trim() ? '✓ Banner updated!' : '✓ Banner cleared.';
+          suc.classList.add('show');
+        } catch(e) {
+          err.textContent = 'Failed: ' + e.message;
+          err.classList.add('show');
+        }
+      }
+
+      document.getElementById('slashSaveBtn').addEventListener('click', () => {
+        saveSlash(document.getElementById('slashInput').value);
+      });
+      document.getElementById('slashClearBtn').addEventListener('click', () => {
+        document.getElementById('slashInput').value = '';
+        saveSlash('');
+      });
       document.getElementById('signOutBtn').addEventListener('click', async () => {
         await signOut(auth);
         window.location.href = 'index.html';
