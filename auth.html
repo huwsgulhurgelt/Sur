@@ -52,6 +52,8 @@
     }
     .auth-title { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 2px; }
     .auth-sub   { font-size: 0.86rem; color: var(--muted); }
+
+    /* avatar upload */
     .avatar-section {
       display: flex; flex-direction: column; align-items: center; gap: 10px;
     }
@@ -62,12 +64,17 @@
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; overflow: hidden;
       transition: border-color 200ms, transform 200ms;
-      position: relative;
+      font-size: 1.8rem;
+      flex-shrink: 0;
     }
     .avatar-ring:hover { border-color: var(--accent); transform: scale(1.04); }
-    .avatar-ring img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .avatar-ring img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block; border-radius: 50%;
+    }
     .avatar-hint { font-size: 0.74rem; color: var(--muted); text-align: center; }
     #avatarInput { display: none; }
+
     .auth-field { display: flex; flex-direction: column; gap: 6px; }
     .auth-field label { font-size: 0.84rem; font-weight: 700; }
     .auth-field input {
@@ -77,16 +84,18 @@
       font: inherit; outline: none;
       transition: border-color 200ms, box-shadow 200ms;
     }
-    .auth-field input:focus { border-color: var(--accent); box-shadow: var(--ring, 0 0 0 3px rgba(0,0,0,0.08)); }
+    .auth-field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 45,58,140), 0.12);
+    }
     .auth-btn {
       width: 100%; padding: 13px;
       background: var(--accent); color: #fff; border: none;
       border-radius: var(--radius); font: inherit;
       font-size: 0.95rem; font-weight: 800; cursor: pointer;
-      box-shadow: 0 4px 16px rgba(var(--accent-rgb,0,0,0),0.35);
       transition: all 200ms ease; letter-spacing: 0.02em;
     }
-    .auth-btn:hover { transform: translateY(-2px); }
+    .auth-btn:hover { transform: translateY(-2px); opacity: 0.9; }
     .auth-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
     .auth-divider {
       display: flex; align-items: center; gap: 12px;
@@ -97,13 +106,15 @@
     }
     .auth-google {
       width: 100%; padding: 12px;
-      background: var(--surface); border: var(--bw) solid var(--border-strong, var(--border));
+      background: var(--surface);
+      border: var(--bw) solid var(--border);
       border-radius: var(--radius); font: inherit;
       font-size: 0.9rem; font-weight: 700; cursor: pointer; color: var(--text);
       display: flex; align-items: center; justify-content: center; gap: 10px;
       transition: all 200ms ease;
     }
-    .auth-google:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow); }
+    .auth-google:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .auth-google:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .auth-error {
       font-size: 0.82rem; color: #ef4444;
       background: rgba(239,68,68,0.08);
@@ -118,44 +129,37 @@
       border-radius: 8px; padding: 10px 14px; display: none; text-align: center;
     }
     .auth-success.show { display: block; }
+
+    /* logged-in view */
     .profile-card {
       display: none; flex-direction: column; align-items: center;
-      gap: 16px; padding: 32px; text-align: center;
+      gap: 16px; padding: 36px; text-align: center;
     }
     .profile-card.show { display: flex; }
-    .profile-avatar {
+    .profile-av {
       width: 88px; height: 88px; border-radius: 50%;
-      object-fit: cover; border: 3px solid var(--accent);
-      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
+      border: 3px solid var(--accent);
       background: var(--surface2, var(--bg));
-    }
-    .profile-avatar-placeholder {
-      width: 88px; height: 88px; border-radius: 50%;
-      background: var(--surface2, var(--bg)); border: 3px solid var(--accent);
       display: flex; align-items: center; justify-content: center;
       font-size: 2rem; font-weight: 900; color: var(--accent);
+      overflow: hidden; flex-shrink: 0;
     }
+    .profile-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .profile-name  { font-size: 1.15rem; font-weight: 900; }
     .profile-email { font-size: 0.82rem; color: var(--muted); }
-    .profile-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
-    .profile-link {
+    .profile-btns  { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+    .plink {
       padding: 9px 20px; border-radius: var(--radius);
       font-size: 0.84rem; font-weight: 700; cursor: pointer;
       font-family: inherit; transition: all 200ms ease;
     }
-    .profile-link.primary {
-      background: var(--accent); color: #fff; border: none;
-      box-shadow: 0 4px 14px rgba(var(--accent-rgb,0,0,0),0.3);
-    }
-    .profile-link.primary:hover { transform: translateY(-2px); }
-    .profile-link.ghost {
+    .plink.primary { background: var(--accent); color: #fff; border: none; }
+    .plink.primary:hover { transform: translateY(-2px); opacity: 0.9; }
+    .plink.ghost {
       background: none; color: var(--muted);
       border: var(--bw) solid var(--border);
     }
-    .profile-link.ghost:hover { border-color: var(--accent); color: var(--text); }
-    .upload-bar { width: 100%; height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; display: none; }
-    .upload-bar.show { display: block; }
-    .upload-bar-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 0; transition: width 200ms ease; }
+    .plink.ghost:hover { border-color: var(--accent); color: var(--text); }
   </style>
 </head>
 <body>
@@ -189,27 +193,27 @@
   <div class="auth-wrap">
     <div class="auth-card">
 
-      <!-- logged in view -->
+      <!-- ── logged in ── -->
       <div class="profile-card" id="profileCard">
-        <div id="profileAvatarWrap"></div>
+        <div class="profile-av" id="profileAv">?</div>
         <div>
           <div class="profile-name"  id="profileName"></div>
           <div class="profile-email" id="profileEmail"></div>
         </div>
-        <div class="profile-links">
-          <button class="profile-link primary" onclick="window.location.href='profile.html'">My Profile</button>
-          <button class="profile-link ghost" id="signOutBtn">Sign out</button>
+        <div class="profile-btns">
+          <button class="plink primary" onclick="window.location.href='profile.html'">My Profile</button>
+          <button class="plink ghost"   id="signOutBtn">Sign out</button>
         </div>
       </div>
 
-      <!-- auth forms -->
+      <!-- ── forms ── -->
       <div id="authForms">
         <div class="auth-tabs">
           <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
           <button class="auth-tab"        id="tabSignUp" onclick="switchTab('signup')">Create Account</button>
         </div>
 
-        <!-- Sign In -->
+        <!-- sign in form -->
         <div class="auth-body" id="formSignIn">
           <div>
             <div class="auth-title">Welcome back</div>
@@ -224,15 +228,15 @@
             <label>Password</label>
             <input type="password" id="siPass" placeholder="••••••••" autocomplete="current-password">
           </div>
-          <button class="auth-btn" id="siBtn" onclick="doSignIn()">Sign In</button>
+          <button class="auth-btn" id="siBtn">Sign In</button>
           <div class="auth-divider">or</div>
-          <button class="auth-google" onclick="doGoogle()">
+          <button class="auth-google" id="siGoogleBtn">
             <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
             Continue with Google
           </button>
         </div>
 
-        <!-- Sign Up -->
+        <!-- sign up form -->
         <div class="auth-body" id="formSignUp" style="display:none">
           <div>
             <div class="auth-title">Create account</div>
@@ -240,14 +244,13 @@
           </div>
           <div class="auth-error"   id="suError"></div>
           <div class="auth-success" id="suSuccess"></div>
+
           <div class="avatar-section">
-            <div class="avatar-ring" id="avatarRing" onclick="document.getElementById('avatarInput').click()">
-              <span id="avatarPlaceholder" style="font-size:1.8rem">👤</span>
-            </div>
-            <div class="avatar-hint">Tap to add profile picture (optional)</div>
+            <div class="avatar-ring" id="avatarRing">👤</div>
+            <div class="avatar-hint">Tap avatar to add a profile picture (optional)</div>
             <input type="file" id="avatarInput" accept="image/*">
-            <div class="upload-bar" id="uploadBar"><div class="upload-bar-fill" id="uploadFill"></div></div>
           </div>
+
           <div class="auth-field">
             <label>Display name</label>
             <input type="text" id="suName" placeholder="Your name" autocomplete="name">
@@ -260,9 +263,9 @@
             <label>Password</label>
             <input type="password" id="suPass" placeholder="Min 6 characters" autocomplete="new-password">
           </div>
-          <button class="auth-btn" id="suBtn" onclick="doSignUp()">Create Account</button>
+          <button class="auth-btn" id="suBtn">Create Account</button>
           <div class="auth-divider">or</div>
-          <button class="auth-google" onclick="doGoogle()">
+          <button class="auth-google" id="suGoogleBtn">
             <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
             Continue with Google
           </button>
@@ -285,129 +288,159 @@
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const provider = new GoogleAuthProvider();
-    let avatarFile = null;
+    let avatarDataUrl = null;
 
-    /* avatar preview */
+    /* ── avatar preview ── */
+    document.getElementById('avatarRing').addEventListener('click', function() {
+      document.getElementById('avatarInput').click();
+    });
     document.getElementById('avatarInput').addEventListener('change', function() {
       const file = this.files[0];
       if (!file) return;
-      avatarFile = file;
       const reader = new FileReader();
-      reader.onload = e => {
-        document.getElementById('avatarRing').innerHTML =
-          '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      reader.onload = function(e) {
+        avatarDataUrl = e.target.result;
+        const ring = document.getElementById('avatarRing');
+        ring.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = avatarDataUrl;
+        ring.appendChild(img);
       };
       reader.readAsDataURL(file);
     });
 
-    /* tab switching */
+    /* ── tab switching ── */
     window.switchTab = function(tab) {
       const si = tab === 'signin';
-      document.getElementById('tabSignIn').classList.toggle('active', si);
+      document.getElementById('tabSignIn').classList.toggle('active',  si);
       document.getElementById('tabSignUp').classList.toggle('active', !si);
       document.getElementById('formSignIn').style.display = si  ? 'flex' : 'none';
       document.getElementById('formSignUp').style.display = !si ? 'flex' : 'none';
+      clearErrors();
     };
+
+    function clearErrors() {
+      ['siError','suError','suSuccess'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) { el.classList.remove('show'); el.textContent = ''; }
+      });
+    }
 
     function showErr(id, msg) {
       const el = document.getElementById(id);
-      el.textContent = msg; el.classList.add('show');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
     }
 
     function friendly(code) {
-      return ({
-        'auth/email-already-in-use':   'That email is already registered. Try signing in.',
-        'auth/invalid-email':          'Please enter a valid email address.',
-        'auth/weak-password':          'Password must be at least 6 characters.',
-        'auth/user-not-found':         'No account found with that email.',
-        'auth/wrong-password':         'Incorrect password. Try again.',
-        'auth/invalid-credential':     'Incorrect email or password.',
-        'auth/too-many-requests':      'Too many attempts. Please wait a moment.',
-        'auth/popup-closed-by-user':   'Google sign-in was cancelled.',
-        'auth/network-request-failed': 'Network error. Check your connection.',
-      }[code]) || 'Something went wrong. Please try again.';
+      const map = {
+        'auth/email-already-in-use':    'That email is already registered. Try signing in instead.',
+        'auth/invalid-email':           'Please enter a valid email address.',
+        'auth/weak-password':           'Password must be at least 6 characters.',
+        'auth/user-not-found':          'No account found with that email.',
+        'auth/wrong-password':          'Incorrect password. Try again.',
+        'auth/invalid-credential':      'Incorrect email or password.',
+        'auth/too-many-requests':       'Too many attempts. Please wait a moment.',
+        'auth/popup-closed-by-user':    'Google sign-in was cancelled.',
+        'auth/network-request-failed':  'Network error. Check your connection.',
+        'auth/operation-not-allowed':   'Email sign-in is not enabled yet. Please use Google sign-in for now.',
+        'auth/user-disabled':           'This account has been disabled.',
+        'auth/requires-recent-login':   'Please sign out and sign in again.',
+      };
+      return map[code] || ('Error: ' + (code || 'unknown'));
     }
 
-    /* sign up */
-    window.doSignUp = async function() {
-      const name = document.getElementById('suName').value.trim();
-      const email = document.getElementById('suEmail').value.trim();
-      const pass  = document.getElementById('suPass').value;
-      document.getElementById('suError').classList.remove('show');
-      document.getElementById('suSuccess').classList.remove('show');
-      if (!name)        { showErr('suError','Please enter a display name.'); return; }
-      if (!email)       { showErr('suError','Please enter your email.');      return; }
-      if (pass.length < 6) { showErr('suError','Password must be at least 6 characters.'); return; }
-      const btn = document.getElementById('suBtn');
-      btn.disabled = true; btn.textContent = 'Creating account…';
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        await updateProfile(cred.user, { displayName: name });
-        document.getElementById('suSuccess').textContent = '✓ Account created! Redirecting…';
-        document.getElementById('suSuccess').classList.add('show');
-        setTimeout(() => { window.location.href = 'index.html'; }, 1200);
-      } catch(e) {
-        showErr('suError', friendly(e.code));
-        btn.disabled = false; btn.textContent = 'Create Account';
-      }
-    };
-
-    /* sign in */
-    window.doSignIn = async function() {
+    /* ── Sign In ── */
+    document.getElementById('siBtn').addEventListener('click', async function() {
       const email = document.getElementById('siEmail').value.trim();
       const pass  = document.getElementById('siPass').value;
-      document.getElementById('siError').classList.remove('show');
-      const btn = document.getElementById('siBtn');
-      btn.disabled = true; btn.textContent = 'Signing in…';
+      clearErrors();
+      if (!email) { showErr('siError','Please enter your email.'); return; }
+      if (!pass)  { showErr('siError','Please enter your password.'); return; }
+      this.disabled = true; this.textContent = 'Signing in…';
       try {
         await signInWithEmailAndPassword(auth, email, pass);
         window.location.href = 'index.html';
       } catch(e) {
         showErr('siError', friendly(e.code));
-        btn.disabled = false; btn.textContent = 'Sign In';
+        this.disabled = false; this.textContent = 'Sign In';
       }
-    };
+    });
 
-    /* google */
-    window.doGoogle = async function() {
+    /* ── Sign Up ── */
+    document.getElementById('suBtn').addEventListener('click', async function() {
+      const name  = document.getElementById('suName').value.trim();
+      const email = document.getElementById('suEmail').value.trim();
+      const pass  = document.getElementById('suPass').value;
+      clearErrors();
+      if (!name)           { showErr('suError','Please enter a display name.'); return; }
+      if (!email)          { showErr('suError','Please enter your email.');      return; }
+      if (pass.length < 6) { showErr('suError','Password must be at least 6 characters.'); return; }
+      this.disabled = true; this.textContent = 'Creating account…';
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await updateProfile(cred.user, { displayName: name });
+        const suc = document.getElementById('suSuccess');
+        suc.textContent = '✓ Account created! Redirecting…';
+        suc.classList.add('show');
+        setTimeout(function() { window.location.href = 'index.html'; }, 1200);
+      } catch(e) {
+        showErr('suError', friendly(e.code));
+        this.disabled = false; this.textContent = 'Create Account';
+      }
+    });
+
+    /* ── Google ── */
+    async function doGoogle(errId) {
+      clearErrors();
       try {
         await signInWithPopup(auth, provider);
         window.location.href = 'index.html';
       } catch(e) {
-        showErr('siError', friendly(e.code));
+        if (e.code !== 'auth/popup-closed-by-user') {
+          showErr(errId, friendly(e.code));
+        }
       }
-    };
+    }
+    document.getElementById('siGoogleBtn').addEventListener('click', function() { doGoogle('siError'); });
+    document.getElementById('suGoogleBtn').addEventListener('click', function() { doGoogle('suError'); });
 
-    /* sign out */
-    document.getElementById('signOutBtn').addEventListener('click', async () => {
+    /* ── Sign Out ── */
+    document.getElementById('signOutBtn').addEventListener('click', async function() {
       await signOut(auth);
     });
 
-    /* auth state */
-    onAuthStateChanged(auth, user => {
-      const profile = document.getElementById('profileCard');
-      const forms   = document.getElementById('authForms');
+    /* ── Auth state ── */
+    onAuthStateChanged(auth, function(user) {
+      const profileCard = document.getElementById('profileCard');
+      const authForms   = document.getElementById('authForms');
       if (user) {
-        forms.style.display = 'none';
-        profile.classList.add('show');
+        authForms.style.display = 'none';
+        profileCard.classList.add('show');
         document.getElementById('profileName').textContent  = user.displayName || 'Anonymous';
         document.getElementById('profileEmail').textContent = user.email || '';
-        const wrap = document.getElementById('profileAvatarWrap');
+        const av = document.getElementById('profileAv');
         if (user.photoURL) {
-          wrap.innerHTML = '<img class="profile-avatar" src="' + user.photoURL + '" alt="">';
+          av.innerHTML = '<img src="' + user.photoURL + '" alt="">';
         } else {
-          const init = (user.displayName || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-          wrap.innerHTML = '<div class="profile-avatar-placeholder">' + init + '</div>';
+          const init = (user.displayName || user.email || '?')
+            .trim().split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+          av.textContent = init;
         }
       } else {
-        forms.style.display = 'block';
-        profile.classList.remove('show');
+        authForms.style.display = 'block';
+        profileCard.classList.remove('show');
       }
     });
 
-    /* enter key */
-    document.getElementById('siPass').addEventListener('keydown', e => { if(e.key==='Enter') window.doSignIn(); });
-    document.getElementById('suPass').addEventListener('keydown', e => { if(e.key==='Enter') window.doSignUp(); });
+    /* ── Enter key shortcuts ── */
+    document.getElementById('siPass').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('siBtn').click();
+    });
+    document.getElementById('suPass').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('suBtn').click();
+    });
   </script>
 
   <script src="page-transition.js"></script>
