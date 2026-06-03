@@ -4,12 +4,11 @@
   <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg)document.documentElement.style.background=_t.bg;}catch(e){}</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Community — Student Knowledge</title>
+  <title>Community — Suraguuli</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="study-style.css">
   <style>
-
     /* ── Write box ── */
     .write-box {
       background: var(--surface);
@@ -26,9 +25,7 @@
       position: absolute; top: 0; left: 0; right: 0; height: 3px;
       background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
     }
-    .write-box-top {
-      display: flex; gap: 12px; align-items: flex-start;
-    }
+    .write-box-top { display: flex; gap: 12px; align-items: flex-start; }
     .write-avatar {
       width: 40px; height: 40px; border-radius: 50%;
       background: var(--surface2); border: var(--bw) solid var(--border);
@@ -55,9 +52,7 @@
       transition: border-color 200ms, box-shadow 200ms; outline: none;
     }
     .write-textarea:focus { border-color: var(--accent); box-shadow: var(--ring); }
-    .write-bottom {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    }
+    .write-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .write-char { font-size: 0.74rem; color: var(--muted); }
     .write-submit {
       padding: 10px 22px;
@@ -78,6 +73,26 @@
     }
     .sign-in-prompt a { color: var(--accent); font-weight: 700; }
     .sign-in-prompt a:hover { text-decoration: underline; }
+
+    /* ── AI moderation badge ── */
+    .mod-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em;
+      padding: 3px 9px; border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      color: var(--accent); margin-bottom: 10px;
+    }
+    .mod-badge::before { content: '🛡️'; font-size: 0.75rem; }
+
+    /* Moderation rejection notice */
+    .mod-reject {
+      font-size: 0.82rem; color: #ef4444;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px; padding: 10px 14px;
+      display: none; margin-top: 4px;
+    }
+    .mod-reject.show { display: block; }
 
     /* ── Sort bar ── */
     .sort-bar {
@@ -105,10 +120,7 @@
       transition: box-shadow 200ms, border-color 200ms, transform 200ms;
     }
     .comm-card:hover { box-shadow: var(--shadow-hover); border-color: var(--border-strong); transform: translateY(-2px); }
-
-    .comm-card-top {
-      display: flex; align-items: center; gap: 10px;
-    }
+    .comm-card-top { display: flex; align-items: center; gap: 10px; }
     .comm-author-dot {
       width: 36px; height: 36px; border-radius: 50%;
       background: var(--surface2); border: var(--bw) solid var(--border);
@@ -121,24 +133,19 @@
     .comm-author-name    { font-size: 0.88rem; font-weight: 800; }
     .comm-author-meta    { font-size: 0.74rem; color: var(--muted); margin-top: 1px; display: flex; align-items: center; gap: 6px; }
 
-    /* expiry pill */
     .expiry-pill {
       font-size: 0.66rem; font-weight: 700;
       padding: 2px 7px; border-radius: 999px;
       background: color-mix(in srgb, var(--accent) 10%, transparent);
       color: var(--accent);
     }
-    .expiry-pill.soon {
-      background: rgba(239,68,68,0.1);
-      color: #ef4444;
-    }
+    .expiry-pill.soon { background: rgba(239,68,68,0.1); color: #ef4444; }
 
     .comm-content {
       font-size: 0.95rem; line-height: 1.75;
       color: var(--text); white-space: pre-wrap; word-break: break-word;
     }
 
-    /* comments toggle */
     .comm-footer {
       display: flex; align-items: center; gap: 14px;
       padding-top: 10px; border-top: var(--bw) solid var(--border);
@@ -167,15 +174,16 @@
     .comm-comment-name { font-size: 0.78rem; font-weight: 800; margin-bottom: 3px; }
     .comm-comment-text { font-size: 0.85rem; color: var(--muted); line-height: 1.55; }
 
-    .comm-comment-form { display: flex; gap: 8px; align-items: flex-end; margin-top: 4px; }
+    .comm-comment-form { display: flex; gap: 8px; align-items: flex-end; margin-top: 4px; flex-direction: column; }
     .comm-comment-input {
-      flex: 1; padding: 9px 13px;
+      width: 100%; padding: 9px 13px;
       background: var(--bg); border: var(--bw) solid var(--border);
       border-radius: var(--radius); font-size: 0.88rem;
       font-family: inherit; color: var(--text);
       transition: border-color 200ms; resize: none; min-height: 40px; outline: none;
     }
     .comm-comment-input:focus { border-color: var(--accent); box-shadow: var(--ring); }
+    .comm-comment-row { display: flex; gap: 8px; align-items: center; width: 100%; }
     .comm-comment-send {
       padding: 9px 18px; background: var(--accent); color: #fff;
       border: none; border-radius: 999px; font-size: 0.82rem; font-weight: 800;
@@ -183,6 +191,11 @@
       transition: all 200ms ease;
     }
     .comm-comment-send:hover { transform: translateY(-1px); }
+    .comm-comment-reject {
+      font-size: 0.76rem; color: #ef4444;
+      display: none; flex: 1;
+    }
+    .comm-comment-reject.show { display: block; }
 
     .no-posts {
       text-align: center; padding: 56px 20px;
@@ -209,7 +222,6 @@
     .skeleton-line.long  { width: 100%; }
     .skeleton-line.mid   { width: 70%; }
 
-    /* expiry notice banner */
     .expiry-notice {
       background: color-mix(in srgb, var(--accent) 8%, var(--surface));
       border: var(--bw) solid var(--border);
@@ -220,7 +232,6 @@
       display: flex; align-items: center; gap: 8px;
     }
     .expiry-notice strong { color: var(--text); }
-
   </style>
 </head>
 <body>
@@ -233,7 +244,6 @@
         <li><a href="informations.html">Informations</a></li>
         <li><a href="tips.html">Tips</a></li>
         <li><a href="advices.html">Advices</a></li>
-        <li><a href="teachers.html">For Teachers</a></li>
         <li><a href="community.html" class="active">Community</a></li>
       </ul>
       <script src="theme-switcher.js"></script>
@@ -247,7 +257,6 @@
     <a href="informations.html">Informations</a>
     <a href="tips.html">Tips</a>
     <a href="advices.html">Advices</a>
-    <a href="teachers.html">For Teachers</a>
     <a href="community.html" class="active">Community</a>
   </div>
 
@@ -259,6 +268,7 @@
 
     <!-- Write box -->
     <div class="write-box">
+      <div class="mod-badge">AI Moderated</div>
       <div class="write-box-top">
         <div class="write-avatar" id="writeAvatar">?</div>
         <div class="write-inputs">
@@ -266,6 +276,7 @@
           <textarea class="write-textarea" id="writeText" placeholder="Share something you learned..." maxlength="2000"></textarea>
         </div>
       </div>
+      <div class="mod-reject" id="postReject"></div>
       <div class="write-bottom">
         <span class="write-char" id="writeChar">0 / 2000</span>
         <button class="write-submit" id="writeSubmit" disabled>Post</button>
@@ -289,17 +300,8 @@
 
     <!-- Feed -->
     <div id="commFeed" style="display:flex;flex-direction:column;gap:14px;">
-      <!-- skeletons while loading -->
-      <div class="skeleton">
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line long"></div>
-        <div class="skeleton-line mid"></div>
-      </div>
-      <div class="skeleton">
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line long"></div>
-        <div class="skeleton-line mid"></div>
-      </div>
+      <div class="skeleton"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line mid"></div></div>
+      <div class="skeleton"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line mid"></div></div>
     </div>
   </div>
 
@@ -312,10 +314,59 @@
       onSnapshot, updateDoc, arrayUnion
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const THIRTY_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
     const POSTS_COL    = collection(db, 'community_posts');
     let   currentUser  = null;
     let   currentSort  = 'new';
+
+    /* ══════════════════════════════════════════
+       AI MODERATION — calls Anthropic API
+       Returns { ok: true } or { ok: false, reason: "..." }
+    ══════════════════════════════════════════ */
+    async function moderateText(text) {
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 100,
+            system: `You are a content moderator for a student study website aimed at school-age users.
+Your job is to check if a post or comment is appropriate.
+
+REJECT content that contains:
+- Profanity, swear words, or offensive language
+- Bullying, harassment, or personal attacks
+- Sexual content of any kind
+- Hate speech or discrimination
+- Spam or advertising
+- Threats or violent content
+- Sharing of personal contact info (phone numbers, addresses)
+
+ALLOW content that is:
+- Educational discussion
+- Study tips and advice
+- General questions and answers
+- Supportive or encouraging messages
+- Constructive criticism
+
+Reply with ONLY valid JSON, nothing else:
+{"ok": true}
+or
+{"ok": false, "reason": "short reason under 10 words"}`,
+            messages: [{ role: 'user', content: `Moderate this text:\n\n"${text.slice(0, 1000)}"` }]
+          })
+        });
+        const data = await res.json();
+        const raw  = data.content?.[0]?.text?.trim() || '{"ok":true}';
+        const clean = raw.replace(/```json|```/g, '').trim();
+        return JSON.parse(clean);
+      } catch (e) {
+        // If moderation fails (network, etc.) allow the post through
+        console.warn('Moderation check failed, allowing post:', e);
+        return { ok: true };
+      }
+    }
 
     /* ── helpers ── */
     function escH(s) {
@@ -332,7 +383,7 @@
       return Math.floor(h / 24) + 'd ago';
     }
     function daysLeft(expiresAt) {
-      if (!expiresAt) return 14;
+      if (!expiresAt) return 30;
       return Math.max(0, Math.ceil((expiresAt - Date.now()) / (24*60*60*1000)));
     }
     function initials(name) {
@@ -346,9 +397,7 @@
       const btn    = document.getElementById('writeSubmit');
       const avatar = document.getElementById('writeAvatar');
       const name   = document.getElementById('writeName');
-
       btn.disabled = false;
-
       if (user) {
         name.value = user.displayName || '';
         name.disabled = true;
@@ -378,13 +427,25 @@
 
       if (!text) { writeText.focus(); return; }
 
-      const btn = document.getElementById('writeSubmit');
-      btn.disabled = true; btn.textContent = 'Posting…';
+      const btn    = document.getElementById('writeSubmit');
+      const reject = document.getElementById('postReject');
+      reject.classList.remove('show');
 
+      btn.disabled = true; btn.textContent = 'Checking…';
+
+      /* ── AI moderation check ── */
+      const mod = await moderateText(text);
+      if (!mod.ok) {
+        reject.textContent = '⚠️ Post blocked: ' + (mod.reason || 'content not allowed');
+        reject.classList.add('show');
+        btn.disabled = false; btn.textContent = 'Post';
+        return;
+      }
+
+      btn.textContent = 'Posting…';
       try {
         const now       = Date.now();
         const expiresAt = new Timestamp(Math.floor((now + THIRTY_DAYS_MS) / 1000), 0);
-
         await addDoc(POSTS_COL, {
           author,
           authorId:    currentUser ? currentUser.uid : null,
@@ -392,9 +453,8 @@
           text,
           comments:    [],
           createdAt:   serverTimestamp(),
-          expiresAt,                    // ← Firestore TTL field
+          expiresAt,
         });
-
         writeText.value = '';
         document.getElementById('writeChar').textContent = '0 / 2000';
       } catch(e) {
@@ -407,26 +467,19 @@
     /* ── live feed via onSnapshot ── */
     function subscribe() {
       const q = query(POSTS_COL, orderBy('createdAt', currentSort === 'new' ? 'desc' : 'asc'));
-
       onSnapshot(q, snap => {
         const feed = document.getElementById('commFeed');
         feed.innerHTML = '';
-
         const now  = Date.now();
         const docs = snap.docs.filter(d => {
           const exp = d.data().expiresAt;
-          return !exp || exp.toMillis() > now;   // hide already-expired on client
+          return !exp || exp.toMillis() > now;
         });
-
         if (!docs.length) {
           feed.innerHTML = '<div class="no-posts">No posts yet. Be the first to share something.</div>';
           return;
         }
-
-        docs.forEach(d => {
-          const card = buildCard(d.id, d.data());
-          feed.appendChild(card);
-        });
+        docs.forEach(d => feed.appendChild(buildCard(d.id, d.data())));
       });
     }
 
@@ -441,17 +494,12 @@
       const left        = daysLeft(expiresMs);
       const soonClass   = left <= 2 ? 'expiry-pill soon' : 'expiry-pill';
       const expiryLabel = left === 0 ? 'expires today' : left === 1 ? '1 day left' : `${left}d left`;
+      const isOwner     = currentUser && currentUser.uid === data.authorId;
+      const comments    = (data.comments || []);
 
-      const isOwner = currentUser && currentUser.uid === data.authorId;
-      const comments = (data.comments || []);
-
-      /* avatar html */
-      let avatarHtml = '';
-      if (data.authorPhoto) {
-        avatarHtml = `<div class="comm-author-dot"><img src="${escH(data.authorPhoto)}" alt=""></div>`;
-      } else {
-        avatarHtml = `<div class="comm-author-dot">${escH(initials(data.author))}</div>`;
-      }
+      let avatarHtml = data.authorPhoto
+        ? `<div class="comm-author-dot"><img src="${escH(data.authorPhoto)}" alt=""></div>`
+        : `<div class="comm-author-dot">${escH(initials(data.author))}</div>`;
 
       card.innerHTML = `
         <div class="comm-card-top">
@@ -479,8 +527,11 @@
             </div>
           `).join('')}
           <div class="comm-comment-form">
-            <textarea class="comm-comment-input" placeholder="Write a comment…" maxlength="500" rows="1"></textarea>
-            <button class="comm-comment-send" data-post="${id}">Send</button>
+            <textarea class="comm-comment-input" placeholder="Write a comment…" maxlength="500" rows="2"></textarea>
+            <div class="comm-comment-row">
+              <span class="comm-comment-reject"></span>
+              <button class="comm-comment-send" data-post="${id}">Send</button>
+            </div>
           </div>
         </div>`;
 
@@ -489,11 +540,27 @@
         document.getElementById('comments-' + id).classList.toggle('open');
       });
 
-      /* send comment */
+      /* send comment — with AI moderation */
       card.querySelector('.comm-comment-send').addEventListener('click', async () => {
-        const ta     = card.querySelector('.comm-comment-input');
-        const text   = ta.value.trim();
+        const ta       = card.querySelector('.comm-comment-input');
+        const rejectEl = card.querySelector('.comm-comment-reject');
+        const sendBtn  = card.querySelector('.comm-comment-send');
+        const text     = ta.value.trim();
         if (!text) return;
+
+        rejectEl.classList.remove('show');
+        sendBtn.disabled = true;
+        sendBtn.textContent = '…';
+
+        const mod = await moderateText(text);
+        if (!mod.ok) {
+          rejectEl.textContent = '⚠️ ' + (mod.reason || 'Comment not allowed');
+          rejectEl.classList.add('show');
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Send';
+          return;
+        }
+
         const author = currentUser ? (currentUser.displayName || 'Anonymous') : 'Anonymous';
         try {
           await updateDoc(doc(db, 'community_posts', id), {
@@ -501,6 +568,9 @@
           });
           ta.value = '';
         } catch(e) { alert('Could not send comment.'); }
+
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
       });
 
       /* delete post */
@@ -525,7 +595,6 @@
       });
     });
 
-    /* ── start ── */
     subscribe();
   </script>
 
