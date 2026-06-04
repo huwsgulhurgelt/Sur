@@ -1,7 +1,25 @@
+/* ═══════════════════════════════════════════════════════
+   page-transition.js  — smooth door animation, NO flash
+   Fix: background is pre-painted from localStorage so
+   there is zero white/blank frame between pages.
+═══════════════════════════════════════════════════════ */
 (function () {
 
+  /* ── 0. Paint background IMMEDIATELY before any render ── */
+  (function prePaint() {
+    try {
+      var t = JSON.parse(localStorage.getItem('site-theme') || 'null');
+      if (t && t.bg) {
+        document.documentElement.style.background = t.bg;
+        document.documentElement.style.backgroundAttachment = 'fixed';
+      }
+    } catch (e) {}
+  })();
+
+  /* ── 1. Inject CSS ── */
   var css = document.createElement('style');
   css.textContent = [
+    /* doors */
     '.pt-wrap{position:fixed;inset:0;z-index:9990;pointer-events:none;perspective:1600px;perspective-origin:50% 48%;display:flex;overflow:hidden;}',
     '.pt-wrap.blocking{pointer-events:all;}',
     '.pt-door{flex:1;height:100%;position:relative;will-change:transform;}',
@@ -11,18 +29,22 @@
     '.pt-door-l::before{content:"";position:absolute;top:0;right:0;width:2px;height:100%;background:rgba(255,255,255,.25);}',
     '.pt-door-r::before{content:"";position:absolute;top:0;left:0;width:2px;height:100%;background:rgba(255,255,255,.25);}',
     '.pt-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.92);font-family:Inter,-apple-system,sans-serif;font-size:2rem;font-weight:900;z-index:2;pointer-events:none;opacity:0;user-select:none;}',
+    /* EXIT: doors swing shut */
     '.pt-wrap.exit .pt-door-l{animation:ptCloseL .44s cubic-bezier(.86,0,.07,1) 0s both;}',
     '.pt-wrap.exit .pt-door-r{animation:ptCloseR .44s cubic-bezier(.86,0,.07,1) .05s both;}',
     '.pt-wrap.exit .pt-logo{animation:ptLogoIn .28s ease .32s both;}',
+    /* ENTER: doors swing open */
     '.pt-wrap.enter .pt-door-l{transform:rotateY(0deg);transform-origin:left center;animation:ptOpenL .52s cubic-bezier(.86,0,.07,1) .1s both;}',
     '.pt-wrap.enter .pt-door-r{transform:rotateY(0deg);transform-origin:right center;animation:ptOpenR .52s cubic-bezier(.86,0,.07,1) .06s both;}',
     '.pt-wrap.enter .pt-logo{opacity:1;animation:ptLogoOut .18s ease 0s both;}',
+    /* keyframes */
     '@keyframes ptCloseL{from{transform:rotateY(-90deg)}to{transform:rotateY(0deg)}}',
     '@keyframes ptCloseR{from{transform:rotateY(90deg)}to{transform:rotateY(0deg)}}',
     '@keyframes ptLogoIn{from{opacity:0;transform:translate(-50%,-44%) scale(.7)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}',
     '@keyframes ptOpenL{from{transform:rotateY(0deg)}to{transform:rotateY(-90deg)}}',
     '@keyframes ptOpenR{from{transform:rotateY(0deg)}to{transform:rotateY(90deg)}}',
     '@keyframes ptLogoOut{from{opacity:1}to{opacity:0}}',
+    /* content entry */
     'body.pt-entering .nav{animation:ptNavIn .5s cubic-bezier(.22,1,.36,1) .28s both;}',
     'body.pt-entering .page-wrap{animation:ptContentIn .65s cubic-bezier(.22,1,.36,1) .3s both;}',
     'body.pt-entering .home-hero{animation:ptContentIn .65s cubic-bezier(.22,1,.36,1) .28s both;}',
@@ -82,11 +104,17 @@
     return wrap;
   }
 
+  /* Save BOTH the theme key and the computed background so the next
+     page can paint it synchronously before any CSS loads — this is
+     what kills the flash. */
   function saveBg() {
     try {
-      var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
-      var t  = JSON.parse(localStorage.getItem('site-theme') || '{}');
-      t.bg   = bg;
+      var cs   = getComputedStyle(document.documentElement);
+      var bg   = cs.getPropertyValue('--body-bg').trim() ||
+                 cs.getPropertyValue('background').trim() ||
+                 getComputedStyle(document.body).background;
+      var t    = JSON.parse(localStorage.getItem('site-theme') || '{}');
+      t.bg     = bg;
       localStorage.setItem('site-theme', JSON.stringify(t));
     } catch (e) {}
   }
@@ -96,7 +124,7 @@
     transitioning = true;
     saveBg();
     createOverlay('exit');
-    setTimeout(function () { window.location.href = href; }, 500);
+    setTimeout(function () { window.location.href = href; }, 520);
   }
 
   function doEnter() {
@@ -104,6 +132,7 @@
     var wrap = createOverlay('enter');
     wrap.classList.add('blocking');
     document.body.classList.add('pt-entering');
+
     var done = false;
     function finish() {
       if (done) return;
@@ -113,6 +142,7 @@
       transitioning = false;
     }
     setTimeout(finish, 750);
+    /* safety fallback */
     setTimeout(finish, 1400);
   }
 
@@ -136,6 +166,7 @@
   function onReady() {
     requestAnimationFrame(function () { requestAnimationFrame(doEnter); });
   }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', onReady);
   } else {
