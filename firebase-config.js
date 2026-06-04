@@ -1,7 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { initializeApp }                                  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore }                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage }                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyCGJs7vIpb_ijG3AJ9GWpakue3A_wUzYHw",
@@ -13,7 +13,14 @@ const firebaseConfig = {
   measurementId:     "G-XR8GYQ8GSD"
 };
 
-const app     = initializeApp(firebaseConfig);
-export const auth    = getAuth(app);
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* Keep the user signed in across page refreshes and tab closes.
+   browserLocalPersistence stores the token in localStorage so it
+   survives until the user explicitly signs out. */
+setPersistence(auth, browserLocalPersistence).catch(() => {});
+
 export const db      = getFirestore(app);
 export const storage = getStorage(app);
+export { auth };
