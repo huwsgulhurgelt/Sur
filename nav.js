@@ -3,19 +3,20 @@
    1. Hamburger mobile menu
    2. Account icon in nav (auto-injected)
    3. Slash text / message of the day banner
+      → Write-access is ADMIN ONLY via xn--admin-pqa.html
+      → This file only READS from Firestore, never writes.
 ═══════════════════════════════════════════════════════ */
 
 (function () {
 
   /* ════════════════════════════════════
-     1. HAMBURGER  (fixed, no conflicts)
+     1. HAMBURGER
   ════════════════════════════════════ */
   function initHamburger() {
     var btn    = document.getElementById('navHamburger');
     var drawer = document.getElementById('navDrawer');
     if (!btn || !drawer) return;
 
-    /* remove any old listeners by cloning */
     var newBtn = btn.cloneNode(true);
     btn.parentNode.replaceChild(newBtn, btn);
     btn = newBtn;
@@ -48,7 +49,6 @@
     var inner = document.querySelector('.nav-inner');
     if (!inner || inner.querySelector('.nav-account')) return;
 
-    /* inject CSS */
     var style = document.createElement('style');
     style.textContent = `
       .nav-account {
@@ -75,7 +75,6 @@
         width: 100%; height: 100%;
         object-fit: cover; display: block;
       }
-      /* green online dot when signed in */
       .nav-account.signed-in::after {
         content: '';
         position: absolute; bottom: 1px; right: 1px;
@@ -86,14 +85,12 @@
     `;
     document.head.appendChild(style);
 
-    /* create the icon link */
     var link = document.createElement('a');
     link.href      = 'profile.html';
     link.className = 'nav-account';
     link.title     = 'My account';
     link.textContent = '👤';
 
-    /* insert before hamburger or at end */
     var burger = inner.querySelector('.nav-hamburger');
     if (burger) {
       inner.insertBefore(link, burger);
@@ -101,7 +98,6 @@
       inner.appendChild(link);
     }
 
-    /* also add to drawer */
     var drawer = document.getElementById('navDrawer');
     if (drawer && !drawer.querySelector('a[href="profile.html"]')) {
       var da = document.createElement('a');
@@ -114,10 +110,8 @@
     return link;
   }
 
-  /* update icon once Firebase auth loads */
   function connectAccountIcon(iconEl) {
     if (!iconEl) return;
-    /* dynamically import Firebase — only if config exists */
     try {
       import('./firebase-config.js').then(function (mod) {
         var auth = mod.auth;
@@ -140,29 +134,19 @@
             });
           });
       });
-    } catch(e) { /* firebase-config.js not present — icon stays as default */ }
+    } catch(e) {}
   }
 
   /* ════════════════════════════════════
-     3. SLASH TEXT — message of the day
+     3. SLASH TEXT (read-only from Firestore)
+     ────────────────────────────────────
+     To set the slash text, go to:
+       yoursite.com/xn--admin-pqa.html
+     and use the "Slash Text" tab.
+
+     This script only READS the value.
+     It never writes to Firestore.
   ════════════════════════════════════ */
-
-  /*
-    HOW TO USE SLASH TEXT:
-    ─────────────────────
-    Option A — set it right here in the code:
-      Set STATIC_SLASH_TEXT to any string. It will show on every page.
-      Set it to '' (empty) to hide it.
-
-    Option B — store in Firestore:
-      Go to Firebase console → Firestore → add a document:
-        Collection: site_config
-        Document ID: slash_text
-        Field: text  (string)  → your message
-        Field: active (boolean) → true
-      Then the banner auto-updates without touching code.
-  */
-  var STATIC_SLASH_TEXT = ''; /* ← put your message here, e.g. "🎉 Welcome back everyone!" */
 
   function injectSlashBanner() {
     if (document.getElementById('slash-banner')) return;
@@ -197,12 +181,10 @@
         transition: color 0.15s;
       }
       #slash-banner .slash-close:hover { color: #fff; }
-      /* funky style */
       [data-theme="funky"] #slash-banner {
         background: linear-gradient(90deg, var(--accent, #f7008e), var(--accent2, #ffe135));
         color: #111;
       }
-      /* flower style */
       [data-theme="flower"] #slash-banner {
         background: color-mix(in srgb, var(--accent, #d8227a) 85%, transparent);
         font-style: italic;
@@ -214,7 +196,6 @@
     banner.id = 'slash-banner';
     banner.innerHTML = '<span id="slash-text"></span><button class="slash-close" id="slashClose">✕</button>';
 
-    /* insert above nav */
     var nav = document.querySelector('.nav');
     if (nav) {
       document.body.insertBefore(banner, nav);
@@ -230,8 +211,8 @@
   }
 
   function showSlashText(text) {
-    var banner  = document.getElementById('slash-banner');
-    var textEl  = document.getElementById('slash-text');
+    var banner = document.getElementById('slash-banner');
+    var textEl = document.getElementById('slash-text');
     if (!banner || !textEl || !text || !text.trim()) return;
     textEl.textContent = text.trim();
     banner.classList.add('show');
@@ -252,7 +233,7 @@
               });
           });
       });
-    } catch(e) { /* no firebase */ }
+    } catch(e) {}
   }
 
   /* ════════════════════════════════════
@@ -263,14 +244,7 @@
     var icon = injectAccountIcon();
     connectAccountIcon(icon);
     injectSlashBanner();
-
-    /* show static text if set */
-    if (STATIC_SLASH_TEXT) {
-      showSlashText(STATIC_SLASH_TEXT);
-    } else {
-      /* try loading from Firestore */
-      loadSlashFromFirestore();
-    }
+    loadSlashFromFirestore();
   }
 
   if (document.readyState === 'loading') {
