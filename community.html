@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg)document.documentElement.style.background=_t.bg;}catch(e){}</script>
+  <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg){document.documentElement.style.background=_t.bg;document.documentElement.style.backgroundAttachment='fixed';}}catch(e){}</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Community — Suraguuli</title>
@@ -64,8 +64,6 @@
     }
     .write-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(var(--accent-rgb),0.45); }
     .write-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    /* sign in prompt */
     .sign-in-prompt {
       text-align: center; padding: 14px;
       font-size: 0.86rem; color: var(--muted);
@@ -73,8 +71,6 @@
     }
     .sign-in-prompt a { color: var(--accent); font-weight: 700; }
     .sign-in-prompt a:hover { text-decoration: underline; }
-
-    /* ── AI moderation badge ── */
     .mod-badge {
       display: inline-flex; align-items: center; gap: 5px;
       font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em;
@@ -83,8 +79,6 @@
       color: var(--accent); margin-bottom: 10px;
     }
     .mod-badge::before { content: '🛡️'; font-size: 0.75rem; }
-
-    /* Moderation rejection notice */
     .mod-reject {
       font-size: 0.82rem; color: #ef4444;
       background: rgba(239,68,68,0.08);
@@ -93,7 +87,6 @@
       display: none; margin-top: 4px;
     }
     .mod-reject.show { display: block; }
-
     /* ── Sort bar ── */
     .sort-bar {
       display: flex; align-items: center; gap: 8px;
@@ -108,8 +101,7 @@
     }
     .sort-btn:hover  { border-color: var(--border-strong); color: var(--text); }
     .sort-btn.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
-
-    /* ── Community post card ── */
+    /* ── Post cards ── */
     .comm-card {
       background: var(--surface);
       border: var(--bw) solid var(--border);
@@ -132,7 +124,6 @@
     .comm-author-info    { flex: 1; min-width: 0; }
     .comm-author-name    { font-size: 0.88rem; font-weight: 800; }
     .comm-author-meta    { font-size: 0.74rem; color: var(--muted); margin-top: 1px; display: flex; align-items: center; gap: 6px; }
-
     .expiry-pill {
       font-size: 0.66rem; font-weight: 700;
       padding: 2px 7px; border-radius: 999px;
@@ -140,12 +131,10 @@
       color: var(--accent);
     }
     .expiry-pill.soon { background: rgba(239,68,68,0.1); color: #ef4444; }
-
     .comm-content {
       font-size: 0.95rem; line-height: 1.75;
       color: var(--text); white-space: pre-wrap; word-break: break-word;
     }
-
     .comm-footer {
       display: flex; align-items: center; gap: 14px;
       padding-top: 10px; border-top: var(--bw) solid var(--border);
@@ -156,6 +145,14 @@
       cursor: pointer; font-family: inherit; transition: color 200ms; padding: 0;
     }
     .comm-comment-btn:hover { color: var(--accent); }
+    /* Report button */
+    .comm-report-btn {
+      background: none; border: none;
+      font-size: 0.78rem; font-weight: 700; color: var(--muted);
+      cursor: pointer; font-family: inherit; transition: color 200ms; padding: 0;
+    }
+    .comm-report-btn:hover { color: #f59e0b; }
+    .comm-report-btn.reported { color: #f59e0b; cursor: default; }
     .comm-delete-btn {
       background: none; border: none;
       font-size: 0.78rem; font-weight: 700; color: var(--muted);
@@ -163,17 +160,52 @@
       padding: 0; margin-left: auto;
     }
     .comm-delete-btn:hover { color: #ef4444; }
-
+    /* Report modal */
+    .report-modal-bg {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .report-modal {
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 28px; max-width: 420px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .report-modal h3 { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
+    .report-modal p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 18px; }
+    .report-reasons  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .report-reason-btn {
+      background: var(--surface2); border: var(--bw) solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 0.86rem; font-weight: 700; color: var(--text);
+      cursor: pointer; font-family: inherit; text-align: left;
+      transition: all 180ms ease;
+    }
+    .report-reason-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .report-modal-cancel {
+      background: none; border: none; font-size: 0.82rem;
+      color: var(--muted); cursor: pointer; font-family: inherit; width: 100%;
+      padding: 6px; transition: color 180ms;
+    }
+    .report-modal-cancel:hover { color: var(--text); }
+    /* Comments */
     .comm-comments { display: none; flex-direction: column; gap: 8px; }
     .comm-comments.open { display: flex; }
-
     .comm-comment-item {
       background: var(--surface2); border: var(--bw) solid var(--border);
       border-radius: var(--radius); padding: 10px 14px;
+      position: relative;
     }
     .comm-comment-name { font-size: 0.78rem; font-weight: 800; margin-bottom: 3px; }
     .comm-comment-text { font-size: 0.85rem; color: var(--muted); line-height: 1.55; }
-
+    .comm-comment-report {
+      position: absolute; top: 8px; right: 10px;
+      background: none; border: none; font-size: 0.7rem; font-weight: 700;
+      color: var(--muted); cursor: pointer; font-family: inherit; padding: 2px 6px;
+      border-radius: 6px; transition: all 160ms;
+    }
+    .comm-comment-report:hover { color: #f59e0b; background: rgba(245,158,11,0.08); }
     .comm-comment-form { display: flex; gap: 8px; align-items: flex-end; margin-top: 4px; flex-direction: column; }
     .comm-comment-input {
       width: 100%; padding: 9px 13px;
@@ -196,15 +228,13 @@
       display: none; flex: 1;
     }
     .comm-comment-reject.show { display: block; }
-
     .no-posts {
       text-align: center; padding: 56px 20px;
       color: var(--muted); font-size: 0.92rem;
       border: var(--bw) dashed var(--border-strong);
       border-radius: var(--radius); background: var(--surface2);
     }
-
-    /* loading skeleton */
+    /* skeleton */
     .skeleton {
       background: var(--surface); border: var(--bw) solid var(--border);
       border-radius: var(--radius); padding: 20px 22px;
@@ -221,7 +251,6 @@
     .skeleton-line.short { width: 40%; }
     .skeleton-line.long  { width: 100%; }
     .skeleton-line.mid   { width: 70%; }
-
     .expiry-notice {
       background: color-mix(in srgb, var(--accent) 8%, var(--surface));
       border: var(--bw) solid var(--border);
@@ -266,7 +295,6 @@
       <p>Share something you learned. Ask a question. Help someone out.</p>
     </div>
 
-    <!-- Write box -->
     <div class="write-box">
       <div class="mod-badge">AI Moderated</div>
       <div class="write-box-top">
@@ -286,22 +314,36 @@
       </div>
     </div>
 
-    <!-- Expiry notice -->
     <div class="expiry-notice">
       ⏳ <span>Posts are automatically deleted after <strong>30 days</strong> to keep things fresh.</span>
     </div>
 
-    <!-- Sort -->
     <div class="sort-bar">
       <span>Sort:</span>
       <button class="sort-btn active" data-sort="new">Newest</button>
       <button class="sort-btn"        data-sort="old">Oldest</button>
     </div>
 
-    <!-- Feed -->
     <div id="commFeed" style="display:flex;flex-direction:column;gap:14px;">
       <div class="skeleton"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line mid"></div></div>
       <div class="skeleton"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line mid"></div></div>
+    </div>
+  </div>
+
+  <!-- Report modal (shared, one instance) -->
+  <div id="reportModalBg" class="report-modal-bg" style="display:none">
+    <div class="report-modal">
+      <h3>Report this content</h3>
+      <p>Why are you reporting this?</p>
+      <div class="report-reasons" id="reportReasons">
+        <button class="report-reason-btn" data-reason="Harassment or bullying">🚫 Harassment or bullying</button>
+        <button class="report-reason-btn" data-reason="Inappropriate or sexual content">🔞 Inappropriate content</button>
+        <button class="report-reason-btn" data-reason="Spam or advertising">📢 Spam or advertising</button>
+        <button class="report-reason-btn" data-reason="Hate speech or discrimination">💬 Hate speech</button>
+        <button class="report-reason-btn" data-reason="Personal information shared">📋 Personal info shared</button>
+        <button class="report-reason-btn" data-reason="Other">❓ Other</button>
+      </div>
+      <button class="report-modal-cancel" id="reportCancel">Cancel</button>
     </div>
   </div>
 
@@ -309,19 +351,21 @@
     import { auth, db } from './firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      collection, addDoc, getDocs, deleteDoc,
+      collection, addDoc, deleteDoc,
       doc, query, orderBy, serverTimestamp, Timestamp,
       onSnapshot, updateDoc, arrayUnion
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
     const POSTS_COL    = collection(db, 'community_posts');
+    const REPORTS_COL  = collection(db, 'xn_reports'); /* hidden collection name */
     let   currentUser  = null;
     let   currentSort  = 'new';
 
     /* ══════════════════════════════════════════
-       AI MODERATION — calls Anthropic API
-       Returns { ok: true } or { ok: false, reason: "..." }
+       AI MODERATION — Claude API (via Anthropic)
+       Uses claude-sonnet-4-20250514 via the
+       Anthropic messages endpoint.
     ══════════════════════════════════════════ */
     async function moderateText(text) {
       try {
@@ -332,18 +376,18 @@
             model: 'claude-sonnet-4-20250514',
             max_tokens: 100,
             system: `You are a content moderator for a student study website aimed at school-age users.
-Your job is to check if a post or comment is appropriate.
+Check if a post or comment is appropriate for a school environment.
 
-REJECT content that contains:
+REJECT if it contains:
 - Profanity, swear words, or offensive language
 - Bullying, harassment, or personal attacks
 - Sexual content of any kind
 - Hate speech or discrimination
 - Spam or advertising
 - Threats or violent content
-- Sharing of personal contact info (phone numbers, addresses)
+- Personal contact info (phone numbers, addresses)
 
-ALLOW content that is:
+ALLOW if it is:
 - Educational discussion
 - Study tips and advice
 - General questions and answers
@@ -362,7 +406,6 @@ or
         const clean = raw.replace(/```json|```/g, '').trim();
         return JSON.parse(clean);
       } catch (e) {
-        // If moderation fails (network, etc.) allow the post through
         console.warn('Moderation check failed, allowing post:', e);
         return { ok: true };
       }
@@ -412,7 +455,7 @@ or
       }
     });
 
-    /* ── write box char count ── */
+    /* ── char count ── */
     const writeText = document.getElementById('writeText');
     writeText.addEventListener('input', () => {
       document.getElementById('writeChar').textContent = writeText.value.length + ' / 2000';
@@ -433,7 +476,6 @@ or
 
       btn.disabled = true; btn.textContent = 'Checking…';
 
-      /* ── AI moderation check ── */
       const mod = await moderateText(text);
       if (!mod.ok) {
         reject.textContent = '⚠️ Post blocked: ' + (mod.reason || 'content not allowed');
@@ -464,7 +506,62 @@ or
       btn.disabled = false; btn.textContent = 'Post';
     });
 
-    /* ── live feed via onSnapshot ── */
+    /* ══════════════════════════════════════════
+       REPORT MODAL
+    ══════════════════════════════════════════ */
+    let reportTarget = null; /* { postId, commentIndex?, type: 'post'|'comment', snippet } */
+
+    document.getElementById('reportCancel').addEventListener('click', closeReportModal);
+    document.getElementById('reportModalBg').addEventListener('click', e => {
+      if (e.target === document.getElementById('reportModalBg')) closeReportModal();
+    });
+
+    document.getElementById('reportReasons').addEventListener('click', async e => {
+      const btn = e.target.closest('.report-reason-btn');
+      if (!btn || !reportTarget) return;
+      const reason = btn.dataset.reason;
+      try {
+        await addDoc(REPORTS_COL, {
+          reason,
+          postId:       reportTarget.postId,
+          commentIndex: reportTarget.commentIndex ?? null,
+          type:         reportTarget.type,
+          snippet:      reportTarget.snippet,
+          reportedBy:   currentUser ? currentUser.uid : 'guest',
+          reportedAt:   serverTimestamp(),
+          status:       'pending'
+        });
+      } catch(e) { console.error('Report failed', e); }
+      closeReportModal();
+      /* show toast */
+      showToast('Report submitted. Thank you! 👍');
+    });
+
+    function openReportModal(target) {
+      reportTarget = target;
+      document.getElementById('reportModalBg').style.display = 'flex';
+    }
+    function closeReportModal() {
+      document.getElementById('reportModalBg').style.display = 'none';
+      reportTarget = null;
+    }
+
+    /* simple toast */
+    function showToast(msg) {
+      var t = document.createElement('div');
+      t.textContent = msg;
+      Object.assign(t.style, {
+        position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+        background:'var(--surface)', border:'1.5px solid var(--border)',
+        borderRadius:'12px', padding:'10px 20px', fontSize:'0.84rem',
+        fontWeight:'700', boxShadow:'0 8px 24px rgba(0,0,0,0.15)',
+        zIndex:'99999', animation:'slashIn .3s ease', color:'var(--text)'
+      });
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    /* ── live feed ── */
     function subscribe() {
       const q = query(POSTS_COL, orderBy('createdAt', currentSort === 'new' ? 'desc' : 'asc'));
       onSnapshot(q, snap => {
@@ -517,13 +614,15 @@ or
           <button class="comm-comment-btn" data-toggle="${id}">
             ${comments.length ? comments.length + ' comment' + (comments.length > 1 ? 's' : '') : 'Comment'}
           </button>
+          <button class="comm-report-btn" data-report-post="${id}" title="Report this post">⚑ Report</button>
           ${isOwner ? `<button class="comm-delete-btn" data-delete="${id}">Delete</button>` : ''}
         </div>
         <div class="comm-comments" id="comments-${id}">
-          ${comments.map(c => `
+          ${comments.map((c, i) => `
             <div class="comm-comment-item">
               <div class="comm-comment-name">${escH(c.author || 'Anonymous')}</div>
               <div class="comm-comment-text">${escH(c.text)}</div>
+              <button class="comm-comment-report" data-report-comment="${id}" data-ci="${i}" title="Report comment">⚑</button>
             </div>
           `).join('')}
           <div class="comm-comment-form">
@@ -540,7 +639,26 @@ or
         document.getElementById('comments-' + id).classList.toggle('open');
       });
 
-      /* send comment — with AI moderation */
+      /* report post */
+      card.querySelector('[data-report-post]').addEventListener('click', function() {
+        if (this.classList.contains('reported')) return;
+        this.classList.add('reported');
+        this.textContent = '⚑ Reported';
+        openReportModal({ postId: id, type: 'post', snippet: data.text.slice(0, 120) });
+      });
+
+      /* report comment buttons */
+      card.querySelectorAll('[data-report-comment]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const ci = parseInt(this.dataset.ci);
+          openReportModal({
+            postId: id, commentIndex: ci, type: 'comment',
+            snippet: (comments[ci] || {}).text?.slice(0, 120) || ''
+          });
+        });
+      });
+
+      /* send comment */
       card.querySelector('.comm-comment-send').addEventListener('click', async () => {
         const ta       = card.querySelector('.comm-comment-input');
         const rejectEl = card.querySelector('.comm-comment-reject');
