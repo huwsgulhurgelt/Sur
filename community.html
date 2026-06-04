@@ -509,7 +509,8 @@ or
     /* ══════════════════════════════════════════
        REPORT MODAL
     ══════════════════════════════════════════ */
-    let reportTarget = null; /* { postId, commentIndex?, type: 'post'|'comment', snippet } */
+    /* reportTarget: { postId, commentIndex?, type, snippet, originBtn? } */
+    let reportTarget = null;
 
     document.getElementById('reportCancel').addEventListener('click', closeReportModal);
     document.getElementById('reportModalBg').addEventListener('click', e => {
@@ -517,24 +518,45 @@ or
     });
 
     document.getElementById('reportReasons').addEventListener('click', async e => {
-      const btn = e.target.closest('.report-reason-btn');
-      if (!btn || !reportTarget) return;
-      const reason = btn.dataset.reason;
+      const reasonBtn = e.target.closest('.report-reason-btn');
+      if (!reasonBtn || !reportTarget) return;
+
+      /* disable all reason buttons while saving */
+      document.querySelectorAll('.report-reason-btn').forEach(b => b.disabled = true);
+
+      const reason = reasonBtn.dataset.reason;
+      let saved = false;
       try {
         await addDoc(REPORTS_COL, {
           reason,
           postId:       reportTarget.postId,
           commentIndex: reportTarget.commentIndex ?? null,
           type:         reportTarget.type,
-          snippet:      reportTarget.snippet,
+          snippet:      reportTarget.snippet || '',
           reportedBy:   currentUser ? currentUser.uid : 'guest',
           reportedAt:   serverTimestamp(),
           status:       'pending'
         });
-      } catch(e) { console.error('Report failed', e); }
-      closeReportModal();
-      /* show toast */
-      showToast('Report submitted. Thank you! 👍');
+        saved = true;
+      } catch(err) {
+        console.error('Report write failed:', err);
+      }
+
+      document.querySelectorAll('.report-reason-btn').forEach(b => b.disabled = false);
+
+      if (saved) {
+        /* only mark the button as reported AFTER successful save */
+        if (reportTarget.originBtn) {
+          reportTarget.originBtn.classList.add('reported');
+          reportTarget.originBtn.textContent = '⚑ Reported';
+          reportTarget.originBtn.disabled = true;
+        }
+        closeReportModal();
+        showToast('Report submitted. Thank you! 👍');
+      } else {
+        closeReportModal();
+        showToast('⚠️ Could not submit report. Check Firestore rules.');
+      }
     });
 
     function openReportModal(target) {
@@ -641,19 +663,23 @@ or
 
       /* report post */
       card.querySelector('[data-report-post]').addEventListener('click', function() {
-        if (this.classList.contains('reported')) return;
-        this.classList.add('reported');
-        this.textContent = '⚑ Reported';
-        openReportModal({ postId: id, type: 'post', snippet: data.text.slice(0, 120) });
+        if (this.classList.contains('reported') || this.disabled) return;
+        openReportModal({
+          postId: id, type: 'post',
+          snippet: data.text.slice(0, 120),
+          originBtn: this
+        });
       });
 
       /* report comment buttons */
       card.querySelectorAll('[data-report-comment]').forEach(btn => {
         btn.addEventListener('click', function() {
+          if (this.classList.contains('reported') || this.disabled) return;
           const ci = parseInt(this.dataset.ci);
           openReportModal({
             postId: id, commentIndex: ci, type: 'comment',
-            snippet: (comments[ci] || {}).text?.slice(0, 120) || ''
+            snippet: (comments[ci] || {}).text?.slice(0, 120) || '',
+            originBtn: this
           });
         });
       });
