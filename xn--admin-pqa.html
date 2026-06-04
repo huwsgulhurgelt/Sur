@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg){document.documentElement.style.background=_t.bg;document.documentElement.style.backgroundAttachment='fixed';}}catch(e){}</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="study-style.css">
+  <style>
+    /* ── Access wall ── */
+    #accessWall {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .access-card {
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 40px 36px; max-width: 380px; width: 100%;
+      box-shadow: var(--shadow-hover); text-align: center;
+    }
+    .access-card h2 { font-size: 1.3rem; font-weight: 900; margin: 0 0 8px; }
+    .access-card p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 24px; }
+    .access-err { font-size: 0.82rem; color: #ef4444; margin-top: 12px; display: none; }
+    .access-err.show { display: block; }
+
+    /* ── Main dashboard ── */
+    #dashMain { display: none; }
+    .dash-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
+    }
+    .dash-title   { font-size: 1.6rem; font-weight: 900; margin: 0; }
+    .dash-uid     { font-size: 0.74rem; color: var(--muted); font-family: monospace; }
+    .dash-signout {
+      background: none; border: var(--bw) solid var(--border);
+      border-radius: 999px; padding: 7px 18px;
+      font-size: 0.78rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; color: var(--muted); transition: all 180ms;
+    }
+    .dash-signout:hover { border-color: var(--border-strong); color: var(--text); }
+
+    /* ── Tabs ── */
+    .dash-tabs {
+      display: flex; gap: 8px; margin-bottom: 24px;
+      border-bottom: var(--bw) solid var(--border); padding-bottom: 0;
+    }
+    .dash-tab {
+      background: none; border: none; border-bottom: 3px solid transparent;
+      padding: 10px 18px 13px; font-size: 0.86rem; font-weight: 800;
+      cursor: pointer; font-family: inherit; color: var(--muted);
+      transition: all 180ms; margin-bottom: -1.5px;
+    }
+    .dash-tab:hover  { color: var(--text); }
+    .dash-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .dash-panel { display: none; }
+    .dash-panel.active { display: block; }
+
+    /* ── Reports panel ── */
+    .report-filters {
+      display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap;
+    }
+    .rf-btn {
+      background: none; border: var(--bw) solid var(--border);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; color: var(--muted); transition: all 180ms;
+    }
+    .rf-btn:hover  { border-color: var(--border-strong); color: var(--text); }
+    .rf-btn.active { border-color: var(--accent); color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+    .report-card {
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .report-card.resolved { opacity: 0.5; }
+    .report-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .report-badge {
+      font-size: 0.66rem; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+    }
+    .report-badge.post    { background: rgba(99,102,241,0.12); color: #6366f1; }
+    .report-badge.comment { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .report-badge.pending   { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .report-badge.resolved  { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .report-badge.dismissed { background: rgba(148,163,184,0.12); color: #94a3b8; }
+    .report-reason { font-size: 0.88rem; font-weight: 800; }
+    .report-snippet {
+      font-size: 0.82rem; color: var(--muted);
+      background: var(--surface2); border-radius: 8px; padding: 8px 12px;
+      border-left: 3px solid var(--border-strong);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .report-info { font-size: 0.74rem; color: var(--muted); }
+    .report-actions { display: flex; gap: 8px; }
+    .ra-btn {
+      padding: 7px 16px; border-radius: 999px; font-size: 0.76rem;
+      font-weight: 800; cursor: pointer; font-family: inherit;
+      border: var(--bw) solid var(--border); background: none;
+      color: var(--muted); transition: all 180ms;
+    }
+    .ra-btn:hover { border-color: var(--border-strong); color: var(--text); }
+    .ra-btn.danger { border-color: rgba(239,68,68,0.4); color: #ef4444; }
+    .ra-btn.danger:hover { background: rgba(239,68,68,0.08); }
+    .ra-btn.success { border-color: rgba(34,197,94,0.4); color: #22c55e; }
+    .ra-btn.success:hover { background: rgba(34,197,94,0.08); }
+    .no-reports {
+      text-align: center; padding: 48px 20px;
+      color: var(--muted); font-size: 0.9rem;
+      border: var(--bw) dashed var(--border-strong);
+      border-radius: var(--radius); background: var(--surface2);
+    }
+
+    /* ── Slash text panel ── */
+    .slash-panel-inner { max-width: 600px; }
+    .slash-panel-inner h3 { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
+    .slash-panel-inner p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 18px; }
+    .slash-textarea {
+      width: 100%; padding: 12px 14px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.95rem;
+      font-family: inherit; color: var(--text);
+      resize: none; min-height: 70px; line-height: 1.6; outline: none;
+      transition: border-color 200ms, box-shadow 200ms;
+    }
+    .slash-textarea:focus { border-color: var(--accent); box-shadow: var(--ring); }
+    .slash-controls { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+    .slash-toggle {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.84rem; font-weight: 700; cursor: pointer;
+    }
+    .slash-toggle input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+    .slash-save {
+      padding: 10px 22px; background: var(--accent); color: #fff;
+      border: none; border-radius: 999px; font-size: 0.84rem; font-weight: 800;
+      cursor: pointer; font-family: inherit; transition: all 200ms;
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb),0.3);
+    }
+    .slash-save:hover { transform: translateY(-1px); }
+    .slash-history { margin-top: 28px; }
+    .slash-history h4 { font-size: 0.86rem; font-weight: 800; margin: 0 0 12px; color: var(--muted); }
+    .slash-hist-item {
+      background: var(--surface2); border: var(--bw) solid var(--border);
+      border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    }
+    .slash-hist-text { font-size: 0.86rem; flex: 1; word-break: break-word; }
+    .slash-hist-meta { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .slash-restore {
+      background: none; border: none; font-size: 0.74rem; font-weight: 700;
+      color: var(--accent); cursor: pointer; padding: 4px 8px;
+      border-radius: 6px; font-family: inherit; transition: background 160ms;
+    }
+    .slash-restore:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+    /* ── Approved UIDs panel ── */
+    .uid-panel { max-width: 600px; }
+    .uid-panel h3 { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
+    .uid-panel p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 18px; }
+    .uid-add-row  { display: flex; gap: 8px; margin-bottom: 20px; }
+    .uid-input {
+      flex: 1; padding: 10px 14px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.86rem;
+      font-family: monospace; color: var(--text); outline: none;
+      transition: border-color 200ms;
+    }
+    .uid-input:focus { border-color: var(--accent); }
+    .uid-add-btn {
+      padding: 10px 20px; background: var(--accent); color: #fff;
+      border: none; border-radius: 999px; font-size: 0.84rem; font-weight: 800;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+    }
+    .uid-list { display: flex; flex-direction: column; gap: 8px; }
+    .uid-item {
+      background: var(--surface2); border: var(--bw) solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .uid-item-text { font-family: monospace; font-size: 0.84rem; word-break: break-all; }
+    .uid-item-label { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+    .uid-remove {
+      background: none; border: none; font-size: 0.8rem; font-weight: 700;
+      color: #ef4444; cursor: pointer; padding: 4px 8px;
+      border-radius: 6px; font-family: inherit; transition: background 160ms; flex-shrink: 0;
+    }
+    .uid-remove:hover { background: rgba(239,68,68,0.08); }
+
+    /* stats row */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .stat-label { font-size: 0.74rem; color: var(--muted); font-weight: 700; }
+    .stat-val   { font-size: 1.6rem; font-weight: 900; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ══ ACCESS WALL ══ -->
+<div id="accessWall">
+  <div class="access-card">
+    <h2>🔒 Admin Access</h2>
+    <p>Sign in with your authorised Google account to continue.</p>
+    <button class="write-submit" id="signInBtn" style="width:100%">Sign in with Google</button>
+    <div class="access-err" id="accessErr">Access denied. Your account is not authorised.</div>
+  </div>
+</div>
+
+<!-- ══ MAIN DASHBOARD ══ -->
+<div id="dashMain">
+  <div class="page-wrap">
+
+    <div class="dash-header">
+      <div>
+        <h1 class="dash-title">Admin Dashboard</h1>
+        <div class="dash-uid" id="dashUid"></div>
+      </div>
+      <button class="dash-signout" id="signOutBtn">Sign out</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Pending reports</div><div class="stat-val" id="statPending">—</div></div>
+      <div class="stat-card"><div class="stat-label">Resolved today</div><div class="stat-val" id="statResolved">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total posts</div><div class="stat-val" id="statPosts">—</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="dash-tabs">
+      <button class="dash-tab active" data-tab="reports">Reports</button>
+      <button class="dash-tab" data-tab="slash">Slash Text</button>
+      <button class="dash-tab" data-tab="uids">Approved UIDs</button>
+    </div>
+
+    <!-- ── Reports panel ── -->
+    <div id="tab-reports" class="dash-panel active">
+      <div class="report-filters">
+        <button class="rf-btn active" data-filter="pending">Pending</button>
+        <button class="rf-btn" data-filter="resolved">Resolved</button>
+        <button class="rf-btn" data-filter="dismissed">Dismissed</button>
+        <button class="rf-btn" data-filter="all">All</button>
+      </div>
+      <div id="reportsList"></div>
+    </div>
+
+    <!-- ── Slash text panel ── -->
+    <div id="tab-slash" class="dash-panel">
+      <div class="slash-panel-inner">
+        <h3>Message of the Day (Slash Text)</h3>
+        <p>This banner appears at the top of every page. It needs to be manually updated each day — it does not auto-clear. Set it blank to hide it.</p>
+        <textarea class="slash-textarea" id="slashInput" placeholder="e.g. 📚 Good luck on exams this week!" maxlength="300"></textarea>
+        <div class="slash-controls">
+          <label class="slash-toggle">
+            <input type="checkbox" id="slashActive" checked>
+            Show banner
+          </label>
+          <button class="slash-save" id="slashSave">Save &amp; Publish</button>
+        </div>
+        <div class="slash-history">
+          <h4>Recent messages</h4>
+          <div id="slashHistoryList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Approved UIDs panel ── -->
+    <div id="tab-uids" class="dash-panel">
+      <div class="uid-panel">
+        <h3>Approved Admin UIDs</h3>
+        <p>Only Firebase UIDs listed here can access this dashboard. Add your own UID first — it is shown in your browser console when you sign in. Changes save to Firestore.</p>
+        <div class="uid-add-row">
+          <input class="uid-input" id="uidInput" placeholder="Paste Firebase UID here…" maxlength="128">
+          <input class="uid-input" id="uidLabelInput" placeholder="Label (optional)" maxlength="40" style="max-width:160px">
+          <button class="uid-add-btn" id="uidAddBtn">Add</button>
+        </div>
+        <div class="uid-list" id="uidList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from './firebase-config.js';
+import {
+  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
+  deleteDoc, query, orderBy, onSnapshot, serverTimestamp, where, limit
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const APPROVED_UIDS_DOC = doc(db, 'xn_config', 'approved_uids');
+const REPORTS_COL       = collection(db, 'xn_reports');
+const SLASH_COL         = collection(db, 'site_config');
+const POSTS_COL         = collection(db, 'community_posts');
+
+let currentUser = null;
+let currentFilter = 'pending';
+let approvedUids = {};
+
+/* ══ AUTH ══ */
+document.getElementById('signInBtn').addEventListener('click', async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  } catch(e) { console.error(e); }
+});
+document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { showWall(); return; }
+  currentUser = user;
+  console.log('[Admin] Your UID:', user.uid); /* visible in console for setup */
+  /* check if approved */
+  try {
+    const snap = await getDoc(APPROVED_UIDS_DOC);
+    if (snap.exists()) {
+      approvedUids = snap.data().uids || {};
+    } else {
+      /* First-time setup: auto-approve the first user who signs in */
+      approvedUids = { [user.uid]: { label: 'Owner', addedAt: Date.now() } };
+      await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
+    }
+    if (!approvedUids[user.uid]) {
+      document.getElementById('accessErr').classList.add('show');
+      await signOut(auth);
+      return;
+    }
+  } catch(e) { console.error(e); }
+  showDash(user);
+});
+
+function showWall() {
+  document.getElementById('accessWall').style.display = 'flex';
+  document.getElementById('dashMain').style.display = 'none';
+}
+function showDash(user) {
+  document.getElementById('accessWall').style.display = 'none';
+  document.getElementById('dashMain').style.display = 'block';
+  document.getElementById('dashUid').textContent = 'UID: ' + user.uid;
+  loadReports();
+  loadSlash();
+  loadUids();
+  loadStats();
+}
+
+/* ══ TABS ══ */
+document.querySelectorAll('.dash-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.dash-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ══ STATS ══ */
+async function loadStats() {
+  const pendingSnap = await getDocs(query(REPORTS_COL, where('status','==','pending')));
+  document.getElementById('statPending').textContent = pendingSnap.size;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const resolvedSnap = await getDocs(query(REPORTS_COL, where('status','==','resolved')));
+  let resolvedToday = 0;
+  resolvedSnap.forEach(d => {
+    const ts = d.data().resolvedAt;
+    if (ts && ts.toMillis && ts.toMillis() >= today.getTime()) resolvedToday++;
+  });
+  document.getElementById('statResolved').textContent = resolvedToday;
+
+  const postsSnap = await getDocs(POSTS_COL);
+  document.getElementById('statPosts').textContent = postsSnap.size;
+}
+
+/* ══ REPORTS ══ */
+document.querySelectorAll('.rf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.rf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    loadReports();
+  });
+});
+
+function loadReports() {
+  const list = document.getElementById('reportsList');
+  list.innerHTML = '<div class="no-reports">Loading…</div>';
+  let q = query(REPORTS_COL, orderBy('reportedAt', 'desc'));
+  onSnapshot(q, snap => {
+    list.innerHTML = '';
+    let docs = snap.docs;
+    if (currentFilter !== 'all') {
+      docs = docs.filter(d => d.data().status === currentFilter);
+    }
+    if (!docs.length) {
+      list.innerHTML = '<div class="no-reports">No reports in this category.</div>';
+      return;
+    }
+    docs.forEach(d => list.appendChild(buildReportCard(d.id, d.data())));
+  });
+}
+
+function buildReportCard(id, data) {
+  const card = document.createElement('div');
+  card.className = 'report-card' + (data.status !== 'pending' ? ' resolved' : '');
+
+  const ts = data.reportedAt ? new Date(data.reportedAt.toMillis()).toLocaleString() : 'Unknown';
+  card.innerHTML = `
+    <div class="report-meta">
+      <span class="report-badge ${data.type}">${data.type === 'post' ? '📝 Post' : '💬 Comment'}</span>
+      <span class="report-badge ${data.status}">${data.status}</span>
+      <span style="font-size:0.74rem;color:var(--muted)">${ts}</span>
+    </div>
+    <div class="report-reason">${escH(data.reason)}</div>
+    ${data.snippet ? `<div class="report-snippet">${escH(data.snippet)}</div>` : ''}
+    <div class="report-info">
+      Post ID: <code>${escH(data.postId)}</code>
+      ${data.commentIndex != null ? ` · Comment #${data.commentIndex}` : ''}
+      · Reported by: <code>${escH(data.reportedBy || 'guest')}</code>
+    </div>
+    ${data.status === 'pending' ? `
+    <div class="report-actions">
+      <button class="ra-btn danger" data-action="delete" data-rid="${id}" data-postid="${data.postId}" data-ci="${data.commentIndex ?? ''}">🗑 Delete content</button>
+      <button class="ra-btn success" data-action="resolve" data-rid="${id}">✓ Resolve</button>
+      <button class="ra-btn" data-action="dismiss" data-rid="${id}">✕ Dismiss</button>
+    </div>` : ''}
+  `;
+
+  card.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => handleReportAction(btn.dataset.action, btn));
+  });
+  return card;
+}
+
+async function handleReportAction(action, btn) {
+  const rid    = btn.dataset.rid;
+  const postId = btn.dataset.postid;
+  const ci     = btn.dataset.ci;
+
+  if (action === 'delete') {
+    if (!confirm('Delete the reported content from Firestore?')) return;
+    try {
+      if (ci !== '') {
+        /* delete a comment: pull the post, remove the comment by index */
+        const postSnap = await getDoc(doc(db, 'community_posts', postId));
+        if (postSnap.exists()) {
+          const comments = [...(postSnap.data().comments || [])];
+          comments.splice(parseInt(ci), 1);
+          await updateDoc(doc(db, 'community_posts', postId), { comments });
+        }
+      } else {
+        await deleteDoc(doc(db, 'community_posts', postId));
+      }
+      await updateDoc(doc(db, 'xn_reports', rid), { status: 'resolved', resolvedAt: serverTimestamp() });
+    } catch(e) { alert('Delete failed: ' + e.message); }
+  } else {
+    const status = action === 'resolve' ? 'resolved' : 'dismissed';
+    await updateDoc(doc(db, 'xn_reports', rid), { status, resolvedAt: serverTimestamp() });
+  }
+  loadStats();
+}
+
+/* ══ SLASH TEXT ══ */
+let slashHistory = [];
+
+async function loadSlash() {
+  try {
+    const snap = await getDoc(doc(db, 'site_config', 'slash_text'));
+    if (snap.exists()) {
+      const d = snap.data();
+      document.getElementById('slashInput').value = d.text || '';
+      document.getElementById('slashActive').checked = d.active !== false;
+    }
+    /* load history from xn_config/slash_history */
+    const histSnap = await getDoc(doc(db, 'xn_config', 'slash_history'));
+    if (histSnap.exists()) {
+      slashHistory = histSnap.data().entries || [];
+      renderSlashHistory();
+    }
+  } catch(e) {}
+}
+
+document.getElementById('slashSave').addEventListener('click', async () => {
+  const text   = document.getElementById('slashInput').value.trim();
+  const active = document.getElementById('slashActive').checked;
+  try {
+    await setDoc(doc(db, 'site_config', 'slash_text'), { text, active, updatedAt: serverTimestamp() });
+    /* push to history */
+    if (text) {
+      slashHistory.unshift({ text, active, ts: Date.now(), by: currentUser.uid });
+      if (slashHistory.length > 20) slashHistory.pop();
+      await setDoc(doc(db, 'xn_config', 'slash_history'), { entries: slashHistory });
+      renderSlashHistory();
+    }
+    showToast('Slash text saved ✓');
+  } catch(e) { alert('Save failed: ' + e.message); }
+});
+
+function renderSlashHistory() {
+  const list = document.getElementById('slashHistoryList');
+  if (!slashHistory.length) { list.innerHTML = '<p style="font-size:0.82rem;color:var(--muted)">No history yet.</p>'; return; }
+  list.innerHTML = slashHistory.slice(0, 10).map((h, i) => `
+    <div class="slash-hist-item">
+      <div>
+        <div class="slash-hist-text">${escH(h.text)}</div>
+        <div class="slash-hist-meta">${new Date(h.ts).toLocaleDateString()}</div>
+      </div>
+      <button class="slash-restore" data-i="${i}">↩ Restore</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('.slash-restore').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const h = slashHistory[parseInt(btn.dataset.i)];
+      document.getElementById('slashInput').value = h.text;
+      document.getElementById('slashActive').checked = h.active;
+    });
+  });
+}
+
+/* ══ APPROVED UIDs ══ */
+async function loadUids() {
+  const snap = await getDoc(APPROVED_UIDS_DOC);
+  approvedUids = snap.exists() ? (snap.data().uids || {}) : {};
+  renderUids();
+}
+
+function renderUids() {
+  const list = document.getElementById('uidList');
+  const entries = Object.entries(approvedUids);
+  if (!entries.length) { list.innerHTML = '<p style="font-size:0.82rem;color:var(--muted)">No UIDs added yet.</p>'; return; }
+  list.innerHTML = entries.map(([uid, meta]) => `
+    <div class="uid-item">
+      <div>
+        <div class="uid-item-text">${escH(uid)}</div>
+        <div class="uid-item-label">${escH(meta.label || '')} · Added ${meta.addedAt ? new Date(meta.addedAt).toLocaleDateString() : '—'}</div>
+      </div>
+      <button class="uid-remove" data-uid="${escH(uid)}" ${uid === currentUser?.uid ? 'title="Cannot remove yourself" disabled' : ''}>Remove</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('.uid-remove:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Remove this UID?')) return;
+      delete approvedUids[btn.dataset.uid];
+      await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
+      renderUids();
+    });
+  });
+}
+
+document.getElementById('uidAddBtn').addEventListener('click', async () => {
+  const uid   = document.getElementById('uidInput').value.trim();
+  const label = document.getElementById('uidLabelInput').value.trim();
+  if (!uid) return;
+  approvedUids[uid] = { label, addedAt: Date.now() };
+  await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
+  document.getElementById('uidInput').value = '';
+  document.getElementById('uidLabelInput').value = '';
+  renderUids();
+  showToast('UID added ✓');
+});
+
+/* ══ HELPERS ══ */
+function escH(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--surface)', border:'1.5px solid var(--border)',
+    borderRadius:'12px', padding:'10px 20px', fontSize:'0.84rem',
+    fontWeight:'700', boxShadow:'0 8px 24px rgba(0,0,0,0.15)',
+    zIndex:'99999', color:'var(--text)'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+</script>
+<script src="theme-switcher.js"></script>
+</body>
+</html>
