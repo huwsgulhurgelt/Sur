@@ -296,7 +296,7 @@
     </div>
 
     <div class="write-box">
-      <div class="mod-badge">AI Moderated</div>
+      <div class="mod-badge">AI Moderated · Gemini</div>
       <div class="write-box-top">
         <div class="write-avatar" id="writeAvatar">?</div>
         <div class="write-inputs">
@@ -362,21 +362,18 @@
     let   currentUser  = null;
     let   currentSort  = 'new';
 
-    /* ══════════════════════════════════════════
-       AI MODERATION — Claude API (via Anthropic)
-       Uses claude-sonnet-4-20250514 via the
-       Anthropic messages endpoint.
+        /* ══════════════════════════════════════════
+       AI MODERATION — Gemini API (Google)
+       Replace 'YOUR_GEMINI_API_KEY' with your
+       actual key from ai.google.dev
     ══════════════════════════════════════════ */
+    const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
+    const GEMINI_MODEL   = 'gemini-2.0-flash';
+
     async function moderateText(text) {
       try {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 100,
-            system: `You are a content moderator for a student study website aimed at school-age users.
-Check if a post or comment is appropriate for a school environment.
+        const prompt = `You are a content moderator for a student study platform for school-age users.
+Decide if the following text is appropriate for a school environment.
 
 REJECT if it contains:
 - Profanity, swear words, or offensive language
@@ -388,27 +385,33 @@ REJECT if it contains:
 - Personal contact info (phone numbers, addresses)
 
 ALLOW if it is:
-- Educational discussion
-- Study tips and advice
-- General questions and answers
-- Supportive or encouraging messages
-- Constructive criticism
+- Educational discussion, study tips, questions, supportive messages, constructive feedback
 
-Reply with ONLY valid JSON, nothing else:
+Text: "${text.slice(0, 1000)}"
+
+Reply ONLY with valid JSON, no extra text:
 {"ok": true}
 or
-{"ok": false, "reason": "short reason under 10 words"}`,
-            messages: [{ role: 'user', content: `Moderate this text:\n\n"${text.slice(0, 1000)}"` }]
+{"ok": false, "reason": "short reason under 10 words"}`;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 100, temperature: 0 }
           })
         });
         const data = await res.json();
-        const raw  = data.content?.[0]?.text?.trim() || '{"ok":true}';
+        const raw   = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '{"ok":true}';
         const clean = raw.replace(/```json|```/g, '').trim();
         return JSON.parse(clean);
       } catch (e) {
         console.warn('Moderation check failed, allowing post:', e);
         return { ok: true };
       }
+    }
     }
 
     /* ── helpers ── */
