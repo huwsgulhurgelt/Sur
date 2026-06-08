@@ -789,3 +789,147 @@ img.nav-logo { height: 36px; width: auto; border: none; padding: 0; background: 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   POLISH PASS — refined details for production
+═══════════════════════════════════════════════════════ */
+
+/* Better font imports - add Sora as a refined alternative to Inter */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+
+:root,
+[data-theme="normal"] {
+  --font-main: 'Sora', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Smooth focus-visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Improved hero typography */
+.home-hero h1 {
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hero subtitle polish */
+.home-hero p {
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+/* Polished page hero h1 - no gradient, stays clean */
+.page-hero h1 {
+  letter-spacing: -0.045em;
+}
+
+/* Card accent bar on hover */
+.post-card::after,
+.home-cat-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent3, var(--accent))));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.post-card:hover::after,
+.home-cat-card:hover::after {
+  transform: scaleX(1);
+}
+
+/* Override funky dot with proper specificity */
+[data-theme="funky"] .post-card::after,
+[data-theme="funky"] .home-cat-card::after {
+  display: none;
+}
+
+/* Nav polish - active link indicator */
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 50%;
+  transform: translateX(-50%);
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* Smooth page load animation */
+.page-wrap {
+  animation: pageIn 400ms cubic-bezier(0.34, 1.1, 0.64, 1);
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Home grid spacing improvement */
+.home-grid {
+  padding-top: 40px;
+}
+
+/* Meta text polish */
+.post-card-meta {
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+/* Improved no-posts empty state */
+.no-posts {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Community page write box improvement */
+.write-box {
+  border-radius: var(--radius-lg);
+}
+
+/* Expiry notice improvement */
+.expiry-notice {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Sort bar styling */
+.sort-bar {
+  font-weight: 600;
+}
+
+/* Footer-like bottom spacing */
+.page-wrap::after {
+  content: '';
+  display: block;
+  height: 40px;
+}
+
+/* Scrollbar polish (webkit) */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted2); }
+
+/* Button press micro-interaction */
+.nav-add:active,
+.form-submit:active,
+.comment-submit:active,
+.write-submit:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Community card hover */
+.comm-card {
+  transition: box-shadow 220ms ease, border-color 200ms ease, transform 220ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
