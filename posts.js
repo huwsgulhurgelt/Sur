@@ -7,7 +7,7 @@
 
    FIELDS:
      id          — unique string, no spaces (e.g. "tips-003")          REQUIRED
-     category    — "informations" | "tips" | "advices" | "teachers"    REQUIRED
+     category    — "informations" | "tips" | "advices"                  REQUIRED
      sub         — subcategory for informations page (see list below)   optional
                    "scholarship-mongolia" | "scholarship-abroad"
                    "career-path" | "anti-bullying-bad" | "anti-bullying-stop"
@@ -183,14 +183,6 @@ var POSTS = [
   },
 
   /* ── FOR TEACHERS ───────────────────────────────────────────────────────── */
-  {
-    id:          "teach-001",
-    category:    "teachers",
-    title:       "Giving effective feedback",
-    description: "Effective feedback is specific, timely, and actionable.\n\nInstead of: 'Good work.'\nTry: 'Your argument in the second paragraph is strong. The third paragraph would be clearer if you added a concrete example.'\n\nFeedback should tell students:\n1. What they did well\n2. What needs improvement\n3. How to improve it\n\nFocus on two or three key points per piece of work — feedback overload is counterproductive.",
-    author:      "Team",
-    date:        "2025-01-22",
-  },
 
   /*
   ── ADD A NEW POST — copy this block ────────────────────────────────────────
@@ -218,14 +210,12 @@ var CAT_LABELS = {
   informations: "Informations",
   tips:         "Tips",
   advices:      "Advices",
-  teachers:     "For Teachers",
 };
 
 var CAT_DESCS = {
   informations: "General knowledge and information shared by students.",
   tips:         "Study techniques, productivity strategies, and methods that work.",
   advices:      "Advice on managing school life, stress, habits, and growth.",
-  teachers:     "Resources, strategies, and ideas for educators.",
 };
 
 function getPostsByCategory(cat) {
