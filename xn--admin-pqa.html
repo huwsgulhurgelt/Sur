@@ -4,7 +4,7 @@
   <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg){document.documentElement.style.background=_t.bg;document.documentElement.style.backgroundAttachment='fixed';}}catch(e){}</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Admin — Suraguuli</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="study-style.css">
@@ -21,8 +21,16 @@
     }
     .access-card h2 { font-size: 1.3rem; font-weight: 900; margin: 0 0 8px; }
     .access-card p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 24px; }
-    .access-err { font-size: 0.82rem; color: #ef4444; margin-top: 12px; display: none; }
+    .access-err     { font-size: 0.82rem; color: #ef4444; margin-top: 12px; display: none; }
     .access-err.show { display: block; }
+    .access-btn {
+      width: 100%; padding: 13px; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius); font: inherit;
+      font-size: 0.95rem; font-weight: 800; cursor: pointer;
+      transition: all 200ms ease;
+    }
+    .access-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+    .access-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
     /* ── Main dashboard ── */
     #dashMain { display: none; }
@@ -30,8 +38,8 @@
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
     }
-    .dash-title   { font-size: 1.6rem; font-weight: 900; margin: 0; }
-    .dash-uid     { font-size: 0.74rem; color: var(--muted); font-family: monospace; }
+    .dash-title { font-size: 1.6rem; font-weight: 900; margin: 0; }
+    .dash-uid   { font-size: 0.74rem; color: var(--muted); font-family: monospace; margin-top: 3px; }
     .dash-signout {
       background: none; border: var(--bw) solid var(--border);
       border-radius: 999px; padding: 7px 18px;
@@ -40,10 +48,22 @@
     }
     .dash-signout:hover { border-color: var(--border-strong); color: var(--text); }
 
+    /* ── Stats ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow);
+    }
+    .stat-label { font-size: 0.74rem; color: var(--muted); font-weight: 700; }
+    .stat-val   { font-size: 1.6rem; font-weight: 900; margin-top: 4px; }
+
     /* ── Tabs ── */
     .dash-tabs {
       display: flex; gap: 8px; margin-bottom: 24px;
-      border-bottom: var(--bw) solid var(--border); padding-bottom: 0;
+      border-bottom: var(--bw) solid var(--border);
     }
     .dash-tab {
       background: none; border: none; border-bottom: 3px solid transparent;
@@ -53,14 +73,11 @@
     }
     .dash-tab:hover  { color: var(--text); }
     .dash-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .dash-panel         { display: none; }
+    .dash-panel.active  { display: block; }
 
-    .dash-panel { display: none; }
-    .dash-panel.active { display: block; }
-
-    /* ── Reports panel ── */
-    .report-filters {
-      display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap;
-    }
+    /* ── Reports ── */
+    .report-filters { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
     .rf-btn {
       background: none; border: var(--bw) solid var(--border);
       border-radius: 999px; padding: 5px 14px;
@@ -70,7 +87,6 @@
     .rf-btn:hover  { border-color: var(--border-strong); color: var(--text); }
     .rf-btn.active { border-color: var(--accent); color: var(--accent);
       background: color-mix(in srgb, var(--accent) 8%, transparent); }
-
     .report-card {
       background: var(--surface); border: var(--bw) solid var(--border);
       border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px;
@@ -78,15 +94,13 @@
     }
     .report-card.resolved { opacity: 0.5; }
     .report-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .report-badge {
-      font-size: 0.66rem; font-weight: 800; padding: 2px 8px; border-radius: 999px;
-    }
-    .report-badge.post    { background: rgba(99,102,241,0.12); color: #6366f1; }
-    .report-badge.comment { background: rgba(245,158,11,0.12); color: #f59e0b; }
-    .report-badge.pending   { background: rgba(239,68,68,0.12); color: #ef4444; }
-    .report-badge.resolved  { background: rgba(34,197,94,0.12); color: #22c55e; }
-    .report-badge.dismissed { background: rgba(148,163,184,0.12); color: #94a3b8; }
-    .report-reason { font-size: 0.88rem; font-weight: 800; }
+    .report-badge { font-size: 0.66rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+    .report-badge.post      { background: rgba(99,102,241,0.12); color: #6366f1; }
+    .report-badge.comment   { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .report-badge.pending   { background: rgba(239,68,68,0.12);  color: #ef4444; }
+    .report-badge.resolved  { background: rgba(34,197,94,0.12);  color: #22c55e; }
+    .report-badge.dismissed { background: rgba(148,163,184,0.12);color: #94a3b8; }
+    .report-reason  { font-size: 0.88rem; font-weight: 800; }
     .report-snippet {
       font-size: 0.82rem; color: var(--muted);
       background: var(--surface2); border-radius: 8px; padding: 8px 12px;
@@ -94,18 +108,18 @@
       white-space: pre-wrap; word-break: break-word;
     }
     .report-info { font-size: 0.74rem; color: var(--muted); }
-    .report-actions { display: flex; gap: 8px; }
+    .report-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .ra-btn {
       padding: 7px 16px; border-radius: 999px; font-size: 0.76rem;
       font-weight: 800; cursor: pointer; font-family: inherit;
       border: var(--bw) solid var(--border); background: none;
       color: var(--muted); transition: all 180ms;
     }
-    .ra-btn:hover { border-color: var(--border-strong); color: var(--text); }
-    .ra-btn.danger { border-color: rgba(239,68,68,0.4); color: #ef4444; }
-    .ra-btn.danger:hover { background: rgba(239,68,68,0.08); }
-    .ra-btn.success { border-color: rgba(34,197,94,0.4); color: #22c55e; }
-    .ra-btn.success:hover { background: rgba(34,197,94,0.08); }
+    .ra-btn:hover          { border-color: var(--border-strong); color: var(--text); }
+    .ra-btn.danger         { border-color: rgba(239,68,68,0.4); color: #ef4444; }
+    .ra-btn.danger:hover   { background: rgba(239,68,68,0.08); }
+    .ra-btn.success        { border-color: rgba(34,197,94,0.4); color: #22c55e; }
+    .ra-btn.success:hover  { background: rgba(34,197,94,0.08); }
     .no-reports {
       text-align: center; padding: 48px 20px;
       color: var(--muted); font-size: 0.9rem;
@@ -113,10 +127,10 @@
       border-radius: var(--radius); background: var(--surface2);
     }
 
-    /* ── Slash text panel ── */
-    .slash-panel-inner { max-width: 600px; }
-    .slash-panel-inner h3 { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
-    .slash-panel-inner p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 18px; }
+    /* ── Slash text ── */
+    .panel-inner { max-width: 600px; }
+    .panel-inner h3 { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
+    .panel-inner p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 18px; }
     .slash-textarea {
       width: 100%; padding: 12px 14px;
       background: var(--bg); border: var(--bw) solid var(--border);
@@ -132,13 +146,13 @@
       font-size: 0.84rem; font-weight: 700; cursor: pointer;
     }
     .slash-toggle input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
-    .slash-save {
+    .panel-save-btn {
       padding: 10px 22px; background: var(--accent); color: #fff;
       border: none; border-radius: 999px; font-size: 0.84rem; font-weight: 800;
       cursor: pointer; font-family: inherit; transition: all 200ms;
       box-shadow: 0 4px 14px rgba(var(--accent-rgb),0.3);
     }
-    .slash-save:hover { transform: translateY(-1px); }
+    .panel-save-btn:hover { transform: translateY(-1px); }
     .slash-history { margin-top: 28px; }
     .slash-history h4 { font-size: 0.86rem; font-weight: 800; margin: 0 0 12px; color: var(--muted); }
     .slash-hist-item {
@@ -155,51 +169,45 @@
     }
     .slash-restore:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
 
-    /* ── Approved UIDs panel ── */
-    .uid-panel { max-width: 600px; }
-    .uid-panel h3 { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
-    .uid-panel p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 18px; }
-    .uid-add-row  { display: flex; gap: 8px; margin-bottom: 20px; }
+    /* ── Approved UIDs ── */
+    .uid-add-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .uid-input {
-      flex: 1; padding: 10px 14px;
+      flex: 1; min-width: 200px; padding: 10px 14px;
       background: var(--bg); border: var(--bw) solid var(--border);
       border-radius: var(--radius); font-size: 0.86rem;
       font-family: monospace; color: var(--text); outline: none;
       transition: border-color 200ms;
     }
     .uid-input:focus { border-color: var(--accent); }
+    .uid-label-input {
+      width: 160px; padding: 10px 14px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.86rem;
+      font-family: inherit; color: var(--text); outline: none;
+      transition: border-color 200ms;
+    }
+    .uid-label-input:focus { border-color: var(--accent); }
     .uid-add-btn {
       padding: 10px 20px; background: var(--accent); color: #fff;
       border: none; border-radius: 999px; font-size: 0.84rem; font-weight: 800;
-      cursor: pointer; font-family: inherit; white-space: nowrap;
+      cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 200ms;
     }
+    .uid-add-btn:hover { transform: translateY(-1px); }
     .uid-list { display: flex; flex-direction: column; gap: 8px; }
     .uid-item {
       background: var(--surface2); border: var(--bw) solid var(--border);
       border-radius: 10px; padding: 10px 14px;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
-    .uid-item-text { font-family: monospace; font-size: 0.84rem; word-break: break-all; }
+    .uid-item-text  { font-family: monospace; font-size: 0.84rem; word-break: break-all; }
     .uid-item-label { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
     .uid-remove {
       background: none; border: none; font-size: 0.8rem; font-weight: 700;
       color: #ef4444; cursor: pointer; padding: 4px 8px;
       border-radius: 6px; font-family: inherit; transition: background 160ms; flex-shrink: 0;
     }
-    .uid-remove:hover { background: rgba(239,68,68,0.08); }
-
-    /* stats row */
-    .stats-row {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px; margin-bottom: 28px;
-    }
-    .stat-card {
-      background: var(--surface); border: var(--bw) solid var(--border);
-      border-radius: var(--radius); padding: 16px 18px;
-      box-shadow: var(--shadow);
-    }
-    .stat-label { font-size: 0.74rem; color: var(--muted); font-weight: 700; }
-    .stat-val   { font-size: 1.6rem; font-weight: 900; margin-top: 4px; }
+    .uid-remove:hover     { background: rgba(239,68,68,0.08); }
+    .uid-remove:disabled  { opacity: 0.35; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -209,7 +217,7 @@
   <div class="access-card">
     <h2>🔒 Admin Access</h2>
     <p>Sign in with your authorised Google account to continue.</p>
-    <button class="write-submit" id="signInBtn" style="width:100%">Sign in with Google</button>
+    <button class="access-btn" id="signInBtn">Sign in with Google</button>
     <div class="access-err" id="accessErr">Access denied. Your account is not authorised.</div>
   </div>
 </div>
@@ -240,7 +248,7 @@
       <button class="dash-tab" data-tab="uids">Approved UIDs</button>
     </div>
 
-    <!-- ── Reports panel ── -->
+    <!-- Reports panel -->
     <div id="tab-reports" class="dash-panel active">
       <div class="report-filters">
         <button class="rf-btn active" data-filter="pending">Pending</button>
@@ -251,18 +259,18 @@
       <div id="reportsList"></div>
     </div>
 
-    <!-- ── Slash text panel ── -->
+    <!-- Slash text panel -->
     <div id="tab-slash" class="dash-panel">
-      <div class="slash-panel-inner">
+      <div class="panel-inner">
         <h3>Message of the Day (Slash Text)</h3>
-        <p>This banner appears at the top of every page. It needs to be manually updated each day — it does not auto-clear. Set it blank to hide it.</p>
+        <p>This banner appears at the top of every page. Leave it blank and save to hide it.</p>
         <textarea class="slash-textarea" id="slashInput" placeholder="e.g. 📚 Good luck on exams this week!" maxlength="300"></textarea>
         <div class="slash-controls">
           <label class="slash-toggle">
             <input type="checkbox" id="slashActive" checked>
             Show banner
           </label>
-          <button class="slash-save" id="slashSave">Save &amp; Publish</button>
+          <button class="panel-save-btn" id="slashSave">Save &amp; Publish</button>
         </div>
         <div class="slash-history">
           <h4>Recent messages</h4>
@@ -271,14 +279,14 @@
       </div>
     </div>
 
-    <!-- ── Approved UIDs panel ── -->
+    <!-- Approved UIDs panel -->
     <div id="tab-uids" class="dash-panel">
-      <div class="uid-panel">
+      <div class="panel-inner">
         <h3>Approved Admin UIDs</h3>
-        <p>Only Firebase UIDs listed here can access this dashboard. Add your own UID first — it is shown in your browser console when you sign in. Changes save to Firestore.</p>
+        <p>Only Firebase UIDs listed here can access this dashboard. Your UID is shown below your name at the top of this page. You cannot remove your own UID.</p>
         <div class="uid-add-row">
-          <input class="uid-input" id="uidInput" placeholder="Paste Firebase UID here…" maxlength="128">
-          <input class="uid-input" id="uidLabelInput" placeholder="Label (optional)" maxlength="40" style="max-width:160px">
+          <input class="uid-input"       id="uidInput"      placeholder="Paste Firebase UID…" maxlength="128">
+          <input class="uid-label-input" id="uidLabelInput" placeholder="Label (optional)"    maxlength="40">
           <button class="uid-add-btn" id="uidAddBtn">Add</button>
         </div>
         <div class="uid-list" id="uidList"></div>
@@ -294,66 +302,94 @@ import {
   GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
-  deleteDoc, query, orderBy, onSnapshot, serverTimestamp, where, limit
+  collection, doc, getDoc, getDocs, setDoc, addDoc,
+  updateDoc, deleteDoc, query, orderBy, onSnapshot,
+  serverTimestamp, where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+/* ── Firestore paths ── */
 const APPROVED_UIDS_DOC = doc(db, 'xn_config', 'approved_uids');
+const SLASH_HISTORY_DOC = doc(db, 'xn_config', 'slash_history');
+const SLASH_TEXT_DOC    = doc(db, 'site_config', 'slash_text');
 const REPORTS_COL       = collection(db, 'xn_reports');
-const SLASH_COL         = collection(db, 'site_config');
 const POSTS_COL         = collection(db, 'community_posts');
 
-let currentUser = null;
+let currentUser   = null;
+let approvedUids  = {};
 let currentFilter = 'pending';
-let approvedUids = {};
+let slashHistory  = [];
+let reportsUnsub  = null;
 
-/* ══ AUTH ══ */
+/* ════════════════════════════════
+   AUTH
+════════════════════════════════ */
 document.getElementById('signInBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('signInBtn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
   try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } catch(e) { console.error(e); }
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Sign in with Google';
+  }
 });
+
 document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
 
 onAuthStateChanged(auth, async user => {
-  if (!user) { showWall(); return; }
-  currentUser = user;
-  console.log('[Admin] Your UID:', user.uid); /* visible in console for setup */
-  /* check if approved */
+  if (!user) {
+    showWall();
+    return;
+  }
+
+  /* Load approved UIDs from Firestore */
   try {
     const snap = await getDoc(APPROVED_UIDS_DOC);
-    if (snap.exists()) {
-      approvedUids = snap.data().uids || {};
-    } else {
-      /* First-time setup: auto-approve the first user who signs in */
+
+    if (!snap.exists()) {
+      /* First ever sign-in: auto-approve this user as owner */
       approvedUids = { [user.uid]: { label: 'Owner', addedAt: Date.now() } };
       await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
+    } else {
+      approvedUids = snap.data().uids || {};
     }
+
     if (!approvedUids[user.uid]) {
+      /* User is not on the approved list */
       document.getElementById('accessErr').classList.add('show');
+      document.getElementById('signInBtn').disabled = false;
+      document.getElementById('signInBtn').textContent = 'Sign in with Google';
       await signOut(auth);
       return;
     }
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    console.error('UID check failed:', e);
+    showWall();
+    return;
+  }
+
+  currentUser = user;
   showDash(user);
 });
 
 function showWall() {
   document.getElementById('accessWall').style.display = 'flex';
-  document.getElementById('dashMain').style.display = 'none';
-}
-function showDash(user) {
-  document.getElementById('accessWall').style.display = 'none';
-  document.getElementById('dashMain').style.display = 'block';
-  document.getElementById('dashUid').textContent = 'UID: ' + user.uid;
-  loadReports();
-  loadSlash();
-  loadUids();
-  loadStats();
+  document.getElementById('dashMain').style.display   = 'none';
+  if (reportsUnsub) { reportsUnsub(); reportsUnsub = null; }
 }
 
-/* ══ TABS ══ */
+function showDash(user) {
+  document.getElementById('accessWall').style.display = 'none';
+  document.getElementById('dashMain').style.display   = 'block';
+  document.getElementById('dashUid').textContent      = 'UID: ' + user.uid;
+  loadStats();
+  loadReports();
+  loadSlash();
+  renderUids();
+}
+
+/* ════════════════════════════════
+   TABS
+════════════════════════════════ */
 document.querySelectorAll('.dash-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.dash-tab').forEach(b => b.classList.remove('active'));
@@ -363,57 +399,79 @@ document.querySelectorAll('.dash-tab').forEach(btn => {
   });
 });
 
-/* ══ STATS ══ */
+/* ════════════════════════════════
+   STATS
+════════════════════════════════ */
 async function loadStats() {
-  const pendingSnap = await getDocs(query(REPORTS_COL, where('status','==','pending')));
-  document.getElementById('statPending').textContent = pendingSnap.size;
+  try {
+    const [pendingSnap, resolvedSnap, postsSnap] = await Promise.all([
+      getDocs(query(REPORTS_COL, where('status', '==', 'pending'))),
+      getDocs(query(REPORTS_COL, where('status', '==', 'resolved'))),
+      getDocs(POSTS_COL)
+    ]);
 
-  const today = new Date(); today.setHours(0,0,0,0);
-  const resolvedSnap = await getDocs(query(REPORTS_COL, where('status','==','resolved')));
-  let resolvedToday = 0;
-  resolvedSnap.forEach(d => {
-    const ts = d.data().resolvedAt;
-    if (ts && ts.toMillis && ts.toMillis() >= today.getTime()) resolvedToday++;
-  });
-  document.getElementById('statResolved').textContent = resolvedToday;
+    document.getElementById('statPending').textContent = pendingSnap.size;
+    document.getElementById('statPosts').textContent   = postsSnap.size;
 
-  const postsSnap = await getDocs(POSTS_COL);
-  document.getElementById('statPosts').textContent = postsSnap.size;
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    let resolvedToday = 0;
+    resolvedSnap.forEach(d => {
+      const ts = d.data().resolvedAt;
+      if (ts && ts.toMillis && ts.toMillis() >= todayStart.getTime()) resolvedToday++;
+    });
+    document.getElementById('statResolved').textContent = resolvedToday;
+  } catch(e) { console.error('Stats failed:', e); }
 }
 
-/* ══ REPORTS ══ */
+/* ════════════════════════════════
+   REPORTS
+════════════════════════════════ */
 document.querySelectorAll('.rf-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.rf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentFilter = btn.dataset.filter;
-    loadReports();
   });
 });
 
 function loadReports() {
   const list = document.getElementById('reportsList');
   list.innerHTML = '<div class="no-reports">Loading…</div>';
-  let q = query(REPORTS_COL, orderBy('reportedAt', 'desc'));
-  onSnapshot(q, snap => {
-    list.innerHTML = '';
-    let docs = snap.docs;
-    if (currentFilter !== 'all') {
-      docs = docs.filter(d => d.data().status === currentFilter);
+  if (reportsUnsub) reportsUnsub();
+
+  reportsUnsub = onSnapshot(
+    query(REPORTS_COL, orderBy('reportedAt', 'desc')),
+    snap => {
+      list.innerHTML = '';
+      let docs = snap.docs;
+      if (currentFilter !== 'all') {
+        docs = docs.filter(d => d.data().status === currentFilter);
+      }
+      if (!docs.length) {
+        list.innerHTML = '<div class="no-reports">No reports in this category.</div>';
+        return;
+      }
+      docs.forEach(d => list.appendChild(buildReportCard(d.id, d.data())));
+    },
+    err => {
+      console.error('Reports error:', err);
+      list.innerHTML = '<div class="no-reports">Failed to load reports.</div>';
     }
-    if (!docs.length) {
-      list.innerHTML = '<div class="no-reports">No reports in this category.</div>';
-      return;
-    }
-    docs.forEach(d => list.appendChild(buildReportCard(d.id, d.data())));
+  );
+
+  /* Re-render when filter changes (listener above always fetches all) */
+  document.querySelectorAll('.rf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      /* snapshot already loaded — just re-render with new filter */
+    });
   });
 }
 
 function buildReportCard(id, data) {
   const card = document.createElement('div');
   card.className = 'report-card' + (data.status !== 'pending' ? ' resolved' : '');
-
   const ts = data.reportedAt ? new Date(data.reportedAt.toMillis()).toLocaleString() : 'Unknown';
+
   card.innerHTML = `
     <div class="report-meta">
       <span class="report-badge ${data.type}">${data.type === 'post' ? '📝 Post' : '💬 Comment'}</span>
@@ -429,9 +487,9 @@ function buildReportCard(id, data) {
     </div>
     ${data.status === 'pending' ? `
     <div class="report-actions">
-      <button class="ra-btn danger" data-action="delete" data-rid="${id}" data-postid="${data.postId}" data-ci="${data.commentIndex ?? ''}">🗑 Delete content</button>
-      <button class="ra-btn success" data-action="resolve" data-rid="${id}">✓ Resolve</button>
-      <button class="ra-btn" data-action="dismiss" data-rid="${id}">✕ Dismiss</button>
+      <button class="ra-btn danger"   data-action="delete"  data-rid="${id}" data-postid="${data.postId}" data-ci="${data.commentIndex ?? ''}">🗑 Delete content</button>
+      <button class="ra-btn success"  data-action="resolve" data-rid="${id}">✓ Resolve</button>
+      <button class="ra-btn"          data-action="dismiss" data-rid="${id}">✕ Dismiss</button>
     </div>` : ''}
   `;
 
@@ -446,11 +504,15 @@ async function handleReportAction(action, btn) {
   const postId = btn.dataset.postid;
   const ci     = btn.dataset.ci;
 
-  if (action === 'delete') {
-    if (!confirm('Delete the reported content from Firestore?')) return;
-    try {
+  btn.disabled = true;
+
+  try {
+    if (action === 'delete') {
+      if (!confirm('Delete the reported content from Firestore? This cannot be undone.')) {
+        btn.disabled = false; return;
+      }
       if (ci !== '') {
-        /* delete a comment: pull the post, remove the comment by index */
+        /* Delete a comment by index */
         const postSnap = await getDoc(doc(db, 'community_posts', postId));
         if (postSnap.exists()) {
           const comments = [...(postSnap.data().comments || [])];
@@ -461,53 +523,64 @@ async function handleReportAction(action, btn) {
         await deleteDoc(doc(db, 'community_posts', postId));
       }
       await updateDoc(doc(db, 'xn_reports', rid), { status: 'resolved', resolvedAt: serverTimestamp() });
-    } catch(e) { alert('Delete failed: ' + e.message); }
-  } else {
-    const status = action === 'resolve' ? 'resolved' : 'dismissed';
-    await updateDoc(doc(db, 'xn_reports', rid), { status, resolvedAt: serverTimestamp() });
+    } else {
+      const status = action === 'resolve' ? 'resolved' : 'dismissed';
+      await updateDoc(doc(db, 'xn_reports', rid), { status, resolvedAt: serverTimestamp() });
+    }
+    loadStats();
+  } catch(e) {
+    alert('Action failed: ' + e.message);
+    btn.disabled = false;
   }
-  loadStats();
 }
 
-/* ══ SLASH TEXT ══ */
-let slashHistory = [];
-
+/* ════════════════════════════════
+   SLASH TEXT
+════════════════════════════════ */
 async function loadSlash() {
   try {
-    const snap = await getDoc(doc(db, 'site_config', 'slash_text'));
-    if (snap.exists()) {
-      const d = snap.data();
-      document.getElementById('slashInput').value = d.text || '';
+    const [textSnap, histSnap] = await Promise.all([
+      getDoc(SLASH_TEXT_DOC),
+      getDoc(SLASH_HISTORY_DOC)
+    ]);
+    if (textSnap.exists()) {
+      const d = textSnap.data();
+      document.getElementById('slashInput').value  = d.text   || '';
       document.getElementById('slashActive').checked = d.active !== false;
     }
-    /* load history from xn_config/slash_history */
-    const histSnap = await getDoc(doc(db, 'xn_config', 'slash_history'));
     if (histSnap.exists()) {
       slashHistory = histSnap.data().entries || [];
       renderSlashHistory();
     }
-  } catch(e) {}
+  } catch(e) { console.error('Slash load failed:', e); }
 }
 
 document.getElementById('slashSave').addEventListener('click', async () => {
   const text   = document.getElementById('slashInput').value.trim();
   const active = document.getElementById('slashActive').checked;
+  const btn    = document.getElementById('slashSave');
+  btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    await setDoc(doc(db, 'site_config', 'slash_text'), { text, active, updatedAt: serverTimestamp() });
-    /* push to history */
+    await setDoc(SLASH_TEXT_DOC, { text, active, updatedAt: serverTimestamp() });
     if (text) {
       slashHistory.unshift({ text, active, ts: Date.now(), by: currentUser.uid });
       if (slashHistory.length > 20) slashHistory.pop();
-      await setDoc(doc(db, 'xn_config', 'slash_history'), { entries: slashHistory });
+      await setDoc(SLASH_HISTORY_DOC, { entries: slashHistory });
       renderSlashHistory();
     }
     showToast('Slash text saved ✓');
-  } catch(e) { alert('Save failed: ' + e.message); }
+  } catch(e) {
+    alert('Save failed: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Save & Publish';
 });
 
 function renderSlashHistory() {
   const list = document.getElementById('slashHistoryList');
-  if (!slashHistory.length) { list.innerHTML = '<p style="font-size:0.82rem;color:var(--muted)">No history yet.</p>'; return; }
+  if (!slashHistory.length) {
+    list.innerHTML = '<p style="font-size:0.82rem;color:var(--muted)">No history yet.</p>';
+    return;
+  }
   list.innerHTML = slashHistory.slice(0, 10).map((h, i) => `
     <div class="slash-hist-item">
       <div>
@@ -520,38 +593,40 @@ function renderSlashHistory() {
   list.querySelectorAll('.slash-restore').forEach(btn => {
     btn.addEventListener('click', () => {
       const h = slashHistory[parseInt(btn.dataset.i)];
-      document.getElementById('slashInput').value = h.text;
+      document.getElementById('slashInput').value    = h.text;
       document.getElementById('slashActive').checked = h.active;
     });
   });
 }
 
-/* ══ APPROVED UIDs ══ */
-async function loadUids() {
-  const snap = await getDoc(APPROVED_UIDS_DOC);
-  approvedUids = snap.exists() ? (snap.data().uids || {}) : {};
-  renderUids();
-}
-
+/* ════════════════════════════════
+   APPROVED UIDs
+════════════════════════════════ */
 function renderUids() {
-  const list = document.getElementById('uidList');
+  const list    = document.getElementById('uidList');
   const entries = Object.entries(approvedUids);
-  if (!entries.length) { list.innerHTML = '<p style="font-size:0.82rem;color:var(--muted)">No UIDs added yet.</p>'; return; }
+  if (!entries.length) {
+    list.innerHTML = '<p style="font-size:0.82rem;color:var(--muted)">No UIDs yet.</p>';
+    return;
+  }
   list.innerHTML = entries.map(([uid, meta]) => `
     <div class="uid-item">
       <div>
         <div class="uid-item-text">${escH(uid)}</div>
-        <div class="uid-item-label">${escH(meta.label || '')} · Added ${meta.addedAt ? new Date(meta.addedAt).toLocaleDateString() : '—'}</div>
+        <div class="uid-item-label">${escH(meta.label || '')}${meta.addedAt ? ' · Added ' + new Date(meta.addedAt).toLocaleDateString() : ''}</div>
       </div>
-      <button class="uid-remove" data-uid="${escH(uid)}" ${uid === currentUser?.uid ? 'title="Cannot remove yourself" disabled' : ''}>Remove</button>
+      <button class="uid-remove" data-uid="${escH(uid)}" ${uid === currentUser?.uid ? 'disabled title="Cannot remove yourself"' : ''}>Remove</button>
     </div>
   `).join('');
+
   list.querySelectorAll('.uid-remove:not([disabled])').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Remove this UID?')) return;
+      if (!confirm('Remove this UID? That person will lose admin access.')) return;
+      btn.disabled = true;
       delete approvedUids[btn.dataset.uid];
       await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
       renderUids();
+      showToast('UID removed.');
     });
   });
 }
@@ -560,32 +635,39 @@ document.getElementById('uidAddBtn').addEventListener('click', async () => {
   const uid   = document.getElementById('uidInput').value.trim();
   const label = document.getElementById('uidLabelInput').value.trim();
   if (!uid) return;
+  const btn = document.getElementById('uidAddBtn');
+  btn.disabled = true;
   approvedUids[uid] = { label, addedAt: Date.now() };
   await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
-  document.getElementById('uidInput').value = '';
+  document.getElementById('uidInput').value      = '';
   document.getElementById('uidLabelInput').value = '';
   renderUids();
   showToast('UID added ✓');
+  btn.disabled = false;
 });
 
-/* ══ HELPERS ══ */
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
 function escH(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
 function showToast(msg) {
-  var t = document.createElement('div');
+  const t = document.createElement('div');
   t.textContent = msg;
   Object.assign(t.style, {
     position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
     background:'var(--surface)', border:'1.5px solid var(--border)',
     borderRadius:'12px', padding:'10px 20px', fontSize:'0.84rem',
     fontWeight:'700', boxShadow:'0 8px 24px rgba(0,0,0,0.15)',
-    zIndex:'99999', color:'var(--text)'
+    zIndex:'99999', color:'var(--text)', whiteSpace:'nowrap'
   });
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 }
 </script>
+
 <script src="theme-switcher.js"></script>
 </body>
 </html>
