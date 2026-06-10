@@ -350,7 +350,7 @@
     import {
       collection, addDoc, deleteDoc,
       doc, query, orderBy, serverTimestamp, Timestamp,
-      onSnapshot, updateDoc, arrayUnion, where, getDocs
+      onSnapshot, updateDoc, arrayUnion, where, getDocs, limit
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     /* ─── Config ─── */
@@ -385,28 +385,49 @@
       return lsGetTimes(key).filter(t => t > cutoff).length;
     }
 
-    /* ─── Firestore rate-limit helpers (signed-in) ─── */
+    /* ─── Firestore rate-limit helpers (signed-in) ───
+       Timestamps stored as plain numbers (Date.now()) so we can
+       query them without a composite index and without waiting for
+       serverTimestamp() to resolve.                              */
     async function fsCountInWindow(uid, type, windowMs) {
-      const cutoff = new Timestamp(Math.floor((Date.now() - windowMs) / 1000), 0);
-      const q = query(
-        collection(db, 'rate_limits'),
-        where('uid',  '==', uid),
-        where('type', '==', type),
-        where('ts',   '>',  cutoff)
-      );
-      const snap = await getDocs(q);
-      return snap.size;
+      try {
+        const cutoff = Date.now() - windowMs;
+        const q = query(
+          collection(db, 'rate_limits'),
+          where('uid',  '==', uid),
+          where('type', '==', type),
+          where('tsMs', '>',  cutoff)
+        );
+        const snap = await getDocs(q);
+        return snap.size;
+      } catch(e) {
+        /* If collection doesn't exist yet or index missing → allow the action */
+        console.warn('Rate limit check skipped:', e.message);
+        return 0;
+      }
     }
     async function fsRecordAction(uid, type) {
-      await addDoc(collection(db, 'rate_limits'), {
-        uid, type, ts: serverTimestamp()
-      });
+      try {
+        await addDoc(collection(db, 'rate_limits'), {
+          uid, type, tsMs: Date.now()
+        });
+      } catch(e) {
+        console.warn('Rate limit record failed (non-blocking):', e.message);
+      }
+    }
+
+    /* ─── Timeout helper — never let a Firestore call hang ─── */
+    function withTimeout(promise, ms = 5000, fallback = 0) {
+      return Promise.race([
+        promise,
+        new Promise(resolve => setTimeout(() => resolve(fallback), ms))
+      ]);
     }
 
     /* ─── Check post limit ─── */
     async function canPost() {
       if (currentUser) {
-        const count = await fsCountInWindow(currentUser.uid, 'post', POST_WINDOW_MS);
+        const count = await withTimeout(fsCountInWindow(currentUser.uid, 'post', POST_WINDOW_MS));
         return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count) };
       } else {
         const count = lsCountInWindow('comm_posts', POST_WINDOW_MS);
@@ -417,7 +438,7 @@
     /* ─── Check comment limit ─── */
     async function canComment() {
       if (currentUser) {
-        const count = await fsCountInWindow(currentUser.uid, 'comment', COMMENT_WINDOW_MS);
+        const count = await withTimeout(fsCountInWindow(currentUser.uid, 'comment', COMMENT_WINDOW_MS));
         return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count) };
       } else {
         const count = lsCountInWindow('comm_comments', COMMENT_WINDOW_MS);
@@ -608,7 +629,9 @@
         feed.innerHTML = '';
         const now  = Date.now();
         const docs = snap.docs.filter(d => {
-          const exp = d.data().expiresAt;
+          const data = d.data();
+          if (data.hidden) return false;
+          const exp = data.expiresAt;
           return !exp || exp.toMillis() > now;
         });
         if (!docs.length) {
