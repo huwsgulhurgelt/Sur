@@ -63,14 +63,6 @@
     }
     .write-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(var(--accent-rgb),0.45); }
     .write-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .mod-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em;
-      padding: 3px 9px; border-radius: 999px;
-      background: color-mix(in srgb, var(--accent) 8%, transparent);
-      color: var(--accent); margin-bottom: 4px;
-    }
-    .mod-badge::before { content: '🛡️'; font-size: 0.75rem; }
     .post-reject {
       font-size: 0.82rem; color: #ef4444;
       background: rgba(239,68,68,0.08);
@@ -79,6 +71,10 @@
       display: none; margin-top: 4px;
     }
     .post-reject.show { display: block; }
+    /* Rate limit info */
+    .rate-info {
+      font-size: 0.74rem; color: var(--muted); font-weight: 600;
+    }
     /* Sort bar */
     .sort-bar {
       display: flex; align-items: center; gap: 8px;
@@ -252,7 +248,7 @@
     .skeleton-line.short { width: 40%; }
     .skeleton-line.long  { width: 100%; }
     .skeleton-line.mid   { width: 70%; }
-    /* Info notices */
+    /* Info notice */
     .expiry-notice {
       background: color-mix(in srgb, var(--accent) 6%, var(--surface));
       border: var(--bw) solid var(--border);
@@ -263,16 +259,6 @@
       display: flex; align-items: center; gap: 8px;
     }
     .expiry-notice strong { color: var(--text); }
-    .gemini-notice {
-      background: rgba(245,158,11,0.07);
-      border: 1px solid rgba(245,158,11,0.28);
-      border-radius: var(--radius);
-      padding: 12px 18px;
-      font-size: 0.82rem; font-weight: 500; color: var(--muted);
-      margin-bottom: 16px;
-      display: none; align-items: center; gap: 8px;
-    }
-    .gemini-notice a { color: var(--accent); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -309,7 +295,6 @@
 
     <!-- Write box -->
     <div class="write-box">
-      <div class="mod-badge">AI Moderated · Gemini</div>
       <div class="write-box-top">
         <div class="write-avatar" id="writeAvatar">?</div>
         <div class="write-inputs">
@@ -320,15 +305,9 @@
       <div class="post-reject" id="postReject"></div>
       <div class="write-bottom">
         <span class="write-char" id="writeChar">0 / 2000</span>
+        <span class="rate-info" id="postRateInfo"></span>
         <button class="write-submit" id="writeSubmit">Post</button>
       </div>
-    </div>
-
-    <!-- Gemini key notice (shown only when key is not set) -->
-    <div class="gemini-notice" id="geminiNotice">
-      ⚠️ AI moderation is inactive — posts still work but are unfiltered. Add your
-      <a href="https://ai.google.dev" target="_blank">Gemini API key</a>
-      in <code>community.html</code> where it says <code>GEMINI_API_KEY</code>.
     </div>
 
     <div class="expiry-notice">
@@ -371,61 +350,87 @@
     import {
       collection, addDoc, deleteDoc,
       doc, query, orderBy, serverTimestamp, Timestamp,
-      onSnapshot, updateDoc, arrayUnion
+      onSnapshot, updateDoc, arrayUnion, where, getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     /* ─── Config ─── */
-    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-    const POSTS_COL      = collection(db, 'community_posts');
-    const REPORTS_COL    = collection(db, 'xn_reports');
-    let   currentUser    = null;
-    let   currentSort    = 'new';
+    const THIRTY_DAYS_MS   = 30 * 24 * 60 * 60 * 1000;
+    const POSTS_COL        = collection(db, 'community_posts');
+    const REPORTS_COL      = collection(db, 'xn_reports');
 
-    /* ─── Gemini moderation ───
-       Get a free key at https://ai.google.dev
-       Replace the string below with your key.
-       If left as-is, moderation is skipped and all posts go through. */
-    const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
+    /* ─── Rate limits ───
+       Guests: tracked in localStorage (easy to bypass, but good-faith UX).
+       Signed-in users: tracked in Firestore via their uid.
+       Posts  : 3 per 7 days
+       Comments: 10 per 2 days                                               */
+    const POST_LIMIT       = 3;
+    const POST_WINDOW_MS   = 7 * 24 * 60 * 60 * 1000;   // 7 days
+    const COMMENT_LIMIT    = 10;
+    const COMMENT_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;  // 2 days
 
-    if (GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
-      document.getElementById('geminiNotice').style.display = 'flex';
+    let currentUser  = null;
+    let currentSort  = 'new';
+
+    /* ─── localStorage rate-limit helpers (guests) ─── */
+    function lsGetTimes(key) {
+      try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+    }
+    function lsAddTime(key) {
+      const times = lsGetTimes(key);
+      times.push(Date.now());
+      try { localStorage.setItem(key, JSON.stringify(times)); } catch(e) {}
+    }
+    function lsCountInWindow(key, windowMs) {
+      const cutoff = Date.now() - windowMs;
+      return lsGetTimes(key).filter(t => t > cutoff).length;
     }
 
-    async function moderateText(text) {
-      if (GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') return { ok: true };
-      try {
-        const prompt = `You are a content moderator for a student study platform for school-age users.
-Is the following text appropriate for a school environment?
+    /* ─── Firestore rate-limit helpers (signed-in) ─── */
+    async function fsCountInWindow(uid, type, windowMs) {
+      const cutoff = new Timestamp(Math.floor((Date.now() - windowMs) / 1000), 0);
+      const q = query(
+        collection(db, 'rate_limits'),
+        where('uid',  '==', uid),
+        where('type', '==', type),
+        where('ts',   '>',  cutoff)
+      );
+      const snap = await getDocs(q);
+      return snap.size;
+    }
+    async function fsRecordAction(uid, type) {
+      await addDoc(collection(db, 'rate_limits'), {
+        uid, type, ts: serverTimestamp()
+      });
+    }
 
-REJECT if it contains profanity, bullying/harassment, sexual content, hate speech, spam, threats, or personal contact info.
-ALLOW if it is educational, supportive, or a genuine question/discussion.
-
-Text: "${text.slice(0, 1000)}"
-
-Reply with ONLY valid JSON:
-{"ok": true}
-or
-{"ok": false, "reason": "reason under 10 words"}`;
-
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { maxOutputTokens: 80, temperature: 0 }
-            })
-          }
-        );
-        const data  = await res.json();
-        const raw   = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '{"ok":true}';
-        const clean = raw.replace(/```json|```/g, '').trim();
-        return JSON.parse(clean);
-      } catch(e) {
-        console.warn('Moderation failed, allowing:', e);
-        return { ok: true };
+    /* ─── Check post limit ─── */
+    async function canPost() {
+      if (currentUser) {
+        const count = await fsCountInWindow(currentUser.uid, 'post', POST_WINDOW_MS);
+        return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count) };
+      } else {
+        const count = lsCountInWindow('comm_posts', POST_WINDOW_MS);
+        return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count) };
       }
+    }
+
+    /* ─── Check comment limit ─── */
+    async function canComment() {
+      if (currentUser) {
+        const count = await fsCountInWindow(currentUser.uid, 'comment', COMMENT_WINDOW_MS);
+        return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count) };
+      } else {
+        const count = lsCountInWindow('comm_comments', COMMENT_WINDOW_MS);
+        return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count) };
+      }
+    }
+
+    /* ─── Update rate info label ─── */
+    async function refreshRateInfo() {
+      const { remaining } = await canPost();
+      const el = document.getElementById('postRateInfo');
+      if (!el) return;
+      el.textContent = remaining + ' post' + (remaining !== 1 ? 's' : '') + ' left this week';
     }
 
     /* ─── Helpers ─── */
@@ -482,6 +487,7 @@ or
         name.disabled = false;
         avatar.textContent = '?';
       }
+      refreshRateInfo();
     });
 
     /* ─── Char count ─── */
@@ -498,7 +504,12 @@ or
         ? (currentUser.displayName || 'Anonymous')
         : (nameEl.value.trim() || 'Anonymous');
 
-      if (!text) { writeText.focus(); writeText.style.borderColor = '#ef4444'; setTimeout(() => writeText.style.borderColor = '', 1200); return; }
+      if (!text) {
+        writeText.focus();
+        writeText.style.borderColor = '#ef4444';
+        setTimeout(() => writeText.style.borderColor = '', 1200);
+        return;
+      }
 
       const btn    = document.getElementById('writeSubmit');
       const reject = document.getElementById('postReject');
@@ -506,9 +517,9 @@ or
       btn.disabled = true;
       btn.textContent = 'Checking…';
 
-      const mod = await moderateText(text);
-      if (!mod.ok) {
-        reject.textContent = '⚠️ Post blocked: ' + (mod.reason || 'content not allowed');
+      const limit = await canPost();
+      if (!limit.ok) {
+        reject.textContent = `⚠️ You've reached the limit of ${POST_LIMIT} posts per week. Try again later.`;
         reject.classList.add('show');
         btn.disabled = false;
         btn.textContent = 'Post';
@@ -528,9 +539,18 @@ or
           createdAt:   serverTimestamp(),
           expiresAt,
         });
+
+        /* record the action for rate limiting */
+        if (currentUser) {
+          await fsRecordAction(currentUser.uid, 'post');
+        } else {
+          lsAddTime('comm_posts');
+        }
+
         writeText.value = '';
         document.getElementById('writeChar').textContent = '0 / 2000';
         if (!currentUser) nameEl.value = '';
+        refreshRateInfo();
       } catch(e) {
         console.error('Post failed:', e);
         reject.textContent = '⚠️ Could not post — check your connection and try again.';
@@ -678,7 +698,7 @@ or
         });
       });
 
-      /* Send comment — works for both guests and signed-in users */
+      /* Send comment */
       card.querySelector('.comm-comment-send').addEventListener('click', async () => {
         const ta        = card.querySelector('.comm-comment-input');
         const nameInput = card.querySelector('.comm-comment-name-input');
@@ -695,9 +715,9 @@ or
         sendBtn.disabled = true;
         sendBtn.textContent = '…';
 
-        const mod = await moderateText(text);
-        if (!mod.ok) {
-          rejectEl.textContent = '⚠️ ' + (mod.reason || 'Comment not allowed');
+        const limit = await canComment();
+        if (!limit.ok) {
+          rejectEl.textContent = `⚠️ You've reached the limit of ${COMMENT_LIMIT} comments per 2 days.`;
           rejectEl.classList.add('show');
           sendBtn.disabled = false;
           sendBtn.textContent = 'Send';
@@ -708,6 +728,14 @@ or
           await updateDoc(doc(db, 'community_posts', id), {
             comments: arrayUnion({ author, text, ts: Date.now() })
           });
+
+          /* record for rate limiting */
+          if (currentUser) {
+            await fsRecordAction(currentUser.uid, 'comment');
+          } else {
+            lsAddTime('comm_comments');
+          }
+
           ta.value = '';
           nameInput.value = '';
         } catch(e) {
