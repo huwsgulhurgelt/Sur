@@ -21,6 +21,22 @@ const auth = getAuth(app);
    survives until the user explicitly signs out. */
 setPersistence(auth, browserLocalPersistence).catch(() => {});
 
+/* ══════════════════════════════════════════════════════════════
+   ADMIN UIDs — Add your Firebase UIDs here to grant admin access.
+   On first load, if the approved_uids document doesn't exist in Firestore,
+   these UIDs will be automatically added.
+   
+   To find your UID:
+   1. Sign in to xn--admin-pqa.html (the admin dashboard)
+   2. Open browser console (F12)
+   3. Your UID will be logged: "[Admin] Your UID: xxx"
+   4. Copy it and paste below
+   ══════════════════════════════════════════════════════════════ */
+export const ADMIN_UIDS = [
+  'REPLACE_WITH_YOUR_FIREBASE_UID_1',  // Your UID here
+  'REPLACE_WITH_YOUR_FIREBASE_UID_2',  // Additional admins here
+];
+
 export const db      = getFirestore(app);
 export const storage = getStorage(app);
 export { auth };
