@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg){document.documentElement.style.background=_t.bg;document.documentElement.style.backgroundAttachment='fixed';}}catch(e){}</script>
+  <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg){document.documentElement.style.background=_t.bg;document.documentElement.style.backgroundAttachment='fixed'}}catch(e){}</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Community — Suraguuli</title>
@@ -273,6 +273,17 @@
       display: none; align-items: center; gap: 8px;
     }
     .gemini-notice a { color: var(--accent); font-weight: 700; }
+    /* Post limit notice */
+    .post-limit-notice {
+      background: rgba(239,68,68,0.07);
+      border: 1px solid rgba(239,68,68,0.28);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      font-size: 0.82rem; font-weight: 500; color: var(--muted);
+      margin-bottom: 16px;
+      display: none; align-items: center; gap: 8px;
+    }
+    .post-limit-notice strong { color: #ef4444; }
   </style>
 </head>
 <body>
@@ -324,6 +335,11 @@
       </div>
     </div>
 
+    <!-- Post limit notice (shown when user has hit the limit) -->
+    <div class="post-limit-notice" id="postLimitNotice">
+      ⏳ <span>You've posted <strong>3 times this week</strong>. Come back next week to share more! 📅</span>
+    </div>
+
     <!-- Gemini key notice (shown only when key is not set) -->
     <div class="gemini-notice" id="geminiNotice">
       ⚠️ AI moderation is inactive — posts still work but are unfiltered. Add your
@@ -371,15 +387,18 @@
     import {
       collection, addDoc, deleteDoc,
       doc, query, orderBy, serverTimestamp, Timestamp,
-      onSnapshot, updateDoc, arrayUnion
+      onSnapshot, updateDoc, arrayUnion, where
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     /* ─── Config ─── */
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const SEVEN_DAYS_MS  = 7 * 24 * 60 * 60 * 1000;
+    const POST_LIMIT     = 3;  // Max 3 posts per week
     const POSTS_COL      = collection(db, 'community_posts');
     const REPORTS_COL    = collection(db, 'xn_reports');
     let   currentUser    = null;
     let   currentSort    = 'new';
+    let   userPostCount  = 0;
 
     /* ─── Gemini moderation ───
        Get a free key at https://ai.google.dev
@@ -464,11 +483,52 @@ or
       setTimeout(() => t.remove(), 3000);
     }
 
+    /* ─── Check post limit ─── */
+    async function checkPostLimit() {
+      if (!currentUser) return true; // Guests can always post
+      
+      const sevenDaysAgo = new Date(Date.now() - SEVEN_DAYS_MS);
+      const q = query(
+        POSTS_COL,
+        where('authorId', '==', currentUser.uid),
+        where('createdAt', '>=', Timestamp.fromDate(sevenDaysAgo))
+      );
+      
+      return new Promise(resolve => {
+        onSnapshot(q, snap => {
+          userPostCount = snap.size;
+          const canPost = snap.size < POST_LIMIT;
+          
+          // Show/hide post limit notice
+          const notice = document.getElementById('postLimitNotice');
+          const submitBtn = document.getElementById('writeSubmit');
+          const writeBox = document.querySelector('.write-box');
+          
+          if (!canPost) {
+            notice.style.display = 'flex';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Post limit reached (3/week)';
+            writeBox.style.opacity = '0.6';
+            writeBox.style.pointerEvents = 'none';
+          } else {
+            notice.style.display = 'none';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Post';
+            writeBox.style.opacity = '1';
+            writeBox.style.pointerEvents = 'auto';
+          }
+          
+          resolve(canPost);
+        });
+      });
+    }
+
     /* ─── Auth state ─── */
     onAuthStateChanged(auth, user => {
       currentUser = user;
       const avatar = document.getElementById('writeAvatar');
       const name   = document.getElementById('writeName');
+      
       if (user) {
         name.value    = user.displayName || '';
         name.disabled = true;
@@ -478,9 +538,17 @@ or
         } else {
           avatar.textContent = initials(user.displayName);
         }
+        // Check post limit on auth state change
+        checkPostLimit();
       } else {
         name.disabled = false;
         avatar.textContent = '?';
+        // Guest can post (no limit for guests)
+        document.getElementById('postLimitNotice').style.display = 'none';
+        document.getElementById('writeSubmit').disabled = false;
+        document.getElementById('writeSubmit').textContent = 'Post';
+        document.querySelector('.write-box').style.opacity = '1';
+        document.querySelector('.write-box').style.pointerEvents = 'auto';
       }
     });
 
@@ -492,6 +560,13 @@ or
 
     /* ─── Submit post ─── */
     document.getElementById('writeSubmit').addEventListener('click', async () => {
+      // Check if user is within post limit
+      const canPost = await checkPostLimit();
+      if (!canPost) {
+        toast('You\'ve reached your 3 posts per week limit. Come back next week!');
+        return;
+      }
+
       const text   = writeText.value.trim();
       const nameEl = document.getElementById('writeName');
       const author = currentUser
@@ -531,6 +606,9 @@ or
         writeText.value = '';
         document.getElementById('writeChar').textContent = '0 / 2000';
         if (!currentUser) nameEl.value = '';
+        toast('✓ Post shared! 🎉');
+        // Re-check limit after posting
+        checkPostLimit();
       } catch(e) {
         console.error('Post failed:', e);
         reject.textContent = '⚠️ Could not post — check your connection and try again.';
