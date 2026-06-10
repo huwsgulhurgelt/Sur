@@ -508,11 +508,11 @@ async function handleReportAction(action, btn) {
 
   try {
     if (action === 'delete') {
-      if (!confirm('Delete the reported content from Firestore? This cannot be undone.')) {
+      if (!confirm('Remove this content? It will be hidden from all users immediately.')) {
         btn.disabled = false; return;
       }
       if (ci !== '') {
-        /* Delete a comment by index */
+        /* Remove a specific comment by index */
         const postSnap = await getDoc(doc(db, 'community_posts', postId));
         if (postSnap.exists()) {
           const comments = [...(postSnap.data().comments || [])];
@@ -520,12 +520,26 @@ async function handleReportAction(action, btn) {
           await updateDoc(doc(db, 'community_posts', postId), { comments });
         }
       } else {
-        await deleteDoc(doc(db, 'community_posts', postId));
+        /* Flag post as hidden instead of deleting.
+           community.html already filters hidden:true posts out of the feed. */
+        await updateDoc(doc(db, 'community_posts', postId), {
+          hidden:   true,
+          hiddenAt: serverTimestamp(),
+          hiddenBy: currentUser.uid
+        });
       }
-      await updateDoc(doc(db, 'xn_reports', rid), { status: 'resolved', resolvedAt: serverTimestamp() });
+      await updateDoc(doc(db, 'xn_reports', rid), {
+        status:     'resolved',
+        resolvedAt: serverTimestamp(),
+        resolvedBy: currentUser.uid
+      });
     } else {
       const status = action === 'resolve' ? 'resolved' : 'dismissed';
-      await updateDoc(doc(db, 'xn_reports', rid), { status, resolvedAt: serverTimestamp() });
+      await updateDoc(doc(db, 'xn_reports', rid), {
+        status,
+        resolvedAt: serverTimestamp(),
+        resolvedBy: currentUser.uid
+      });
     }
     loadStats();
   } catch(e) {
