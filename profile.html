@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="study-style.css">
   <style>
-
     .profile-wrap {
       max-width: 600px;
       margin: 0 auto;
@@ -23,9 +22,7 @@
       border: var(--bw) solid var(--border);
       border-radius: var(--radius-lg);
       padding: 36px 32px 28px;
-      display: flex;
-      align-items: center;
-      gap: 24px;
+      display: flex; align-items: center; gap: 24px;
       margin-bottom: 22px;
       box-shadow: var(--shadow);
       position: relative; overflow: hidden;
@@ -37,13 +34,9 @@
     }
 
     /* avatar */
-    .avatar-wrap {
-      position: relative; flex-shrink: 0;
-      width: 90px; height: 90px;
-    }
+    .avatar-wrap { position: relative; flex-shrink: 0; width: 90px; height: 90px; }
     .avatar-img {
       width: 90px; height: 90px; border-radius: 50%;
-      object-fit: cover;
       border: 3px solid var(--accent);
       box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
       background: var(--surface2);
@@ -90,10 +83,7 @@
       font-size: 0.78rem; font-weight: 800;
       letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
     }
-    .edit-card-body {
-      padding: 24px;
-      display: flex; flex-direction: column; gap: 18px;
-    }
+    .edit-card-body { padding: 24px; display: flex; flex-direction: column; gap: 18px; }
 
     .field-group { display: flex; flex-direction: column; gap: 6px; }
     .field-group label { font-size: 0.84rem; font-weight: 700; }
@@ -105,9 +95,7 @@
       transition: border-color 200ms, box-shadow 200ms;
     }
     .field-group input:focus { border-color: var(--accent); box-shadow: var(--ring); }
-    .field-group input:disabled { opacity: 0.5; cursor: not-allowed; }
     .field-hint { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
-    .field-group input.error-border { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.14); }
 
     .edit-error {
       font-size: 0.82rem; color: #ef4444;
@@ -116,7 +104,6 @@
       border-radius: 8px; padding: 10px 14px; display: none;
     }
     .edit-error.show { display: block; }
-
     .edit-success {
       font-size: 0.82rem; color: #22c55e;
       background: rgba(34,197,94,0.08);
@@ -125,19 +112,15 @@
     }
     .edit-success.show { display: block; }
 
-    /* change limit pill */
-    .limit-row {
-      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    }
+    /* changes left pill */
+    .limit-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .changes-left {
       font-size: 0.72rem; font-weight: 700;
       padding: 3px 10px; border-radius: 999px;
       background: color-mix(in srgb, var(--accent) 10%, transparent);
       color: var(--accent);
     }
-    .changes-left.zero {
-      background: rgba(239,68,68,0.1); color: #ef4444;
-    }
+    .changes-left.zero { background: rgba(239,68,68,0.1); color: #ef4444; }
 
     .save-btn {
       width: 100%; padding: 13px;
@@ -148,24 +131,27 @@
       box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent);
       transition: all 200ms ease;
     }
-    .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent); }
+    .save-btn:hover { transform: translateY(-2px); }
     .save-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* upload progress bar */
+    .upload-bar { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; display: none; }
+    .upload-bar.show { display: block; }
+    .upload-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 0; transition: width 200ms; }
 
     /* ── Danger zone ── */
     .danger-card {
       background: var(--surface);
       border: var(--bw) solid rgba(239,68,68,0.2);
       border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: var(--shadow);
+      overflow: hidden; box-shadow: var(--shadow);
     }
     .danger-card-header {
       padding: 18px 24px 14px;
       border-bottom: 1px solid rgba(239,68,68,0.15);
       background: rgba(239,68,68,0.04);
       font-size: 0.78rem; font-weight: 800;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: #ef4444;
+      letter-spacing: 0.1em; text-transform: uppercase; color: #ef4444;
     }
     .danger-card-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
     .danger-text { font-size: 0.86rem; color: var(--muted); line-height: 1.6; }
@@ -178,7 +164,7 @@
     }
     .sign-out-btn:hover { background: rgba(239,68,68,0.08); border-color: #ef4444; }
 
-    /* ── Not logged in state ── */
+    /* ── Not logged in ── */
     .not-logged-in {
       text-align: center; padding: 60px 24px;
       background: var(--surface); border: var(--bw) solid var(--border);
@@ -193,13 +179,7 @@
       box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
       transition: all 200ms;
     }
-    .go-auth-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 45%, transparent); }
-
-    /* upload progress bar */
-    .upload-bar { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; display: none; }
-    .upload-bar.show { display: block; }
-    .upload-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 0; transition: width 200ms; }
-
+    .go-auth-btn:hover { transform: translateY(-2px); }
   </style>
 </head>
 <body>
@@ -238,10 +218,9 @@
       <a href="auth.html" class="go-auth-btn">Sign In / Create Account</a>
     </div>
 
-    <!-- logged in view -->
+    <!-- logged in -->
     <div id="loggedInView" style="display:none">
 
-      <!-- header -->
       <div class="profile-header">
         <div class="avatar-wrap">
           <div class="avatar-img" id="headerAvatar"></div>
@@ -255,16 +234,14 @@
         </div>
       </div>
 
-      <!-- edit card -->
+      <!-- edit profile -->
       <div class="edit-card">
         <div class="edit-card-header">Edit Profile</div>
         <div class="edit-card-body">
-
           <div class="edit-error"   id="editError"></div>
           <div class="edit-success" id="editSuccess"></div>
           <div class="upload-bar"   id="uploadBar"><div class="upload-fill" id="uploadFill"></div></div>
 
-          <!-- nickname -->
           <div class="field-group">
             <label for="nickInput">Display name</label>
             <input type="text" id="nickInput" maxlength="40" placeholder="Your name">
@@ -273,13 +250,11 @@
               <span class="changes-left" id="changesLeft">— changes left this week</span>
             </div>
           </div>
-
           <button class="save-btn" id="saveBtn">Save changes</button>
-
         </div>
       </div>
 
-      <!-- slash text editor -->
+      <!-- admin-only: slash text editor — hidden until admin check passes -->
       <div class="edit-card" id="slashCard" style="display:none">
         <div class="edit-card-header">📢 Message of the Day</div>
         <div class="edit-card-body">
@@ -289,10 +264,7 @@
             <label for="slashInput">Banner text</label>
             <input type="text" id="slashInput" maxlength="120"
               placeholder="e.g. 🎉 Welcome back everyone!">
-            <div class="field-hint">
-              Shows as a coloured banner at the top of every page.
-              Leave empty and save to hide it.
-            </div>
+            <div class="field-hint">Shows as a banner at the top of every page. Leave empty and save to hide it.</div>
           </div>
           <div style="display:flex;gap:10px">
             <button class="save-btn" id="slashSaveBtn" style="flex:1">Save banner</button>
@@ -314,8 +286,7 @@
       </div>
 
     </div><!-- /#loggedInView -->
-
-  </div><!-- /.profile-wrap -->
+  </div>
 
   <script type="module">
     import { auth, db, storage } from './firebase-config.js';
@@ -326,13 +297,12 @@
     import { ref, uploadBytesResumable, getDownloadURL }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-    /* ── limits ── */
     const MAX_CHANGES_PER_WEEK = 3;
 
     /* ── helpers ── */
     function initials(name) {
       if (!name) return '?';
-      return name.trim().split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      return name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
     }
     function showErr(msg) {
       const el = document.getElementById('editError');
@@ -345,7 +315,6 @@
       document.getElementById('editError').classList.remove('show');
     }
 
-    /* ── render header ── */
     function renderHeader(user, nick) {
       document.getElementById('headerName').textContent  = nick || user.displayName || 'No name set';
       document.getElementById('headerEmail').textContent = user.email || '';
@@ -357,25 +326,21 @@
       }
     }
 
-    /* ── get/create user doc ── */
     async function getUserDoc(uid) {
       const ref2 = doc(db, 'users', uid);
       const snap = await getDoc(ref2);
       if (snap.exists()) return snap.data();
-      // create on first visit
       const data = { nameChanges: [], createdAt: serverTimestamp() };
       await setDoc(ref2, data);
       return data;
     }
 
-    /* ── count changes in last 7 days ── */
     function changesThisWeek(changeTimestamps) {
       if (!Array.isArray(changeTimestamps)) return 0;
       const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
       return changeTimestamps.filter(ts => ts > weekAgo).length;
     }
 
-    /* ── upload avatar ── */
     async function uploadAvatar(uid, file) {
       return new Promise((resolve, reject) => {
         const storageRef = ref(storage, `avatars/${uid}/${file.name}`);
@@ -391,6 +356,57 @@
       });
     }
 
+    /* ── Check if user is admin ── */
+    async function isAdmin(uid) {
+      try {
+        const snap = await getDoc(doc(db, 'xn_config', 'approved_uids'));
+        if (!snap.exists()) return false;
+        return !!(snap.data().uids || {})[uid];
+      } catch(e) { return false; }
+    }
+
+    /* ── Slash text (admin only) ── */
+    async function initSlashCard(user) {
+      const admin = await isAdmin(user.uid);
+      if (!admin) return;
+
+      const card = document.getElementById('slashCard');
+      card.style.display = 'block';
+
+      try {
+        const snap = await getDoc(doc(db, 'site_config', 'slash_text'));
+        if (snap.exists() && snap.data().text) {
+          document.getElementById('slashInput').value = snap.data().text;
+        }
+      } catch(e) {}
+
+      async function saveSlash(text) {
+        const errEl = document.getElementById('slashError');
+        const sucEl = document.getElementById('slashSuccess');
+        errEl.classList.remove('show'); sucEl.classList.remove('show');
+        try {
+          await setDoc(doc(db, 'site_config', 'slash_text'), {
+            text:      text.trim(),
+            active:    text.trim().length > 0,
+            updatedAt: serverTimestamp()
+          });
+          sucEl.textContent = text.trim() ? '✓ Banner updated!' : '✓ Banner cleared.';
+          sucEl.classList.add('show');
+        } catch(e) {
+          errEl.textContent = 'Failed: ' + e.message;
+          errEl.classList.add('show');
+        }
+      }
+
+      document.getElementById('slashSaveBtn').addEventListener('click', () => {
+        saveSlash(document.getElementById('slashInput').value);
+      });
+      document.getElementById('slashClearBtn').addEventListener('click', () => {
+        document.getElementById('slashInput').value = '';
+        saveSlash('');
+      });
+    }
+
     /* ── main ── */
     onAuthStateChanged(auth, async user => {
       document.getElementById('notLoggedIn').style.display  = user ? 'none'  : 'block';
@@ -398,21 +414,19 @@
       if (!user) return;
 
       const userDoc = await getUserDoc(user.uid);
-      loadSlashCard(user);
       const used    = changesThisWeek(userDoc.nameChanges || []);
       const left    = Math.max(0, MAX_CHANGES_PER_WEEK - used);
 
-      /* fill inputs */
-      const nickInput = document.getElementById('nickInput');
-      nickInput.value = user.displayName || '';
+      document.getElementById('nickInput').value = user.displayName || '';
 
       const pill = document.getElementById('changesLeft');
       pill.textContent = left + ' name change' + (left !== 1 ? 's' : '') + ' left this week';
       pill.classList.toggle('zero', left === 0);
 
       renderHeader(user, user.displayName);
+      initSlashCard(user);
 
-      /* ── avatar file input ── */
+      /* avatar upload */
       document.getElementById('avatarEditBtn').addEventListener('click', () => {
         document.getElementById('avatarFileInput').click();
       });
@@ -425,7 +439,7 @@
           const url = await uploadAvatar(user.uid, file);
           await updateProfile(user, { photoURL: url });
           await updateDoc(doc(db, 'users', user.uid), { photoURL: url });
-          renderHeader(user, nickInput.value.trim() || user.displayName);
+          renderHeader(user, document.getElementById('nickInput').value.trim() || user.displayName);
           showOk('Profile picture updated!');
         } catch(e) {
           showErr('Upload failed: ' + e.message);
@@ -433,77 +447,38 @@
         saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
       });
 
-      /* ── save name ── */
+      /* save display name */
       document.getElementById('saveBtn').addEventListener('click', async () => {
-        const nick = nickInput.value.trim();
-        if (!nick) { showErr('Name cannot be empty.'); return; }
+        const nick = document.getElementById('nickInput').value.trim();
+        if (!nick)                       { showErr('Name cannot be empty.'); return; }
         if (nick === (user.displayName || '')) { showOk('No changes to save.'); return; }
 
-        const latestDoc  = await getUserDoc(user.uid);
-        const usedNow    = changesThisWeek(latestDoc.nameChanges || []);
-        const leftNow    = MAX_CHANGES_PER_WEEK - usedNow;
-        if (leftNow <= 0) {
-          showErr('You\'ve used all ' + MAX_CHANGES_PER_WEEK + ' name changes for this week. Try again next week.');
+        const latestDoc = await getUserDoc(user.uid);
+        const usedNow   = changesThisWeek(latestDoc.nameChanges || []);
+        if (usedNow >= MAX_CHANGES_PER_WEEK) {
+          showErr(`You've used all ${MAX_CHANGES_PER_WEEK} name changes for this week. Try again next week.`);
           return;
         }
 
         const saveBtn = document.getElementById('saveBtn');
         saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
-
         try {
           await updateProfile(user, { displayName: nick });
           const newTs = [...(latestDoc.nameChanges || []), Date.now()];
           await updateDoc(doc(db, 'users', user.uid), { displayName: nick, nameChanges: newTs });
           renderHeader(user, nick);
 
-          const newLeft = Math.max(0, leftNow - 1);
+          const newLeft = Math.max(0, MAX_CHANGES_PER_WEEK - usedNow - 1);
           pill.textContent = newLeft + ' name change' + (newLeft !== 1 ? 's' : '') + ' left this week';
           pill.classList.toggle('zero', newLeft === 0);
-          showOk('Name updated to "' + nick + '"!');
+          showOk(`Name updated to "${nick}"!`);
         } catch(e) {
           showErr('Failed to save: ' + e.message);
         }
         saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
       });
 
-      /* ── slash text ── */
-      async function loadSlashCard(user) {
-        const card = document.getElementById('slashCard');
-        if (!card) return;
-        card.style.display = 'block';
-        try {
-          const snap = await getDoc(doc(db, 'site_config', 'slash_text'));
-          if (snap.exists() && snap.data().text) {
-            document.getElementById('slashInput').value = snap.data().text;
-          }
-        } catch(e) {}
-      }
-
-      async function saveSlash(text) {
-        const err = document.getElementById('slashError');
-        const suc = document.getElementById('slashSuccess');
-        err.classList.remove('show'); suc.classList.remove('show');
-        try {
-          await setDoc(doc(db, 'site_config', 'slash_text'), {
-            text:      text.trim(),
-            active:    text.trim().length > 0,
-            updatedAt: serverTimestamp()
-          });
-          suc.textContent = text.trim() ? '✓ Banner updated!' : '✓ Banner cleared.';
-          suc.classList.add('show');
-        } catch(e) {
-          err.textContent = 'Failed: ' + e.message;
-          err.classList.add('show');
-        }
-      }
-
-      document.getElementById('slashSaveBtn').addEventListener('click', () => {
-        saveSlash(document.getElementById('slashInput').value);
-      });
-      document.getElementById('slashClearBtn').addEventListener('click', () => {
-        document.getElementById('slashInput').value = '';
-        saveSlash('');
-      });
+      /* sign out */
       document.getElementById('signOutBtn').addEventListener('click', async () => {
         await signOut(auth);
         window.location.href = 'index.html';
