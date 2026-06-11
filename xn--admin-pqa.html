@@ -4,684 +4,788 @@
   <script>try{var _t=JSON.parse(localStorage.getItem('site-theme')||'null');if(_t&&_t.bg){document.documentElement.style.background=_t.bg;document.documentElement.style.backgroundAttachment='fixed';}}catch(e){}</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Suraguuli</title>
+  <title>Community — Suraguuli</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="study-style.css">
   <style>
-    /* ── Access wall ── */
-    #accessWall {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      padding: 24px;
+    .write-box {
+      background: var(--surface);
+      border: var(--bw) solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 28px;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: var(--shadow);
+      position: relative; overflow: hidden;
     }
-    .access-card {
-      background: var(--surface); border: var(--bw) solid var(--border);
-      border-radius: var(--radius); padding: 40px 36px; max-width: 380px; width: 100%;
-      box-shadow: var(--shadow-hover); text-align: center;
+    .write-box::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
     }
-    .access-card h2 { font-size: 1.3rem; font-weight: 900; margin: 0 0 8px; }
-    .access-card p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 24px; }
-    .access-err     { font-size: 0.82rem; color: #ef4444; margin-top: 12px; display: none; }
-    .access-err.show { display: block; }
-    .access-btn {
-      width: 100%; padding: 13px; background: var(--accent); color: #fff;
-      border: none; border-radius: var(--radius); font: inherit;
-      font-size: 0.95rem; font-weight: 800; cursor: pointer;
+    .write-box-top { display: flex; gap: 12px; align-items: flex-start; }
+    .write-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--surface2); border: var(--bw) solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 800; color: var(--muted);
+      flex-shrink: 0; overflow: hidden;
+    }
+    .write-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .write-inputs { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .write-name {
+      width: 100%; padding: 9px 13px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.88rem;
+      font-family: inherit; color: var(--text);
+      transition: border-color 200ms, box-shadow 200ms; outline: none;
+    }
+    .write-name:focus { border-color: var(--accent); box-shadow: var(--ring); }
+    .write-textarea {
+      width: 100%; padding: 11px 13px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.93rem;
+      font-family: inherit; color: var(--text);
+      resize: none; min-height: 88px; line-height: 1.6;
+      transition: border-color 200ms, box-shadow 200ms; outline: none;
+    }
+    .write-textarea:focus { border-color: var(--accent); box-shadow: var(--ring); }
+    .write-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .write-char { font-size: 0.74rem; color: var(--muted); }
+    .write-submit {
+      padding: 10px 22px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 999px; font-size: 0.88rem; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb),0.35);
       transition: all 200ms ease;
     }
-    .access-btn:hover { transform: translateY(-2px); opacity: 0.9; }
-    .access-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-
-    /* ── Main dashboard ── */
-    #dashMain { display: none; }
-    .dash-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
+    .write-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(var(--accent-rgb),0.45); }
+    .write-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .post-reject {
+      font-size: 0.82rem; color: #ef4444;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px; padding: 10px 14px;
+      display: none; margin-top: 4px;
     }
-    .dash-title { font-size: 1.6rem; font-weight: 900; margin: 0; }
-    .dash-uid   { font-size: 0.74rem; color: var(--muted); font-family: monospace; margin-top: 3px; }
-    .dash-signout {
-      background: none; border: var(--bw) solid var(--border);
-      border-radius: 999px; padding: 7px 18px;
-      font-size: 0.78rem; font-weight: 700; cursor: pointer;
-      font-family: inherit; color: var(--muted); transition: all 180ms;
+    .post-reject.show { display: block; }
+    /* Rate limit info */
+    .rate-info {
+      font-size: 0.74rem; color: var(--muted); font-weight: 600;
     }
-    .dash-signout:hover { border-color: var(--border-strong); color: var(--text); }
-
-    /* ── Stats ── */
-    .stats-row {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px; margin-bottom: 28px;
+    /* Sort bar */
+    .sort-bar {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 18px; font-size: 0.82rem; color: var(--muted); font-weight: 600;
     }
-    .stat-card {
-      background: var(--surface); border: var(--bw) solid var(--border);
-      border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow);
-    }
-    .stat-label { font-size: 0.74rem; color: var(--muted); font-weight: 700; }
-    .stat-val   { font-size: 1.6rem; font-weight: 900; margin-top: 4px; }
-
-    /* ── Tabs ── */
-    .dash-tabs {
-      display: flex; gap: 8px; margin-bottom: 24px;
-      border-bottom: var(--bw) solid var(--border);
-    }
-    .dash-tab {
-      background: none; border: none; border-bottom: 3px solid transparent;
-      padding: 10px 18px 13px; font-size: 0.86rem; font-weight: 800;
-      cursor: pointer; font-family: inherit; color: var(--muted);
-      transition: all 180ms; margin-bottom: -1.5px;
-    }
-    .dash-tab:hover  { color: var(--text); }
-    .dash-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-    .dash-panel         { display: none; }
-    .dash-panel.active  { display: block; }
-
-    /* ── Reports ── */
-    .report-filters { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
-    .rf-btn {
+    .sort-btn {
       background: none; border: var(--bw) solid var(--border);
       border-radius: 999px; padding: 5px 14px;
-      font-size: 0.76rem; font-weight: 700; cursor: pointer;
-      font-family: inherit; color: var(--muted); transition: all 180ms;
+      font-size: 0.78rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; color: var(--muted);
+      transition: all 200ms ease;
     }
-    .rf-btn:hover  { border-color: var(--border-strong); color: var(--text); }
-    .rf-btn.active { border-color: var(--accent); color: var(--accent);
-      background: color-mix(in srgb, var(--accent) 8%, transparent); }
-    .report-card {
-      background: var(--surface); border: var(--bw) solid var(--border);
-      border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px;
-      display: flex; flex-direction: column; gap: 10px;
+    .sort-btn:hover  { border-color: var(--border-strong); color: var(--text); }
+    .sort-btn.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+    /* Post cards */
+    .comm-card {
+      background: var(--surface);
+      border: var(--bw) solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 220ms ease, border-color 200ms ease, transform 220ms cubic-bezier(0.34,1.4,0.64,1);
     }
-    .report-card.resolved { opacity: 0.5; }
-    .report-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .report-badge { font-size: 0.66rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
-    .report-badge.post      { background: rgba(99,102,241,0.12); color: #6366f1; }
-    .report-badge.comment   { background: rgba(245,158,11,0.12); color: #f59e0b; }
-    .report-badge.pending   { background: rgba(239,68,68,0.12);  color: #ef4444; }
-    .report-badge.resolved  { background: rgba(34,197,94,0.12);  color: #22c55e; }
-    .report-badge.dismissed { background: rgba(148,163,184,0.12);color: #94a3b8; }
-    .report-reason  { font-size: 0.88rem; font-weight: 800; }
-    .report-snippet {
-      font-size: 0.82rem; color: var(--muted);
-      background: var(--surface2); border-radius: 8px; padding: 8px 12px;
-      border-left: 3px solid var(--border-strong);
-      white-space: pre-wrap; word-break: break-word;
-    }
-    .report-info { font-size: 0.74rem; color: var(--muted); }
-    .report-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .ra-btn {
-      padding: 7px 16px; border-radius: 999px; font-size: 0.76rem;
-      font-weight: 800; cursor: pointer; font-family: inherit;
-      border: var(--bw) solid var(--border); background: none;
-      color: var(--muted); transition: all 180ms;
-    }
-    .ra-btn:hover          { border-color: var(--border-strong); color: var(--text); }
-    .ra-btn.danger         { border-color: rgba(239,68,68,0.4); color: #ef4444; }
-    .ra-btn.danger:hover   { background: rgba(239,68,68,0.08); }
-    .ra-btn.success        { border-color: rgba(34,197,94,0.4); color: #22c55e; }
-    .ra-btn.success:hover  { background: rgba(34,197,94,0.08); }
-    .no-reports {
-      text-align: center; padding: 48px 20px;
-      color: var(--muted); font-size: 0.9rem;
-      border: var(--bw) dashed var(--border-strong);
-      border-radius: var(--radius); background: var(--surface2);
-    }
-
-    /* ── Slash text ── */
-    .panel-inner { max-width: 600px; }
-    .panel-inner h3 { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
-    .panel-inner p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 18px; }
-    .slash-textarea {
-      width: 100%; padding: 12px 14px;
-      background: var(--bg); border: var(--bw) solid var(--border);
-      border-radius: var(--radius); font-size: 0.95rem;
-      font-family: inherit; color: var(--text);
-      resize: none; min-height: 70px; line-height: 1.6; outline: none;
-      transition: border-color 200ms, box-shadow 200ms;
-    }
-    .slash-textarea:focus { border-color: var(--accent); box-shadow: var(--ring); }
-    .slash-controls { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
-    .slash-toggle {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 0.84rem; font-weight: 700; cursor: pointer;
-    }
-    .slash-toggle input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
-    .panel-save-btn {
-      padding: 10px 22px; background: var(--accent); color: #fff;
-      border: none; border-radius: 999px; font-size: 0.84rem; font-weight: 800;
-      cursor: pointer; font-family: inherit; transition: all 200ms;
-      box-shadow: 0 4px 14px rgba(var(--accent-rgb),0.3);
-    }
-    .panel-save-btn:hover { transform: translateY(-1px); }
-    .slash-history { margin-top: 28px; }
-    .slash-history h4 { font-size: 0.86rem; font-weight: 800; margin: 0 0 12px; color: var(--muted); }
-    .slash-hist-item {
+    .comm-card:hover { box-shadow: var(--shadow-hover); border-color: var(--border-strong); transform: translateY(-2px); }
+    .comm-card-top { display: flex; align-items: center; gap: 10px; }
+    .comm-author-dot {
+      width: 36px; height: 36px; border-radius: 50%;
       background: var(--surface2); border: var(--bw) solid var(--border);
-      border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
-      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 800; color: var(--muted);
+      flex-shrink: 0; overflow: hidden;
     }
-    .slash-hist-text { font-size: 0.86rem; flex: 1; word-break: break-word; }
-    .slash-hist-meta { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
-    .slash-restore {
-      background: none; border: none; font-size: 0.74rem; font-weight: 700;
-      color: var(--accent); cursor: pointer; padding: 4px 8px;
-      border-radius: 6px; font-family: inherit; transition: background 160ms;
+    .comm-author-dot img { width: 100%; height: 100%; object-fit: cover; }
+    .comm-author-info    { flex: 1; min-width: 0; }
+    .comm-author-name    { font-size: 0.88rem; font-weight: 800; }
+    .comm-author-meta    { font-size: 0.74rem; color: var(--muted); margin-top: 1px; display: flex; align-items: center; gap: 6px; }
+    .expiry-pill {
+      font-size: 0.66rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      color: var(--accent);
     }
-    .slash-restore:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
-
-    /* ── Approved UIDs ── */
-    .uid-add-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .uid-input {
-      flex: 1; min-width: 200px; padding: 10px 14px;
+    .expiry-pill.soon { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .comm-content {
+      font-size: 0.95rem; line-height: 1.75;
+      color: var(--text); white-space: pre-wrap; word-break: break-word;
+    }
+    .comm-footer {
+      display: flex; align-items: center; gap: 14px;
+      padding-top: 10px; border-top: var(--bw) solid var(--border);
+    }
+    .comm-comment-btn {
+      background: none; border: none;
+      font-size: 0.82rem; font-weight: 700; color: var(--muted);
+      cursor: pointer; font-family: inherit; transition: color 200ms; padding: 0;
+    }
+    .comm-comment-btn:hover { color: var(--accent); }
+    .comm-report-btn {
+      background: none; border: none;
+      font-size: 0.78rem; font-weight: 700; color: var(--muted);
+      cursor: pointer; font-family: inherit; transition: color 200ms; padding: 0;
+    }
+    .comm-report-btn:hover { color: #f59e0b; }
+    .comm-report-btn.reported { color: #f59e0b; cursor: default; }
+    .comm-delete-btn {
+      background: none; border: none;
+      font-size: 0.78rem; font-weight: 700; color: var(--muted);
+      cursor: pointer; font-family: inherit; transition: color 200ms;
+      padding: 0; margin-left: auto;
+    }
+    .comm-delete-btn:hover { color: #ef4444; }
+    /* Comments section */
+    .comm-comments { display: none; flex-direction: column; gap: 8px; }
+    .comm-comments.open { display: flex; }
+    .comm-comment-item {
+      background: var(--surface2); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 10px 14px;
+      position: relative;
+    }
+    .comm-comment-name { font-size: 0.78rem; font-weight: 800; margin-bottom: 3px; }
+    .comm-comment-text { font-size: 0.85rem; color: var(--muted); line-height: 1.55; }
+    .comm-comment-report {
+      position: absolute; top: 8px; right: 10px;
+      background: none; border: none; font-size: 0.7rem; font-weight: 700;
+      color: var(--muted); cursor: pointer; font-family: inherit; padding: 2px 6px;
+      border-radius: 6px; transition: all 160ms;
+    }
+    .comm-comment-report:hover { color: #f59e0b; background: rgba(245,158,11,0.08); }
+    /* Comment form inside card */
+    .comm-comment-form { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+    .comm-comment-name-input {
+      width: 100%; padding: 8px 12px;
       background: var(--bg); border: var(--bw) solid var(--border);
-      border-radius: var(--radius); font-size: 0.86rem;
-      font-family: monospace; color: var(--text); outline: none;
-      transition: border-color 200ms;
-    }
-    .uid-input:focus { border-color: var(--accent); }
-    .uid-label-input {
-      width: 160px; padding: 10px 14px;
-      background: var(--bg); border: var(--bw) solid var(--border);
-      border-radius: var(--radius); font-size: 0.86rem;
+      border-radius: var(--radius); font-size: 0.84rem;
       font-family: inherit; color: var(--text); outline: none;
       transition: border-color 200ms;
     }
-    .uid-label-input:focus { border-color: var(--accent); }
-    .uid-add-btn {
-      padding: 10px 20px; background: var(--accent); color: #fff;
-      border: none; border-radius: 999px; font-size: 0.84rem; font-weight: 800;
-      cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 200ms;
+    .comm-comment-name-input:focus { border-color: var(--accent); }
+    .comm-comment-input {
+      width: 100%; padding: 9px 13px;
+      background: var(--bg); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); font-size: 0.88rem;
+      font-family: inherit; color: var(--text);
+      transition: border-color 200ms; resize: none; min-height: 60px; outline: none;
     }
-    .uid-add-btn:hover { transform: translateY(-1px); }
-    .uid-list { display: flex; flex-direction: column; gap: 8px; }
-    .uid-item {
+    .comm-comment-input:focus { border-color: var(--accent); box-shadow: var(--ring); }
+    .comm-comment-row { display: flex; gap: 8px; align-items: center; width: 100%; }
+    .comm-comment-send {
+      padding: 9px 18px; background: var(--accent); color: #fff;
+      border: none; border-radius: 999px; font-size: 0.82rem; font-weight: 800;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+      transition: all 200ms ease;
+    }
+    .comm-comment-send:hover { transform: translateY(-1px); }
+    .comm-comment-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .comm-comment-reject {
+      font-size: 0.76rem; color: #ef4444;
+      display: none; flex: 1;
+    }
+    .comm-comment-reject.show { display: block; }
+    /* Report modal */
+    .report-modal-bg {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .report-modal {
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 28px; max-width: 420px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .report-modal h3 { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
+    .report-modal p  { font-size: 0.84rem; color: var(--muted); margin: 0 0 18px; }
+    .report-reasons  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .report-reason-btn {
       background: var(--surface2); border: var(--bw) solid var(--border);
       border-radius: 10px; padding: 10px 14px;
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      font-size: 0.86rem; font-weight: 700; color: var(--text);
+      cursor: pointer; font-family: inherit; text-align: left;
+      transition: all 180ms ease;
     }
-    .uid-item-text  { font-family: monospace; font-size: 0.84rem; word-break: break-all; }
-    .uid-item-label { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
-    .uid-remove {
-      background: none; border: none; font-size: 0.8rem; font-weight: 700;
-      color: #ef4444; cursor: pointer; padding: 4px 8px;
-      border-radius: 6px; font-family: inherit; transition: background 160ms; flex-shrink: 0;
+    .report-reason-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .report-modal-cancel {
+      background: none; border: none; font-size: 0.82rem;
+      color: var(--muted); cursor: pointer; font-family: inherit; width: 100%;
+      padding: 6px; transition: color 180ms;
     }
-    .uid-remove:hover     { background: rgba(239,68,68,0.08); }
-    .uid-remove:disabled  { opacity: 0.35; cursor: not-allowed; }
+    .report-modal-cancel:hover { color: var(--text); }
+    /* Feed */
+    #commFeed { display: flex; flex-direction: column; gap: 14px; }
+    .no-posts {
+      text-align: center; padding: 56px 20px;
+      color: var(--muted); font-size: 0.92rem; font-weight: 600;
+      border: var(--bw) dashed var(--border-strong);
+      border-radius: var(--radius); background: var(--surface2);
+    }
+    /* Skeleton */
+    .skeleton {
+      background: var(--surface); border: var(--bw) solid var(--border);
+      border-radius: var(--radius); padding: 20px 22px;
+      display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow);
+    }
+    .skeleton-line {
+      height: 12px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skeleton-line.short { width: 40%; }
+    .skeleton-line.long  { width: 100%; }
+    .skeleton-line.mid   { width: 70%; }
+    /* Info notice */
+    .expiry-notice {
+      background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+      border: var(--bw) solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      font-size: 0.82rem; font-weight: 500; color: var(--muted);
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .expiry-notice strong { color: var(--text); }
   </style>
 </head>
 <body>
 
-<!-- ══ ACCESS WALL ══ -->
-<div id="accessWall">
-  <div class="access-card">
-    <h2>🔒 Admin Access</h2>
-    <p>Sign in with your authorised Google account to continue.</p>
-    <button class="access-btn" id="signInBtn">Sign in with Google</button>
-    <div class="access-err" id="accessErr">Access denied. Your account is not authorised.</div>
+  <nav class="nav">
+    <div class="nav-inner">
+      <img src="pictures/e25ff237663f4c0e1a03faa1e7bfc2c2.jpg" class="nav-logo" alt="Logo">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="informations.html">Informations</a></li>
+        <li><a href="tips.html">Tips</a></li>
+        <li><a href="advices.html">Advices</a></li>
+        <li><a href="community.html" class="active">Community</a></li>
+      </ul>
+      <script src="theme-switcher.js"></script>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+  <div class="nav-drawer" id="navDrawer">
+    <a href="index.html">Home</a>
+    <a href="informations.html">Informations</a>
+    <a href="tips.html">Tips</a>
+    <a href="advices.html">Advices</a>
+    <a href="community.html" class="active">Community</a>
   </div>
-</div>
 
-<!-- ══ MAIN DASHBOARD ══ -->
-<div id="dashMain">
   <div class="page-wrap">
-
-    <div class="dash-header">
-      <div>
-        <h1 class="dash-title">Admin Dashboard</h1>
-        <div class="dash-uid" id="dashUid"></div>
-      </div>
-      <button class="dash-signout" id="signOutBtn">Sign out</button>
+    <div class="page-hero">
+      <h1>Community</h1>
+      <p>Share something you learned. Ask a question. Help someone out.</p>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-label">Pending reports</div><div class="stat-val" id="statPending">—</div></div>
-      <div class="stat-card"><div class="stat-label">Resolved today</div><div class="stat-val" id="statResolved">—</div></div>
-      <div class="stat-card"><div class="stat-label">Total posts</div><div class="stat-val" id="statPosts">—</div></div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="dash-tabs">
-      <button class="dash-tab active" data-tab="reports">Reports</button>
-      <button class="dash-tab" data-tab="slash">Slash Text</button>
-      <button class="dash-tab" data-tab="uids">Approved UIDs</button>
-    </div>
-
-    <!-- Reports panel -->
-    <div id="tab-reports" class="dash-panel active">
-      <div class="report-filters">
-        <button class="rf-btn active" data-filter="pending">Pending</button>
-        <button class="rf-btn" data-filter="resolved">Resolved</button>
-        <button class="rf-btn" data-filter="dismissed">Dismissed</button>
-        <button class="rf-btn" data-filter="all">All</button>
-      </div>
-      <div id="reportsList"></div>
-    </div>
-
-    <!-- Slash text panel -->
-    <div id="tab-slash" class="dash-panel">
-      <div class="panel-inner">
-        <h3>Message of the Day (Slash Text)</h3>
-        <p>This banner appears at the top of every page. Leave it blank and save to hide it.</p>
-        <textarea class="slash-textarea" id="slashInput" placeholder="e.g. 📚 Good luck on exams this week!" maxlength="300"></textarea>
-        <div class="slash-controls">
-          <label class="slash-toggle">
-            <input type="checkbox" id="slashActive" checked>
-            Show banner
-          </label>
-          <button class="panel-save-btn" id="slashSave">Save &amp; Publish</button>
-        </div>
-        <div class="slash-history">
-          <h4>Recent messages</h4>
-          <div id="slashHistoryList"></div>
+    <!-- Write box -->
+    <div class="write-box">
+      <div class="write-box-top">
+        <div class="write-avatar" id="writeAvatar">?</div>
+        <div class="write-inputs">
+          <input class="write-name" id="writeName" placeholder="Your name (optional — defaults to Anonymous)" maxlength="60">
+          <textarea class="write-textarea" id="writeText" placeholder="Share something you learned, ask a question, or help someone out…" maxlength="2000"></textarea>
         </div>
       </div>
-    </div>
-
-    <!-- Approved UIDs panel -->
-    <div id="tab-uids" class="dash-panel">
-      <div class="panel-inner">
-        <h3>Approved Admin UIDs</h3>
-        <p>Only Firebase UIDs listed here can access this dashboard. Your UID is shown below your name at the top of this page. You cannot remove your own UID.</p>
-        <div class="uid-add-row">
-          <input class="uid-input"       id="uidInput"      placeholder="Paste Firebase UID…" maxlength="128">
-          <input class="uid-label-input" id="uidLabelInput" placeholder="Label (optional)"    maxlength="40">
-          <button class="uid-add-btn" id="uidAddBtn">Add</button>
-        </div>
-        <div class="uid-list" id="uidList"></div>
+      <div class="post-reject" id="postReject"></div>
+      <div class="write-bottom">
+        <span class="write-char" id="writeChar">0 / 2000</span>
+        <span class="rate-info" id="postRateInfo"></span>
+        <button class="write-submit" id="writeSubmit">Post</button>
       </div>
     </div>
 
+    <div class="expiry-notice">
+      ⏳ <span>Posts are automatically removed after <strong>30 days</strong> to keep things fresh.</span>
+    </div>
+
+    <div class="sort-bar">
+      <span>Sort:</span>
+      <button class="sort-btn active" data-sort="new">Newest</button>
+      <button class="sort-btn"        data-sort="old">Oldest</button>
+    </div>
+
+    <div id="commFeed">
+      <div class="skeleton"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line mid"></div></div>
+      <div class="skeleton"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line mid"></div></div>
+      <div class="skeleton"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line mid"></div></div>
+    </div>
   </div>
-</div>
 
-<script type="module">
-import { auth, db } from './firebase-config.js';
-import {
-  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  collection, doc, getDoc, getDocs, setDoc, addDoc,
-  updateDoc, deleteDoc, query, orderBy, onSnapshot,
-  serverTimestamp, where
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-/* ── Firestore paths ── */
-const APPROVED_UIDS_DOC = doc(db, 'xn_config', 'approved_uids');
-const SLASH_HISTORY_DOC = doc(db, 'xn_config', 'slash_history');
-const SLASH_TEXT_DOC    = doc(db, 'site_config', 'slash_text');
-const REPORTS_COL       = collection(db, 'xn_reports');
-const POSTS_COL         = collection(db, 'community_posts');
-
-let currentUser   = null;
-let approvedUids  = {};
-let currentFilter = 'pending';
-let slashHistory  = [];
-let reportsUnsub  = null;
-
-/* ════════════════════════════════
-   AUTH
-════════════════════════════════ */
-document.getElementById('signInBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('signInBtn');
-  btn.disabled = true; btn.textContent = 'Signing in…';
-  try {
-    await signInWithPopup(auth, new GoogleAuthProvider());
-  } catch(e) {
-    btn.disabled = false; btn.textContent = 'Sign in with Google';
-  }
-});
-
-document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
-
-onAuthStateChanged(auth, async user => {
-  if (!user) {
-    showWall();
-    return;
-  }
-
-  /* Load approved UIDs from Firestore */
-  try {
-    const snap = await getDoc(APPROVED_UIDS_DOC);
-
-    if (!snap.exists()) {
-      /* First ever sign-in: auto-approve this user as owner */
-      approvedUids = { [user.uid]: { label: 'Owner', addedAt: Date.now() } };
-      await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
-    } else {
-      approvedUids = snap.data().uids || {};
-    }
-
-    if (!approvedUids[user.uid]) {
-      /* User is not on the approved list */
-      document.getElementById('accessErr').classList.add('show');
-      document.getElementById('signInBtn').disabled = false;
-      document.getElementById('signInBtn').textContent = 'Sign in with Google';
-      await signOut(auth);
-      return;
-    }
-  } catch(e) {
-    console.error('UID check failed:', e);
-    showWall();
-    return;
-  }
-
-  currentUser = user;
-  showDash(user);
-});
-
-function showWall() {
-  document.getElementById('accessWall').style.display = 'flex';
-  document.getElementById('dashMain').style.display   = 'none';
-  if (reportsUnsub) { reportsUnsub(); reportsUnsub = null; }
-}
-
-function showDash(user) {
-  document.getElementById('accessWall').style.display = 'none';
-  document.getElementById('dashMain').style.display   = 'block';
-  document.getElementById('dashUid').textContent      = 'UID: ' + user.uid;
-  loadStats();
-  loadReports();
-  loadSlash();
-  renderUids();
-}
-
-/* ════════════════════════════════
-   TABS
-════════════════════════════════ */
-document.querySelectorAll('.dash-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.dash-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
-/* ════════════════════════════════
-   STATS
-════════════════════════════════ */
-async function loadStats() {
-  try {
-    const [pendingSnap, resolvedSnap, postsSnap] = await Promise.all([
-      getDocs(query(REPORTS_COL, where('status', '==', 'pending'))),
-      getDocs(query(REPORTS_COL, where('status', '==', 'resolved'))),
-      getDocs(POSTS_COL)
-    ]);
-
-    document.getElementById('statPending').textContent = pendingSnap.size;
-    document.getElementById('statPosts').textContent   = postsSnap.size;
-
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    let resolvedToday = 0;
-    resolvedSnap.forEach(d => {
-      const ts = d.data().resolvedAt;
-      if (ts && ts.toMillis && ts.toMillis() >= todayStart.getTime()) resolvedToday++;
-    });
-    document.getElementById('statResolved').textContent = resolvedToday;
-  } catch(e) { console.error('Stats failed:', e); }
-}
-
-/* ════════════════════════════════
-   REPORTS
-════════════════════════════════ */
-document.querySelectorAll('.rf-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.rf-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-  });
-});
-
-function loadReports() {
-  const list = document.getElementById('reportsList');
-  list.innerHTML = '<div class="no-reports">Loading…</div>';
-  if (reportsUnsub) reportsUnsub();
-
-  reportsUnsub = onSnapshot(
-    query(REPORTS_COL, orderBy('reportedAt', 'desc')),
-    snap => {
-      list.innerHTML = '';
-      let docs = snap.docs;
-      if (currentFilter !== 'all') {
-        docs = docs.filter(d => d.data().status === currentFilter);
-      }
-      if (!docs.length) {
-        list.innerHTML = '<div class="no-reports">No reports in this category.</div>';
-        return;
-      }
-      docs.forEach(d => list.appendChild(buildReportCard(d.id, d.data())));
-    },
-    err => {
-      console.error('Reports error:', err);
-      list.innerHTML = '<div class="no-reports">Failed to load reports.</div>';
-    }
-  );
-
-  /* Re-render when filter changes (listener above always fetches all) */
-  document.querySelectorAll('.rf-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      /* snapshot already loaded — just re-render with new filter */
-    });
-  });
-}
-
-function buildReportCard(id, data) {
-  const card = document.createElement('div');
-  card.className = 'report-card' + (data.status !== 'pending' ? ' resolved' : '');
-  const ts = data.reportedAt ? new Date(data.reportedAt.toMillis()).toLocaleString() : 'Unknown';
-
-  card.innerHTML = `
-    <div class="report-meta">
-      <span class="report-badge ${data.type}">${data.type === 'post' ? '📝 Post' : '💬 Comment'}</span>
-      <span class="report-badge ${data.status}">${data.status}</span>
-      <span style="font-size:0.74rem;color:var(--muted)">${ts}</span>
+  <!-- Report modal -->
+  <div id="reportModalBg" class="report-modal-bg" style="display:none">
+    <div class="report-modal">
+      <h3>Report this content</h3>
+      <p>Why are you reporting this?</p>
+      <div class="report-reasons" id="reportReasons">
+        <button class="report-reason-btn" data-reason="Harassment or bullying">🚫 Harassment or bullying</button>
+        <button class="report-reason-btn" data-reason="Inappropriate content">🔞 Inappropriate content</button>
+        <button class="report-reason-btn" data-reason="Spam or advertising">📢 Spam or advertising</button>
+        <button class="report-reason-btn" data-reason="Hate speech">💬 Hate speech</button>
+        <button class="report-reason-btn" data-reason="Personal info shared">📋 Personal info shared</button>
+        <button class="report-reason-btn" data-reason="Other">❓ Other</button>
+      </div>
+      <button class="report-modal-cancel" id="reportCancel">Cancel</button>
     </div>
-    <div class="report-reason">${escH(data.reason)}</div>
-    ${data.snippet ? `<div class="report-snippet">${escH(data.snippet)}</div>` : ''}
-    <div class="report-info">
-      Post ID: <code>${escH(data.postId)}</code>
-      ${data.commentIndex != null ? ` · Comment #${data.commentIndex}` : ''}
-      · Reported by: <code>${escH(data.reportedBy || 'guest')}</code>
-    </div>
-    ${data.status === 'pending' ? `
-    <div class="report-actions">
-      <button class="ra-btn danger"   data-action="delete"  data-rid="${id}" data-postid="${data.postId}" data-ci="${data.commentIndex ?? ''}">🗑 Delete content</button>
-      <button class="ra-btn success"  data-action="resolve" data-rid="${id}">✓ Resolve</button>
-      <button class="ra-btn"          data-action="dismiss" data-rid="${id}">✕ Dismiss</button>
-    </div>` : ''}
-  `;
+  </div>
 
-  card.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener('click', () => handleReportAction(btn.dataset.action, btn));
-  });
-  return card;
-}
+  <script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      collection, addDoc, deleteDoc,
+      doc, getDoc, setDoc, query, orderBy, serverTimestamp, Timestamp,
+      onSnapshot, updateDoc, arrayUnion, arrayRemove, where, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-async function handleReportAction(action, btn) {
-  const rid    = btn.dataset.rid;
-  const postId = btn.dataset.postid;
-  const ci     = btn.dataset.ci;
+    /* ─── Config ─── */
+    const THIRTY_DAYS_MS   = 30 * 24 * 60 * 60 * 1000;
+    const POSTS_COL        = collection(db, 'community_posts');
+    const REPORTS_COL      = collection(db, 'xn_reports');
 
-  btn.disabled = true;
+    /* ─── Rate limits ───────────────────────────────────────────
+       Signed-in users: timestamps stored IN their own user doc
+       (users/{uid}.postTimes / commentTimes arrays).
+       The Firestore RULE enforces the array size, so it cannot
+       be bypassed from any client — not just this page.
+       Guests: localStorage only (good-faith; guests can't auth).
+       Posts   : 3 per 7 days
+       Comments: 10 per 2 days                                    */
+    const POST_LIMIT        = 3;
+    const POST_WINDOW_MS    = 7  * 24 * 60 * 60 * 1000;
+    const COMMENT_LIMIT     = 10;
+    const COMMENT_WINDOW_MS = 2  * 24 * 60 * 60 * 1000;
 
-  try {
-    if (action === 'delete') {
-      if (!confirm('Remove this content? It will be hidden from all users immediately.')) {
-        btn.disabled = false; return;
+    let currentUser = null;
+    let currentSort = 'new';
+
+    /* ── guest helpers (localStorage) ── */
+    function lsGetTimes(key) {
+      try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+    }
+    function lsAddTime(key) {
+      const times = lsGetTimes(key);
+      times.push(Date.now());
+      try { localStorage.setItem(key, JSON.stringify(times)); } catch(e) {}
+    }
+    function lsCountInWindow(key, windowMs) {
+      const cutoff = Date.now() - windowMs;
+      return lsGetTimes(key).filter(t => t > cutoff).length;
+    }
+
+    /* ── signed-in helpers: read/write timestamps on user doc ── */
+    async function getTimestamps(uid, field) {
+      try {
+        const snap = await getDoc(doc(db, 'users', uid));
+        return snap.exists() ? (snap.data()[field] || []) : [];
+      } catch(e) { return []; }
+    }
+
+    async function countInWindow(uid, field, windowMs) {
+      const cutoff = Date.now() - windowMs;
+      const times  = await getTimestamps(uid, field);
+      return times.filter(t => t > cutoff).length;
+    }
+
+    /* Prune expired timestamps and append new one.
+       The Firestore rule will reject this write if the
+       in-window count already hits the limit.              */
+    async function recordTimestamp(uid, field, windowMs) {
+      const cutoff  = Date.now() - windowMs;
+      const times   = await getTimestamps(uid, field);
+      const pruned  = times.filter(t => t > cutoff);
+      pruned.push(Date.now());
+      await setDoc(doc(db, 'users', uid), { [field]: pruned }, { merge: true });
+    }
+
+    /* ── canPost / canComment ── */
+    async function canPost() {
+      if (currentUser) {
+        const count = await countInWindow(currentUser.uid, 'postTimes', POST_WINDOW_MS);
+        return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count) };
       }
-      if (ci !== '') {
-        /* Remove a specific comment by index */
-        const postSnap = await getDoc(doc(db, 'community_posts', postId));
-        if (postSnap.exists()) {
-          const comments = [...(postSnap.data().comments || [])];
-          comments.splice(parseInt(ci), 1);
-          await updateDoc(doc(db, 'community_posts', postId), { comments });
+      const count = lsCountInWindow('comm_posts', POST_WINDOW_MS);
+      return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count) };
+    }
+
+    async function canComment() {
+      if (currentUser) {
+        const count = await countInWindow(currentUser.uid, 'commentTimes', COMMENT_WINDOW_MS);
+        return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count) };
+      }
+      const count = lsCountInWindow('comm_comments', COMMENT_WINDOW_MS);
+      return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count) };
+    }
+
+    /* ─── Update rate info label ─── */
+    async function refreshRateInfo() {
+      const { remaining } = await canPost();
+      const el = document.getElementById('postRateInfo');
+      if (!el) return;
+      el.textContent = remaining + ' post' + (remaining !== 1 ? 's' : '') + ' left this week';
+    }
+
+    /* ─── Helpers ─── */
+    function escH(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function timeAgo(ms) {
+      if (!ms) return '';
+      const diff = Date.now() - ms;
+      const m = Math.floor(diff / 60000);
+      if (m < 1)  return 'Just now';
+      if (m < 60) return m + 'm ago';
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h / 24) + 'd ago';
+    }
+    function daysLeft(ms) {
+      if (!ms) return 30;
+      return Math.max(0, Math.ceil((ms - Date.now()) / (24*60*60*1000)));
+    }
+    function initials(name) {
+      if (!name || name === 'Anonymous') return '?';
+      return name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    }
+    function toast(msg) {
+      const t = document.createElement('div');
+      t.textContent = msg;
+      Object.assign(t.style, {
+        position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+        background:'var(--surface)', border:'1.5px solid var(--border)',
+        borderRadius:'12px', padding:'10px 20px', fontSize:'0.84rem',
+        fontWeight:'700', boxShadow:'0 8px 24px rgba(0,0,0,0.15)',
+        zIndex:'99999', color:'var(--text)', whiteSpace:'nowrap'
+      });
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    /* ─── Auth state ─── */
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      const avatar = document.getElementById('writeAvatar');
+      const name   = document.getElementById('writeName');
+      if (user) {
+        name.value    = user.displayName || '';
+        name.disabled = true;
+        name.placeholder = user.displayName || 'Anonymous';
+        if (user.photoURL) {
+          avatar.innerHTML = `<img src="${escH(user.photoURL)}" alt="">`;
+        } else {
+          avatar.textContent = initials(user.displayName);
         }
       } else {
-        /* Flag post as hidden instead of deleting.
-           community.html already filters hidden:true posts out of the feed. */
-        await updateDoc(doc(db, 'community_posts', postId), {
-          hidden:   true,
-          hiddenAt: serverTimestamp(),
-          hiddenBy: currentUser.uid
+        name.disabled = false;
+        avatar.textContent = '?';
+      }
+      refreshRateInfo();
+    });
+
+    /* ─── Char count ─── */
+    const writeText = document.getElementById('writeText');
+    writeText.addEventListener('input', () => {
+      document.getElementById('writeChar').textContent = writeText.value.length + ' / 2000';
+    });
+
+    /* ─── Submit post ─── */
+    document.getElementById('writeSubmit').addEventListener('click', async () => {
+      const text   = writeText.value.trim();
+      const nameEl = document.getElementById('writeName');
+      const author = currentUser
+        ? (currentUser.displayName || 'Anonymous')
+        : (nameEl.value.trim() || 'Anonymous');
+
+      if (!text) {
+        writeText.focus();
+        writeText.style.borderColor = '#ef4444';
+        setTimeout(() => writeText.style.borderColor = '', 1200);
+        return;
+      }
+
+      const btn    = document.getElementById('writeSubmit');
+      const reject = document.getElementById('postReject');
+      reject.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+
+      const limit = await canPost();
+      if (!limit.ok) {
+        reject.textContent = `⚠️ You've reached the limit of ${POST_LIMIT} posts per week. Try again later.`;
+        reject.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Post';
+        return;
+      }
+
+      btn.textContent = 'Posting…';
+      try {
+        const now       = Date.now();
+        const expiresAt = new Timestamp(Math.floor((now + THIRTY_DAYS_MS) / 1000), 0);
+        await addDoc(POSTS_COL, {
+          author,
+          authorId:    currentUser ? currentUser.uid : null,
+          authorPhoto: currentUser ? (currentUser.photoURL || null) : null,
+          text,
+          comments:    [],
+          createdAt:   serverTimestamp(),
+          expiresAt,
+        });
+
+        /* record the action for rate limiting */
+        if (currentUser) {
+          await recordTimestamp(currentUser.uid, 'postTimes', POST_WINDOW_MS);
+        } else {
+          lsAddTime('comm_posts');
+        }
+
+        writeText.value = '';
+        document.getElementById('writeChar').textContent = '0 / 2000';
+        if (!currentUser) nameEl.value = '';
+        refreshRateInfo();
+      } catch(e) {
+        console.error('Post failed:', e);
+        reject.textContent = '⚠️ Could not post — check your connection and try again.';
+        reject.classList.add('show');
+      }
+      btn.disabled = false;
+      btn.textContent = 'Post';
+    });
+
+    /* ─── Report modal ─── */
+    let reportTarget = null;
+
+    document.getElementById('reportCancel').addEventListener('click', closeReport);
+    document.getElementById('reportModalBg').addEventListener('click', e => {
+      if (e.target === document.getElementById('reportModalBg')) closeReport();
+    });
+    document.getElementById('reportReasons').addEventListener('click', async e => {
+      const btn = e.target.closest('.report-reason-btn');
+      if (!btn || !reportTarget) return;
+      document.querySelectorAll('.report-reason-btn').forEach(b => b.disabled = true);
+      try {
+        await addDoc(REPORTS_COL, {
+          reason:       btn.dataset.reason,
+          postId:       reportTarget.postId,
+          commentIndex: reportTarget.commentIndex ?? null,
+          type:         reportTarget.type,
+          snippet:      reportTarget.snippet || '',
+          reportedBy:   currentUser ? currentUser.uid : 'guest',
+          reportedAt:   serverTimestamp(),
+          status:       'pending'
+        });
+        if (reportTarget.originBtn) {
+          reportTarget.originBtn.classList.add('reported');
+          reportTarget.originBtn.textContent = '⚑ Reported';
+          reportTarget.originBtn.disabled = true;
+        }
+        closeReport();
+        toast('Report submitted. Thank you! 👍');
+      } catch(err) {
+        closeReport();
+        toast('⚠️ Could not submit report.');
+      }
+      document.querySelectorAll('.report-reason-btn').forEach(b => b.disabled = false);
+    });
+    function openReport(target) { reportTarget = target; document.getElementById('reportModalBg').style.display = 'flex'; }
+    function closeReport() { document.getElementById('reportModalBg').style.display = 'none'; reportTarget = null; }
+
+    /* ─── Live feed ─── */
+    let unsubscribe = null;
+    function subscribe() {
+      if (unsubscribe) unsubscribe();
+      const q = query(POSTS_COL, orderBy('createdAt', currentSort === 'new' ? 'desc' : 'asc'));
+      unsubscribe = onSnapshot(q, snap => {
+        const feed = document.getElementById('commFeed');
+        feed.innerHTML = '';
+        const now  = Date.now();
+        const docs = snap.docs.filter(d => {
+          const data = d.data();
+          if (data.hidden) return false;
+          const exp = data.expiresAt;
+          return !exp || exp.toMillis() > now;
+        });
+        if (!docs.length) {
+          feed.innerHTML = '<div class="no-posts">No posts yet — be the first to share something! 👆</div>';
+          return;
+        }
+        docs.forEach(d => feed.appendChild(buildCard(d.id, d.data())));
+      }, err => {
+        console.error('Feed error:', err);
+        document.getElementById('commFeed').innerHTML =
+          '<div class="no-posts">Could not load posts. Check your connection.</div>';
+      });
+    }
+
+    /* ─── Build card ─── */
+    function buildCard(id, data) {
+      const card = document.createElement('div');
+      card.className = 'comm-card';
+      card.dataset.id = id;
+
+      const createdMs = data.createdAt ? data.createdAt.toMillis() : Date.now();
+      const expiresMs = data.expiresAt ? data.expiresAt.toMillis() : (createdMs + THIRTY_DAYS_MS);
+      const left      = daysLeft(expiresMs);
+      const soonClass = left <= 2 ? 'expiry-pill soon' : 'expiry-pill';
+      const expLabel  = left === 0 ? 'expires today' : left === 1 ? '1 day left' : `${left}d left`;
+      const isOwner   = currentUser && currentUser.uid === data.authorId;
+      const comments  = data.comments || [];
+
+      const avatarHtml = data.authorPhoto
+        ? `<div class="comm-author-dot"><img src="${escH(data.authorPhoto)}" alt=""></div>`
+        : `<div class="comm-author-dot">${escH(initials(data.author))}</div>`;
+
+      card.innerHTML = `
+        <div class="comm-card-top">
+          ${avatarHtml}
+          <div class="comm-author-info">
+            <div class="comm-author-name">${escH(data.author || 'Anonymous')}</div>
+            <div class="comm-author-meta">
+              ${timeAgo(createdMs)}
+              <span class="${soonClass}">${expLabel}</span>
+            </div>
+          </div>
+        </div>
+        <div class="comm-content">${escH(data.text)}</div>
+        <div class="comm-footer">
+          <button class="comm-comment-btn" data-toggle="${id}">
+            ${comments.length ? comments.length + ' comment' + (comments.length !== 1 ? 's' : '') : 'Comment'}
+          </button>
+          <button class="comm-report-btn" data-report-post="${id}">⚑ Report</button>
+          ${isOwner ? `<button class="comm-delete-btn" data-delete="${id}">Delete</button>` : ''}
+        </div>
+        <div class="comm-comments" id="comments-${id}">
+          ${comments.map((c, i) => `
+            <div class="comm-comment-item">
+              <div class="comm-comment-name">${escH(c.author || 'Anonymous')}</div>
+              <div class="comm-comment-text">${escH(c.text)}</div>
+              <button class="comm-comment-report" data-report-comment="${id}" data-ci="${i}">⚑</button>
+            </div>
+          `).join('')}
+          <div class="comm-comment-form">
+            <input class="comm-comment-name-input" placeholder="Your name (optional)" maxlength="60">
+            <textarea class="comm-comment-input" placeholder="Write a comment…" maxlength="500" rows="2"></textarea>
+            <div class="comm-comment-row">
+              <span class="comm-comment-reject"></span>
+              <button class="comm-comment-send" data-post="${id}">Send</button>
+            </div>
+          </div>
+        </div>`;
+
+      /* Toggle comments */
+      card.querySelector('[data-toggle]').addEventListener('click', () => {
+        card.querySelector(`#comments-${id}`).classList.toggle('open');
+      });
+
+      /* Report post */
+      card.querySelector('[data-report-post]').addEventListener('click', function() {
+        if (this.disabled) return;
+        openReport({ postId: id, type: 'post', snippet: data.text.slice(0, 120), originBtn: this });
+      });
+
+      /* Report comment */
+      card.querySelectorAll('[data-report-comment]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (this.disabled) return;
+          const ci = parseInt(this.dataset.ci);
+          openReport({ postId: id, commentIndex: ci, type: 'comment', snippet: (comments[ci]?.text || '').slice(0, 120), originBtn: this });
+        });
+      });
+
+      /* Send comment */
+      card.querySelector('.comm-comment-send').addEventListener('click', async () => {
+        const ta        = card.querySelector('.comm-comment-input');
+        const nameInput = card.querySelector('.comm-comment-name-input');
+        const rejectEl  = card.querySelector('.comm-comment-reject');
+        const sendBtn   = card.querySelector('.comm-comment-send');
+        const text      = ta.value.trim();
+        if (!text) return;
+
+        const author = currentUser
+          ? (currentUser.displayName || 'Anonymous')
+          : (nameInput.value.trim() || 'Anonymous');
+
+        rejectEl.classList.remove('show');
+        sendBtn.disabled = true;
+        sendBtn.textContent = '…';
+
+        const limit = await canComment();
+        if (!limit.ok) {
+          rejectEl.textContent = `⚠️ You've reached the limit of ${COMMENT_LIMIT} comments per 2 days.`;
+          rejectEl.classList.add('show');
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Send';
+          return;
+        }
+
+        try {
+          await updateDoc(doc(db, 'community_posts', id), {
+            comments: arrayUnion({ author, text, ts: Date.now() })
+          });
+
+          /* record for rate limiting */
+          if (currentUser) {
+            await recordTimestamp(currentUser.uid, 'commentTimes', COMMENT_WINDOW_MS);
+          } else {
+            lsAddTime('comm_comments');
+          }
+
+          ta.value = '';
+          nameInput.value = '';
+        } catch(e) {
+          console.error('Comment failed:', e);
+          rejectEl.textContent = '⚠️ Could not post comment — try again.';
+          rejectEl.classList.add('show');
+        }
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+      });
+
+      /* Delete post */
+      const delBtn = card.querySelector('[data-delete]');
+      if (delBtn) {
+        delBtn.addEventListener('click', async () => {
+          if (!confirm('Delete this post? This cannot be undone.')) return;
+          try {
+            await deleteDoc(doc(db, 'community_posts', id));
+          } catch(e) {
+            toast('Could not delete post.');
+          }
         });
       }
-      await updateDoc(doc(db, 'xn_reports', rid), {
-        status:     'resolved',
-        resolvedAt: serverTimestamp(),
-        resolvedBy: currentUser.uid
+
+      return card;
+    }
+
+    /* ─── Sort buttons ─── */
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSort = btn.dataset.sort;
+        subscribe();
       });
-    } else {
-      const status = action === 'resolve' ? 'resolved' : 'dismissed';
-      await updateDoc(doc(db, 'xn_reports', rid), {
-        status,
-        resolvedAt: serverTimestamp(),
-        resolvedBy: currentUser.uid
-      });
-    }
-    loadStats();
-  } catch(e) {
-    alert('Action failed: ' + e.message);
-    btn.disabled = false;
-  }
-}
-
-/* ════════════════════════════════
-   SLASH TEXT
-════════════════════════════════ */
-async function loadSlash() {
-  try {
-    const [textSnap, histSnap] = await Promise.all([
-      getDoc(SLASH_TEXT_DOC),
-      getDoc(SLASH_HISTORY_DOC)
-    ]);
-    if (textSnap.exists()) {
-      const d = textSnap.data();
-      document.getElementById('slashInput').value  = d.text   || '';
-      document.getElementById('slashActive').checked = d.active !== false;
-    }
-    if (histSnap.exists()) {
-      slashHistory = histSnap.data().entries || [];
-      renderSlashHistory();
-    }
-  } catch(e) { console.error('Slash load failed:', e); }
-}
-
-document.getElementById('slashSave').addEventListener('click', async () => {
-  const text   = document.getElementById('slashInput').value.trim();
-  const active = document.getElementById('slashActive').checked;
-  const btn    = document.getElementById('slashSave');
-  btn.disabled = true; btn.textContent = 'Saving…';
-  try {
-    await setDoc(SLASH_TEXT_DOC, { text, active, updatedAt: serverTimestamp() });
-    if (text) {
-      slashHistory.unshift({ text, active, ts: Date.now(), by: currentUser.uid });
-      if (slashHistory.length > 20) slashHistory.pop();
-      await setDoc(SLASH_HISTORY_DOC, { entries: slashHistory });
-      renderSlashHistory();
-    }
-    showToast('Slash text saved ✓');
-  } catch(e) {
-    alert('Save failed: ' + e.message);
-  }
-  btn.disabled = false; btn.textContent = 'Save & Publish';
-});
-
-function renderSlashHistory() {
-  const list = document.getElementById('slashHistoryList');
-  if (!slashHistory.length) {
-    list.innerHTML = '<p style="font-size:0.82rem;color:var(--muted)">No history yet.</p>';
-    return;
-  }
-  list.innerHTML = slashHistory.slice(0, 10).map((h, i) => `
-    <div class="slash-hist-item">
-      <div>
-        <div class="slash-hist-text">${escH(h.text)}</div>
-        <div class="slash-hist-meta">${new Date(h.ts).toLocaleDateString()}</div>
-      </div>
-      <button class="slash-restore" data-i="${i}">↩ Restore</button>
-    </div>
-  `).join('');
-  list.querySelectorAll('.slash-restore').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const h = slashHistory[parseInt(btn.dataset.i)];
-      document.getElementById('slashInput').value    = h.text;
-      document.getElementById('slashActive').checked = h.active;
     });
-  });
-}
 
-/* ════════════════════════════════
-   APPROVED UIDs
-════════════════════════════════ */
-function renderUids() {
-  const list    = document.getElementById('uidList');
-  const entries = Object.entries(approvedUids);
-  if (!entries.length) {
-    list.innerHTML = '<p style="font-size:0.82rem;color:var(--muted)">No UIDs yet.</p>';
-    return;
-  }
-  list.innerHTML = entries.map(([uid, meta]) => `
-    <div class="uid-item">
-      <div>
-        <div class="uid-item-text">${escH(uid)}</div>
-        <div class="uid-item-label">${escH(meta.label || '')}${meta.addedAt ? ' · Added ' + new Date(meta.addedAt).toLocaleDateString() : ''}</div>
-      </div>
-      <button class="uid-remove" data-uid="${escH(uid)}" ${uid === currentUser?.uid ? 'disabled title="Cannot remove yourself"' : ''}>Remove</button>
-    </div>
-  `).join('');
+    subscribe();
+  </script>
 
-  list.querySelectorAll('.uid-remove:not([disabled])').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm('Remove this UID? That person will lose admin access.')) return;
-      btn.disabled = true;
-      delete approvedUids[btn.dataset.uid];
-      await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
-      renderUids();
-      showToast('UID removed.');
-    });
-  });
-}
-
-document.getElementById('uidAddBtn').addEventListener('click', async () => {
-  const uid   = document.getElementById('uidInput').value.trim();
-  const label = document.getElementById('uidLabelInput').value.trim();
-  if (!uid) return;
-  const btn = document.getElementById('uidAddBtn');
-  btn.disabled = true;
-  approvedUids[uid] = { label, addedAt: Date.now() };
-  await setDoc(APPROVED_UIDS_DOC, { uids: approvedUids });
-  document.getElementById('uidInput').value      = '';
-  document.getElementById('uidLabelInput').value = '';
-  renderUids();
-  showToast('UID added ✓');
-  btn.disabled = false;
-});
-
-/* ════════════════════════════════
-   HELPERS
-════════════════════════════════ */
-function escH(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function showToast(msg) {
-  const t = document.createElement('div');
-  t.textContent = msg;
-  Object.assign(t.style, {
-    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
-    background:'var(--surface)', border:'1.5px solid var(--border)',
-    borderRadius:'12px', padding:'10px 20px', fontSize:'0.84rem',
-    fontWeight:'700', boxShadow:'0 8px 24px rgba(0,0,0,0.15)',
-    zIndex:'99999', color:'var(--text)', whiteSpace:'nowrap'
-  });
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
-</script>
-
-<script src="theme-switcher.js"></script>
+  <script src="page-transition.js"></script>
+  <script src="nav.js"></script>
 </body>
 </html>
