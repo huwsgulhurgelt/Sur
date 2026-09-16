@@ -20,6 +20,55 @@
       margin: 0 auto;
       padding: 20px;
     }
+    .login-wrapper {
+      max-width: 400px;
+      margin: 100px auto;
+      background: white;
+      padding: 40px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .login-wrapper h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .login-wrapper p {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .auth-google {
+      width: 100%;
+      padding: 12px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 200ms ease;
+    }
+    .auth-google:hover {
+      border-color: #333;
+      background: #fafafa;
+    }
+    .status {
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      display: none;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
     h1 {
       font-size: 28px;
       margin-bottom: 20px;
@@ -94,22 +143,10 @@
     button:hover {
       background: #555;
     }
-    .status {
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 4px;
-      display: none;
-    }
     .status.success {
       background: #d4edda;
       color: #155724;
       border: 1px solid #c3e6cb;
-      display: block;
-    }
-    .status.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
       display: block;
     }
     .info-box {
@@ -142,27 +179,76 @@
     .hidden {
       display: none;
     }
+    .user-info {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: space-between;
+    }
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .user-details {
+      flex: 1;
+    }
+    .user-name {
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .user-email {
+      font-size: 12px;
+      color: #666;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Admin Panel</h1>
-
-    <div id="loginForm">
-      <div class="form-group">
-        <label>Admin Password:</label>
-        <input type="password" id="adminPassword" placeholder="Enter admin password">
-      </div>
-      <button onclick="authenticate()">Login</button>
+    <!-- Login View -->
+    <div id="loginView" class="login-wrapper">
+      <h1>Admin Panel</h1>
+      <p>Sign in with Google to access admin controls</p>
       <div id="loginStatus" class="status"></div>
+      <button class="auth-google" id="googleLoginBtn">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.798 5.956-2.18l-2.908-2.259c-.834.486-1.902.753-3.048.753-2.344 0-4.328-1.545-5.036-3.74H1.07v2.332C2.56 16.748 5.631 18 9 18z"/><path fill="#FBBC04" d="M3.99 10.574c-.18-.486-.283-1.003-.283-1.54s.102-1.054.283-1.54V4.162H1.07C.38 5.746 0 7.33 0 9.034s.38 3.288 1.07 4.872l2.92-2.332z"/><path fill="#EA4335" d="M9 3.88c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.631 0 2.56 1.25 1.07 3.162l2.92 2.332c.708-2.195 2.692-3.614 5.01-3.614z"/></svg>
+        Sign in with Google
+      </button>
     </div>
 
-    <div id="adminPanel" class="hidden">
+    <!-- Admin View -->
+    <div id="adminView" class="hidden">
+      <h1>Admin Panel</h1>
+      
+      <div class="user-info">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-details">
+            <div class="user-name" id="userName"></div>
+            <div class="user-email" id="userEmail"></div>
+          </div>
+        </div>
+        <button onclick="logout()" style="background: #e74c3c;">Sign Out</button>
+      </div>
+
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('slash')">Slash Text</button>
         <button class="tab-btn" onclick="switchTab('reports')">Reports</button>
         <button class="tab-btn" onclick="switchTab('posts')">Posts</button>
-        <button class="tab-btn" onclick="switchTab('logout')">Logout</button>
       </div>
 
       <!-- Slash Text Tab -->
@@ -235,73 +321,74 @@
 
   <script type="module">
     import { auth, db } from './firebase-config.js';
-    import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       doc, getDoc, setDoc, collection, getDocs, updateDoc,
       deleteDoc, serverTimestamp, query, orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // Admin credentials - Change this to your email and password
-    const ADMIN_EMAIL = 'admin@sur.local';
-    const ADMIN_PASSWORD = 'sur_admin_password_123'; // Change this!
+    // CHANGE THIS TO YOUR EMAIL
+    const ADMIN_EMAIL = 'huwsgulhurgelt1@gmail.com';
 
+    const provider = new GoogleAuthProvider();
     let currentUser = null;
 
-    // Authenticate
-    window.authenticate = async function() {
-      const password = document.getElementById('adminPassword').value;
-      const statusEl = document.getElementById('loginStatus');
-
-      if (password !== ADMIN_PASSWORD) {
-        statusEl.textContent = 'Invalid password';
-        statusEl.className = 'status error';
-        return;
-      }
-
+    // Google Login
+    document.getElementById('googleLoginBtn').addEventListener('click', async function() {
       try {
-        await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD).catch(() => {
-          // If account doesn't exist, just allow login if password matches
-          // This is a simple auth for admin-only use
-        });
-        currentUser = { authenticated: true };
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('adminPanel').classList.remove('hidden');
-        loadSlashText();
-      } catch(e) {
-        // Password-based auth worked
-        if (password === ADMIN_PASSWORD) {
-          currentUser = { authenticated: true };
-          document.getElementById('loginForm').classList.add('hidden');
-          document.getElementById('adminPanel').classList.remove('hidden');
-          loadSlashText();
+        const result = await signInWithPopup(auth, provider);
+        if (result.user.email === ADMIN_EMAIL) {
+          currentUser = result.user;
+          showAdminPanel();
         } else {
-          statusEl.textContent = 'Authentication failed';
+          const statusEl = document.getElementById('loginStatus');
+          statusEl.textContent = 'Access denied. Only admins can access this panel.';
           statusEl.className = 'status error';
+          await signOut(auth);
+        }
+      } catch(e) {
+        console.error('Login error:', e);
+      }
+    });
+
+    // Check if user is already logged in
+    onAuthStateChanged(auth, function(user) {
+      if (user) {
+        if (user.email === ADMIN_EMAIL) {
+          currentUser = user;
+          showAdminPanel();
+        } else {
+          signOut(auth);
         }
       }
+    });
+
+    function showAdminPanel() {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('adminView').classList.remove('hidden');
+      document.getElementById('userName').textContent = currentUser.displayName || 'Admin';
+      document.getElementById('userEmail').textContent = currentUser.email;
+      if (currentUser.photoURL) {
+        document.getElementById('userAvatar').innerHTML = '<img src="' + currentUser.photoURL + '" alt="">';
+      }
+      loadSlashText();
+    }
+
+    // Logout
+    window.logout = async function() {
+      await signOut(auth);
+      currentUser = null;
+      document.getElementById('adminView').classList.add('hidden');
+      document.getElementById('loginView').classList.remove('hidden');
     };
 
     // Tab switching
     window.switchTab = function(tabName) {
-      if (tabName === 'logout') {
-        logout();
-        return;
-      }
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById(tabName).classList.add('active');
       event.target.classList.add('active');
     };
-
-    // Logout
-    function logout() {
-      currentUser = null;
-      document.getElementById('adminPanel').classList.add('hidden');
-      document.getElementById('loginForm').classList.remove('hidden');
-      document.getElementById('adminPassword').value = '';
-      signOut(auth).catch(() => {});
-    }
-    window.logout = logout;
 
     // ========== SLASH TEXT ==========
     window.loadSlashText = async function() {
