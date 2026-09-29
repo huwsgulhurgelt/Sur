@@ -5,221 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      color: #333;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
     .login-wrapper {
-      max-width: 400px;
-      margin: 100px auto;
-      background: white;
-      padding: 40px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      text-align: center;
+      max-width: 400px; margin: 100px auto; background: white;
+      padding: 40px; border: 1px solid #ddd; border-radius: 8px; text-align: center;
     }
-    .login-wrapper h1 {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-    .login-wrapper p {
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 14px;
-    }
+    .login-wrapper h1 { font-size: 24px; margin-bottom: 10px; }
+    .login-wrapper p { color: #666; margin-bottom: 30px; font-size: 14px; }
     .auth-google {
-      width: 100%;
-      padding: 12px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: all 200ms ease;
+      width: 100%; padding: 12px; background: white; border: 1px solid #ddd;
+      border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
     }
-    .auth-google:hover {
-      border-color: #333;
-      background: #fafafa;
-    }
-    .status {
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 4px;
-      display: none;
-    }
-    .status.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-      display: block;
-    }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-    }
-    h2 {
-      font-size: 18px;
-      margin-top: 30px;
-      margin-bottom: 15px;
-      background: #e8e8e8;
-      padding: 10px;
-    }
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #ddd;
-    }
-    .tab-btn {
-      padding: 10px 20px;
-      border: none;
-      background: #ddd;
-      cursor: pointer;
-      font-size: 14px;
-      border-bottom: 3px solid transparent;
-    }
-    .tab-btn.active {
-      background: #fff;
-      border-bottom: 3px solid #333;
-    }
-    .tab-content {
-      display: none;
-      background: #fff;
-      padding: 20px;
-      border: 1px solid #ddd;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    input[type="text"],
-    input[type="password"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      font-family: Arial, sans-serif;
-    }
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-    button {
-      background: #333;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button:hover {
-      background: #555;
-    }
-    .status.success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-      display: block;
-    }
-    .info-box {
-      background: #e7f3ff;
-      padding: 10px;
-      border-left: 4px solid #2196F3;
-      margin-bottom: 15px;
-      font-size: 13px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      text-align: left;
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      font-size: 13px;
-    }
-    th {
-      background: #f0f0f0;
-      font-weight: bold;
-    }
-    .btn-small {
-      padding: 5px 10px;
-      font-size: 12px;
-      margin-right: 5px;
-    }
-    .hidden {
-      display: none;
-    }
+    .auth-google:hover { border-color: #333; background: #fafafa; }
+    .status { padding: 10px; margin-bottom: 15px; border-radius: 4px; display: none; }
+    .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
+    h1 { font-size: 28px; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+    h2 { font-size: 18px; margin-top: 30px; margin-bottom: 15px; background: #e8e8e8; padding: 10px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #ddd; }
+    .tab-btn { padding: 10px 20px; border: none; background: #ddd; cursor: pointer; font-size: 14px; border-bottom: 3px solid transparent; }
+    .tab-btn.active { background: #fff; border-bottom: 3px solid #333; }
+    .tab-content { display: none; background: #fff; padding: 20px; border: 1px solid #ddd; }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+    input[type="text"], textarea { width: 100%; padding: 8px; border: 1px solid #ccc; font-size: 14px; font-family: Arial, sans-serif; }
+    textarea { min-height: 100px; resize: vertical; }
+    button { background: #333; color: white; padding: 10px 20px; border: none; cursor: pointer; font-size: 14px; }
+    button:hover { background: #555; }
+    .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
+    .info-box { background: #e7f3ff; padding: 10px; border-left: 4px solid #2196F3; margin-bottom: 15px; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #ddd; font-size: 13px; vertical-align: top; }
+    th { background: #f0f0f0; font-weight: bold; }
+    .btn-small { padding: 5px 10px; font-size: 12px; margin: 0 4px 4px 0; }
+    .btn-small.ok { background: #2e7d32; }
+    .btn-small.mute { background: #6b7280; }
+    .btn-small.bad { background: #c62828; }
+    .hidden { display: none; }
     .user-info {
-      background: #f0f0f0;
-      padding: 15px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      justify-content: space-between;
+      background: #f0f0f0; padding: 15px; border-radius: 4px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 15px; justify-content: space-between;
     }
     .user-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      width: 50px; height: 50px; border-radius: 50%; background: #ddd;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
-    .user-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .user-details {
-      flex: 1;
-    }
-    .user-name {
-      font-weight: bold;
-      font-size: 14px;
-    }
-    .user-email {
-      font-size: 12px;
-      color: #666;
-    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-details { flex: 1; }
+    .user-name { font-weight: bold; font-size: 14px; }
+    .user-email { font-size: 12px; color: #666; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Login View -->
     <div id="loginView" class="login-wrapper">
       <h1>Admin Panel</h1>
       <p>Sign in with Google to access admin controls</p>
@@ -230,10 +71,9 @@
       </button>
     </div>
 
-    <!-- Admin View -->
     <div id="adminView" class="hidden">
       <h1>Admin Panel</h1>
-      
+
       <div class="user-info">
         <div style="display: flex; align-items: center; gap: 15px;">
           <div class="user-avatar" id="userAvatar">?</div>
@@ -246,38 +86,37 @@
       </div>
 
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('slash')">Slash Text</button>
-        <button class="tab-btn" onclick="switchTab('reports')">Reports</button>
-        <button class="tab-btn" onclick="switchTab('posts')">Posts</button>
+        <button class="tab-btn active" data-tab="slash" onclick="switchTab('slash', event)">Slash Text</button>
+        <button class="tab-btn" data-tab="reports" onclick="switchTab('reports', event)">Reports</button>
+        <button class="tab-btn" data-tab="posts" onclick="switchTab('posts', event)">Posts</button>
       </div>
 
-      <!-- Slash Text Tab -->
       <div id="slash" class="tab-content active">
         <h2>Slash Text (Banner Message)</h2>
-        <div class="info-box">
-          Slash text is a banner message that appears at the top of all pages. Leave empty to disable.
-        </div>
+        <div class="info-box">Slash text is a banner message that appears at the top of all pages. Leave empty to disable.</div>
         <div id="slashStatus" class="status"></div>
         <div class="form-group">
           <label>Banner Text:</label>
           <textarea id="slashTextInput" placeholder="Enter banner text..."></textarea>
         </div>
         <div class="form-group">
-          <label>
-            <input type="checkbox" id="slashActiveInput"> Active
-          </label>
+          <label><input type="checkbox" id="slashActiveInput"> Active</label>
         </div>
         <button onclick="saveSlashText()">Save Slash Text</button>
         <button onclick="loadSlashText()" style="margin-left: 10px;">Refresh</button>
       </div>
 
-      <!-- Reports Tab -->
       <div id="reports" class="tab-content">
         <h2>Community Reports</h2>
         <div class="info-box">
-          Manage reported posts and comments from community.
+          <strong>Resolve</strong> hides the post on the site.<br>
+          <strong>Dismiss</strong> closes the report and leaves the post up.<br>
+          <strong>Delete</strong> removes the report and deletes the post.
         </div>
         <div id="reportsStatus" class="status"></div>
+        <label style="font-weight:normal;margin-bottom:10px;">
+          <input type="checkbox" id="showAllReports"> Show resolved / dismissed too
+        </label>
         <button onclick="loadReports()">Load Reports</button>
         <table id="reportsTable">
           <thead>
@@ -295,12 +134,9 @@
         </table>
       </div>
 
-      <!-- Posts Tab -->
       <div id="posts" class="tab-content">
         <h2>Community Posts</h2>
-        <div class="info-box">
-          View and manage community posts. You can hide posts manually if needed.
-        </div>
+        <div class="info-box">View and manage community posts. Hide removes it from the feed. Delete removes it completely.</div>
         <div id="postsStatus" class="status"></div>
         <button onclick="loadPosts()">Load Posts</button>
         <table id="postsTable">
@@ -310,6 +146,7 @@
               <th>Text</th>
               <th>Created</th>
               <th>Comments</th>
+              <th>Hidden</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -327,13 +164,14 @@
       deleteDoc, serverTimestamp, query, orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // CHANGE THIS TO YOUR EMAIL
     const ADMIN_EMAIL = 'beforeedit5262@gmail.com';
-
     const provider = new GoogleAuthProvider();
     let currentUser = null;
 
-    // Google Login
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     document.getElementById('googleLoginBtn').addEventListener('click', async function() {
       try {
         const result = await signInWithPopup(auth, provider);
@@ -351,7 +189,6 @@
       }
     });
 
-    // Check if user is already logged in
     onAuthStateChanged(auth, function(user) {
       if (user) {
         if (user.email === ADMIN_EMAIL) {
@@ -372,9 +209,9 @@
         document.getElementById('userAvatar').innerHTML = '<img src="' + currentUser.photoURL + '" alt="">';
       }
       loadSlashText();
+      loadReports();
     }
 
-    // Logout
     window.logout = async function() {
       await signOut(auth);
       currentUser = null;
@@ -382,15 +219,16 @@
       document.getElementById('loginView').classList.remove('hidden');
     };
 
-    // Tab switching
-    window.switchTab = function(tabName) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    window.switchTab = function(tabName, ev) {
+      document.querySelectorAll('.tab-content').forEach(function(tab) { tab.classList.remove('active'); });
+      document.querySelectorAll('.tab-btn').forEach(function(btn) { btn.classList.remove('active'); });
       document.getElementById(tabName).classList.add('active');
-      event.target.classList.add('active');
+      var btn = (ev && ev.currentTarget) || document.querySelector('.tab-btn[data-tab="' + tabName + '"]');
+      if (btn) btn.classList.add('active');
+      if (tabName === 'reports') loadReports();
+      if (tabName === 'posts') loadPosts();
     };
 
-    // ========== SLASH TEXT ==========
     window.loadSlashText = async function() {
       try {
         const snap = await getDoc(doc(db, 'site_config', 'slash_text'));
@@ -404,14 +242,13 @@
         }
       } catch(e) {
         console.error('Error loading slash text:', e);
-        showStatus('slashStatus', 'Error loading data', 'error');
+        showStatus('slashStatus', 'Error loading data: ' + e.message, 'error');
       }
     };
 
     window.saveSlashText = async function() {
       const text = document.getElementById('slashTextInput').value;
       const active = document.getElementById('slashActiveInput').checked;
-
       try {
         await setDoc(doc(db, 'site_config', 'slash_text'), {
           text: text,
@@ -420,40 +257,72 @@
         });
         showStatus('slashStatus', 'Slash text saved successfully', 'success');
       } catch(e) {
-        console.error('Error saving:', e);
         showStatus('slashStatus', 'Error saving slash text: ' + e.message, 'error');
       }
     };
 
-    // ========== REPORTS ==========
+    document.getElementById('showAllReports').addEventListener('change', function() {
+      loadReports();
+    });
+
+    async function hideCommunityPost(postId) {
+      if (!postId) return;
+      await updateDoc(doc(db, 'community_posts', postId), { hidden: true });
+    }
+
+    async function removeReportedComment(postId, commentIndex) {
+      if (!postId || commentIndex === null || commentIndex === undefined || commentIndex === '') return;
+      const i = parseInt(commentIndex, 10);
+      if (isNaN(i)) return;
+      const postSnap = await getDoc(doc(db, 'community_posts', postId));
+      if (!postSnap.exists()) return;
+      const comments = (postSnap.data().comments || []).slice();
+      if (i < 0 || i >= comments.length) return;
+      comments.splice(i, 1);
+      await updateDoc(doc(db, 'community_posts', postId), { comments: comments });
+    }
+
     window.loadReports = async function() {
       try {
         const snap = await getDocs(collection(db, 'xn_reports'));
         const tableBody = document.querySelector('#reportsTable tbody');
         tableBody.innerHTML = '';
+        const showAll = document.getElementById('showAllReports').checked;
+        const rows = [];
 
-        if (snap.empty) {
-          tableBody.innerHTML = '<tr><td colspan="7">No reports yet</td></tr>';
+        snap.docs.forEach(function(reportSnap) {
+          const data = reportSnap.data();
+          const status = data.status || 'pending';
+          if (!showAll && status !== 'pending') return;
+          rows.push({ id: reportSnap.id, data: data, ms: data.reportedAt && data.reportedAt.toMillis ? data.reportedAt.toMillis() : 0 });
+        });
+
+        rows.sort(function(a, b) { return b.ms - a.ms; });
+
+        if (!rows.length) {
+          tableBody.innerHTML = '<tr><td colspan="7">No reports' + (showAll ? '' : ' pending') + '</td></tr>';
           return;
         }
 
-        snap.docs.forEach(doc => {
-          const data = doc.data();
-          const row = document.createElement('tr');
-          const createdAt = data.reportedAt ? new Date(data.reportedAt.toMillis()).toLocaleDateString() : 'N/A';
-          row.innerHTML = `
-            <td>${createdAt}</td>
-            <td>${data.type || 'N/A'}</td>
-            <td>${data.reason || 'N/A'}</td>
-            <td>${(data.snippet || '').substring(0, 50)}...</td>
-            <td>${data.reportedBy || 'guest'}</td>
-            <td>${data.status || 'pending'}</td>
-            <td>
-              <button class="btn-small" onclick="markReportResolved('${doc.id}')">Mark Resolved</button>
-              <button class="btn-small" onclick="deleteReport('${doc.id}')">Delete</button>
-            </td>
-          `;
-          tableBody.appendChild(row);
+        rows.forEach(function(row) {
+          const data = row.data;
+          const createdAt = row.ms ? new Date(row.ms).toLocaleString() : 'N/A';
+          const postId = data.postId || '';
+          const ci = (data.commentIndex === 0 || data.commentIndex) ? String(data.commentIndex) : '';
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td>' + esc(createdAt) + '</td>' +
+            '<td>' + esc(data.type || 'N/A') + '</td>' +
+            '<td>' + esc(data.reason || 'N/A') + '</td>' +
+            '<td>' + esc((data.snippet || '').substring(0, 80)) + '</td>' +
+            '<td>' + esc(data.reportedBy || 'guest') + '</td>' +
+            '<td>' + esc(data.status || 'pending') + '</td>' +
+            '<td>' +
+              '<button class="btn-small ok" data-act="resolve" data-id="' + esc(row.id) + '" data-post="' + esc(postId) + '" data-type="' + esc(data.type || '') + '" data-ci="' + esc(ci) + '">Resolve</button>' +
+              '<button class="btn-small mute" data-act="dismiss" data-id="' + esc(row.id) + '">Dismiss</button>' +
+              '<button class="btn-small bad" data-act="delete" data-id="' + esc(row.id) + '" data-post="' + esc(postId) + '">Delete</button>' +
+            '</td>';
+          tableBody.appendChild(tr);
         });
       } catch(e) {
         console.error('Error loading reports:', e);
@@ -461,28 +330,53 @@
       }
     };
 
-    window.markReportResolved = async function(reportId) {
+    document.querySelector('#reportsTable').addEventListener('click', async function(e) {
+      const btn = e.target.closest('button[data-act]');
+      if (!btn) return;
+      const act = btn.dataset.act;
+      const reportId = btn.dataset.id;
+      const postId = btn.dataset.post || '';
+      const type = btn.dataset.type || '';
+      const ci = btn.dataset.ci;
+      btn.disabled = true;
       try {
-        await updateDoc(doc(db, 'xn_reports', reportId), {
-          status: 'resolved'
-        });
-        loadReports();
-      } catch(e) {
-        showStatus('reportsStatus', 'Error updating report: ' + e.message, 'error');
+        if (act === 'resolve') {
+          if (type === 'comment' && postId) {
+            await removeReportedComment(postId, ci);
+          } else if (postId) {
+            await hideCommunityPost(postId);
+          }
+          await updateDoc(doc(db, 'xn_reports', reportId), {
+            status: 'resolved',
+            resolvedAt: serverTimestamp()
+          });
+          showStatus('reportsStatus', 'Resolved. The content is hidden/removed from the site.', 'success');
+        } else if (act === 'dismiss') {
+          await updateDoc(doc(db, 'xn_reports', reportId), {
+            status: 'dismissed',
+            resolvedAt: serverTimestamp()
+          });
+          showStatus('reportsStatus', 'Report dismissed. The post was left up.', 'success');
+        } else if (act === 'delete') {
+          if (!confirm('Delete this report and the post?')) {
+            btn.disabled = false;
+            return;
+          }
+          if (postId) {
+            try { await deleteDoc(doc(db, 'community_posts', postId)); } catch (err) {
+              await hideCommunityPost(postId);
+            }
+          }
+          await deleteDoc(doc(db, 'xn_reports', reportId));
+          showStatus('reportsStatus', 'Report and post deleted.', 'success');
+        }
+        await loadReports();
+      } catch (err) {
+        showStatus('reportsStatus', 'Action failed: ' + err.message + ' — publish the Firestore rules if this is a permissions error.', 'error');
+        btn.disabled = false;
       }
-    };
+    });
 
-    window.deleteReport = async function(reportId) {
-      if (!confirm('Delete this report?')) return;
-      try {
-        await deleteDoc(doc(db, 'xn_reports', reportId));
-        loadReports();
-      } catch(e) {
-        showStatus('reportsStatus', 'Error deleting report: ' + e.message, 'error');
-      }
-    };
-
-    // ========== POSTS ==========
     window.loadPosts = async function() {
       try {
         const q = query(collection(db, 'community_posts'), orderBy('createdAt', 'desc'));
@@ -491,26 +385,27 @@
         tableBody.innerHTML = '';
 
         if (snap.empty) {
-          tableBody.innerHTML = '<tr><td colspan="5">No posts yet</td></tr>';
+          tableBody.innerHTML = '<tr><td colspan="6">No posts yet</td></tr>';
           return;
         }
 
-        snap.docs.forEach(doc => {
-          const data = doc.data();
-          const row = document.createElement('tr');
+        snap.docs.forEach(function(postSnap) {
+          const data = postSnap.data();
           const createdAt = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A';
           const commentsCount = (data.comments || []).length;
-          row.innerHTML = `
-            <td>${data.author || 'Anonymous'}</td>
-            <td>${(data.text || '').substring(0, 50)}...</td>
-            <td>${createdAt}</td>
-            <td>${commentsCount}</td>
-            <td>
-              <button class="btn-small" onclick="hidePost('${doc.id}')">Hide</button>
-              <button class="btn-small" onclick="deletePost('${doc.id}')">Delete</button>
-            </td>
-          `;
-          tableBody.appendChild(row);
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td>' + esc(data.author || 'Anonymous') + '</td>' +
+            '<td>' + esc((data.text || '').substring(0, 50)) + '</td>' +
+            '<td>' + esc(createdAt) + '</td>' +
+            '<td>' + commentsCount + '</td>' +
+            '<td>' + (data.hidden ? 'yes' : 'no') + '</td>' +
+            '<td>' +
+              '<button class="btn-small" data-pact="hide" data-id="' + esc(postSnap.id) + '">Hide</button>' +
+              '<button class="btn-small" data-pact="unhide" data-id="' + esc(postSnap.id) + '">Unhide</button>' +
+              '<button class="btn-small bad" data-pact="delete" data-id="' + esc(postSnap.id) + '">Delete</button>' +
+            '</td>';
+          tableBody.appendChild(tr);
         });
       } catch(e) {
         console.error('Error loading posts:', e);
@@ -518,35 +413,41 @@
       }
     };
 
-    window.hidePost = async function(postId) {
+    document.querySelector('#postsTable').addEventListener('click', async function(e) {
+      const btn = e.target.closest('button[data-pact]');
+      if (!btn) return;
+      const act = btn.dataset.pact;
+      const postId = btn.dataset.id;
+      btn.disabled = true;
       try {
-        await updateDoc(doc(db, 'community_posts', postId), {
-          hidden: true
-        });
-        loadPosts();
-      } catch(e) {
-        showStatus('postsStatus', 'Error hiding post: ' + e.message, 'error');
+        if (act === 'hide') {
+          await updateDoc(doc(db, 'community_posts', postId), { hidden: true });
+          showStatus('postsStatus', 'Post hidden from the feed.', 'success');
+        } else if (act === 'unhide') {
+          await updateDoc(doc(db, 'community_posts', postId), { hidden: false });
+          showStatus('postsStatus', 'Post is visible again.', 'success');
+        } else if (act === 'delete') {
+          if (!confirm('Delete this post?')) {
+            btn.disabled = false;
+            return;
+          }
+          await deleteDoc(doc(db, 'community_posts', postId));
+          showStatus('postsStatus', 'Post deleted.', 'success');
+        }
+        await loadPosts();
+      } catch (err) {
+        showStatus('postsStatus', 'Action failed: ' + err.message, 'error');
+        btn.disabled = false;
       }
-    };
+    });
 
-    window.deletePost = async function(postId) {
-      if (!confirm('Delete this post?')) return;
-      try {
-        await deleteDoc(doc(db, 'community_posts', postId));
-        loadPosts();
-      } catch(e) {
-        showStatus('postsStatus', 'Error deleting post: ' + e.message, 'error');
-      }
-    };
-
-    // Utility
     function showStatus(elementId, message, type) {
       const el = document.getElementById(elementId);
       el.textContent = message;
       el.className = 'status ' + type;
-      setTimeout(() => {
+      setTimeout(function() {
         el.className = 'status';
-      }, 5000);
+      }, 6000);
     }
   </script>
 </body>
