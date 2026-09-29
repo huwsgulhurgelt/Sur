@@ -71,11 +71,9 @@
       display: none; margin-top: 4px;
     }
     .post-reject.show { display: block; }
-    /* Rate limit info */
     .rate-info {
       font-size: 0.74rem; color: var(--muted); font-weight: 600;
     }
-    /* Sort bar */
     .sort-bar {
       display: flex; align-items: center; gap: 8px;
       margin-bottom: 18px; font-size: 0.82rem; color: var(--muted); font-weight: 600;
@@ -89,7 +87,6 @@
     }
     .sort-btn:hover  { border-color: var(--border-strong); color: var(--text); }
     .sort-btn.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
-    /* Post cards */
     .comm-card {
       background: var(--surface);
       border: var(--bw) solid var(--border);
@@ -147,7 +144,6 @@
       padding: 0; margin-left: auto;
     }
     .comm-delete-btn:hover { color: #ef4444; }
-    /* Comments section */
     .comm-comments { display: none; flex-direction: column; gap: 8px; }
     .comm-comments.open { display: flex; }
     .comm-comment-item {
@@ -164,7 +160,6 @@
       border-radius: 6px; transition: all 160ms;
     }
     .comm-comment-report:hover { color: #f59e0b; background: rgba(245,158,11,0.08); }
-    /* Comment form inside card */
     .comm-comment-form { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
     .comm-comment-name-input {
       width: 100%; padding: 8px 12px;
@@ -196,7 +191,6 @@
       display: none; flex: 1;
     }
     .comm-comment-reject.show { display: block; }
-    /* Report modal */
     .report-modal-bg {
       position: fixed; inset: 0; z-index: 10000;
       background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
@@ -225,7 +219,6 @@
       padding: 6px; transition: color 180ms;
     }
     .report-modal-cancel:hover { color: var(--text); }
-    /* Feed */
     #commFeed { display: flex; flex-direction: column; gap: 14px; }
     .no-posts {
       text-align: center; padding: 56px 20px;
@@ -233,7 +226,6 @@
       border: var(--bw) dashed var(--border-strong);
       border-radius: var(--radius); background: var(--surface2);
     }
-    /* Skeleton */
     .skeleton {
       background: var(--surface); border: var(--bw) solid var(--border);
       border-radius: var(--radius); padding: 20px 22px;
@@ -248,7 +240,6 @@
     .skeleton-line.short { width: 40%; }
     .skeleton-line.long  { width: 100%; }
     .skeleton-line.mid   { width: 70%; }
-    /* Info notice */
     .expiry-notice {
       background: color-mix(in srgb, var(--accent) 6%, var(--surface));
       border: var(--bw) solid var(--border);
@@ -293,7 +284,6 @@
       <p>Share something you learned. Ask a question. Help someone out.</p>
     </div>
 
-    <!-- Write box -->
     <div class="write-box">
       <div class="write-box-top">
         <div class="write-avatar" id="writeAvatar">?</div>
@@ -311,7 +301,7 @@
     </div>
 
     <div class="expiry-notice">
-      ⏳ <span>Posts are automatically removed after <strong>30 days</strong> to keep things fresh.</span>
+      ⏳ <span>Posts are automatically removed after <strong>10 days</strong> to keep things fresh.</span>
     </div>
 
     <div class="sort-bar">
@@ -327,7 +317,6 @@
     </div>
   </div>
 
-  <!-- Report modal -->
   <div id="reportModalBg" class="report-modal-bg" style="display:none">
     <div class="report-modal">
       <h3>Report this content</h3>
@@ -350,33 +339,26 @@
     import {
       collection, addDoc, deleteDoc,
       doc, query, orderBy, serverTimestamp, Timestamp,
-      onSnapshot, updateDoc, arrayUnion, where, getDocs, limit
+      onSnapshot, updateDoc, arrayUnion, where, getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    /* ─── Config ─── */
-    const THIRTY_DAYS_MS   = 30 * 24 * 60 * 60 * 1000;
+    const TEN_DAYS_MS      = 10 * 24 * 60 * 60 * 1000;
     const POSTS_COL        = collection(db, 'community_posts');
     const REPORTS_COL      = collection(db, 'xn_reports');
 
-    /* ─── Rate limits ───
-       Guests: tracked in localStorage (easy to bypass, but good-faith UX).
-       Signed-in users: tracked in Firestore via their uid.
-       Posts  : 3 per 7 days
-       Comments: 10 per 2 days                                               */
-    const POST_LIMIT       = 3;
-    const POST_WINDOW_MS   = 7 * 24 * 60 * 60 * 1000;   // 7 days
-    const COMMENT_LIMIT    = 10;
-    const COMMENT_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;  // 2 days
+    const POST_LIMIT        = 3;
+    const POST_WINDOW_MS    = 7 * 24 * 60 * 60 * 1000;
+    const COMMENT_LIMIT     = 10;
+    const COMMENT_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
 
     let currentUser  = null;
     let currentSort  = 'new';
 
-    /* ─── localStorage rate-limit helpers (guests) ─── */
     function lsGetTimes(key) {
       try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
     }
     function lsAddTime(key) {
-      const times = lsGetTimes(key);
+      const times = lsGetTimes(key).filter(t => t > Date.now() - Math.max(POST_WINDOW_MS, COMMENT_WINDOW_MS));
       times.push(Date.now());
       try { localStorage.setItem(key, JSON.stringify(times)); } catch(e) {}
     }
@@ -385,76 +367,73 @@
       return lsGetTimes(key).filter(t => t > cutoff).length;
     }
 
-    /* ─── Firestore rate-limit helpers (signed-in) ───
-       Timestamps stored as plain numbers (Date.now()) so we can
-       query them without a composite index and without waiting for
-       serverTimestamp() to resolve.                              */
     async function fsCountInWindow(uid, type, windowMs) {
-      try {
-        const cutoff = Date.now() - windowMs;
-        const q = query(
-          collection(db, 'rate_limits'),
-          where('uid',  '==', uid),
-          where('type', '==', type),
-          where('tsMs', '>',  cutoff)
-        );
-        const snap = await getDocs(q);
-        return snap.size;
-      } catch(e) {
-        /* If collection doesn't exist yet or index missing → allow the action */
-        console.warn('Rate limit check skipped:', e.message);
-        return 0;
-      }
+      const cutoff = Date.now() - windowMs;
+      const q = query(
+        collection(db, 'rate_limits'),
+        where('uid',  '==', uid),
+        where('type', '==', type),
+        where('tsMs', '>',  cutoff)
+      );
+      const snap = await getDocs(q);
+      return snap.size;
     }
     async function fsRecordAction(uid, type) {
-      try {
-        await addDoc(collection(db, 'rate_limits'), {
-          uid, type, tsMs: Date.now()
-        });
-      } catch(e) {
-        console.warn('Rate limit record failed (non-blocking):', e.message);
-      }
+      await addDoc(collection(db, 'rate_limits'), {
+        uid, type, tsMs: Date.now()
+      });
     }
 
-    /* ─── Timeout helper — never let a Firestore call hang ─── */
-    function withTimeout(promise, ms = 5000, fallback = 0) {
-      return Promise.race([
-        promise,
-        new Promise(resolve => setTimeout(() => resolve(fallback), ms))
-      ]);
+    async function countSignedInPostsThisWeek(uid) {
+      const cutoff = Date.now() - POST_WINDOW_MS;
+      const q = query(POSTS_COL, where('authorId', '==', uid));
+      const snap = await getDocs(q);
+      return snap.docs.filter(d => {
+        const created = d.data().createdAt;
+        if (!created || typeof created.toMillis !== 'function') return true;
+        return created.toMillis() > cutoff;
+      }).length;
     }
 
-    /* ─── Check post limit ─── */
     async function canPost() {
       if (currentUser) {
-        const count = await withTimeout(fsCountInWindow(currentUser.uid, 'post', POST_WINDOW_MS));
-        return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count) };
-      } else {
-        const count = lsCountInWindow('comm_posts', POST_WINDOW_MS);
-        return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count) };
+        try {
+          const count = await countSignedInPostsThisWeek(currentUser.uid);
+          return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count), error: false };
+        } catch (e) {
+          console.error('Post limit check failed:', e);
+          return { ok: false, remaining: 0, error: true };
+        }
       }
+      const count = lsCountInWindow('comm_posts', POST_WINDOW_MS);
+      return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count), error: false };
     }
 
-    /* ─── Check comment limit ─── */
     async function canComment() {
       if (currentUser) {
-        const count = await withTimeout(fsCountInWindow(currentUser.uid, 'comment', COMMENT_WINDOW_MS));
-        return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count) };
-      } else {
-        const count = lsCountInWindow('comm_comments', COMMENT_WINDOW_MS);
-        return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count) };
+        try {
+          const count = await fsCountInWindow(currentUser.uid, 'comment', COMMENT_WINDOW_MS);
+          return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count), error: false };
+        } catch (e) {
+          console.error('Comment limit check failed:', e);
+          return { ok: false, remaining: 0, error: true };
+        }
       }
+      const count = lsCountInWindow('comm_comments', COMMENT_WINDOW_MS);
+      return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count), error: false };
     }
 
-    /* ─── Update rate info label ─── */
     async function refreshRateInfo() {
-      const { remaining } = await canPost();
+      const { remaining, error } = await canPost();
       const el = document.getElementById('postRateInfo');
       if (!el) return;
+      if (error) {
+        el.textContent = 'Could not check weekly limit';
+        return;
+      }
       el.textContent = remaining + ' post' + (remaining !== 1 ? 's' : '') + ' left this week';
     }
 
-    /* ─── Helpers ─── */
     function escH(s) {
       return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
@@ -469,7 +448,7 @@
       return Math.floor(h / 24) + 'd ago';
     }
     function daysLeft(ms) {
-      if (!ms) return 30;
+      if (!ms) return 10;
       return Math.max(0, Math.ceil((ms - Date.now()) / (24*60*60*1000)));
     }
     function initials(name) {
@@ -490,7 +469,6 @@
       setTimeout(() => t.remove(), 3000);
     }
 
-    /* ─── Auth state ─── */
     onAuthStateChanged(auth, user => {
       currentUser = user;
       const avatar = document.getElementById('writeAvatar');
@@ -511,13 +489,11 @@
       refreshRateInfo();
     });
 
-    /* ─── Char count ─── */
     const writeText = document.getElementById('writeText');
     writeText.addEventListener('input', () => {
       document.getElementById('writeChar').textContent = writeText.value.length + ' / 2000';
     });
 
-    /* ─── Submit post ─── */
     document.getElementById('writeSubmit').addEventListener('click', async () => {
       const text   = writeText.value.trim();
       const nameEl = document.getElementById('writeName');
@@ -538,8 +514,15 @@
       btn.disabled = true;
       btn.textContent = 'Checking…';
 
-      const limit = await canPost();
-      if (!limit.ok) {
+      const limitCheck = await canPost();
+      if (limitCheck.error) {
+        reject.textContent = '⚠️ Could not verify your weekly post limit. Try again in a moment.';
+        reject.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Post';
+        return;
+      }
+      if (!limitCheck.ok) {
         reject.textContent = `⚠️ You've reached the limit of ${POST_LIMIT} posts per week. Try again later.`;
         reject.classList.add('show');
         btn.disabled = false;
@@ -550,7 +533,7 @@
       btn.textContent = 'Posting…';
       try {
         const now       = Date.now();
-        const expiresAt = new Timestamp(Math.floor((now + THIRTY_DAYS_MS) / 1000), 0);
+        const expiresAt = new Timestamp(Math.floor((now + TEN_DAYS_MS) / 1000), 0);
         await addDoc(POSTS_COL, {
           author,
           authorId:    currentUser ? currentUser.uid : null,
@@ -561,17 +544,12 @@
           expiresAt,
         });
 
-        /* record the action for rate limiting */
-        if (currentUser) {
-          await fsRecordAction(currentUser.uid, 'post');
-        } else {
-          lsAddTime('comm_posts');
-        }
+        if (!currentUser) lsAddTime('comm_posts');
 
         writeText.value = '';
         document.getElementById('writeChar').textContent = '0 / 2000';
         if (!currentUser) nameEl.value = '';
-        refreshRateInfo();
+        await refreshRateInfo();
       } catch(e) {
         console.error('Post failed:', e);
         reject.textContent = '⚠️ Could not post — check your connection and try again.';
@@ -581,7 +559,6 @@
       btn.textContent = 'Post';
     });
 
-    /* ─── Report modal ─── */
     let reportTarget = null;
 
     document.getElementById('reportCancel').addEventListener('click', closeReport);
@@ -619,7 +596,6 @@
     function openReport(target) { reportTarget = target; document.getElementById('reportModalBg').style.display = 'flex'; }
     function closeReport() { document.getElementById('reportModalBg').style.display = 'none'; reportTarget = null; }
 
-    /* ─── Live feed ─── */
     let unsubscribe = null;
     function subscribe() {
       if (unsubscribe) unsubscribe();
@@ -639,6 +615,7 @@
           return;
         }
         docs.forEach(d => feed.appendChild(buildCard(d.id, d.data())));
+        refreshRateInfo();
       }, err => {
         console.error('Feed error:', err);
         document.getElementById('commFeed').innerHTML =
@@ -646,14 +623,13 @@
       });
     }
 
-    /* ─── Build card ─── */
     function buildCard(id, data) {
       const card = document.createElement('div');
       card.className = 'comm-card';
       card.dataset.id = id;
 
       const createdMs = data.createdAt ? data.createdAt.toMillis() : Date.now();
-      const expiresMs = data.expiresAt ? data.expiresAt.toMillis() : (createdMs + THIRTY_DAYS_MS);
+      const expiresMs = data.expiresAt ? data.expiresAt.toMillis() : (createdMs + TEN_DAYS_MS);
       const left      = daysLeft(expiresMs);
       const soonClass = left <= 2 ? 'expiry-pill soon' : 'expiry-pill';
       const expLabel  = left === 0 ? 'expires today' : left === 1 ? '1 day left' : `${left}d left`;
@@ -701,18 +677,15 @@
           </div>
         </div>`;
 
-      /* Toggle comments */
       card.querySelector('[data-toggle]').addEventListener('click', () => {
         card.querySelector(`#comments-${id}`).classList.toggle('open');
       });
 
-      /* Report post */
       card.querySelector('[data-report-post]').addEventListener('click', function() {
         if (this.disabled) return;
         openReport({ postId: id, type: 'post', snippet: data.text.slice(0, 120), originBtn: this });
       });
 
-      /* Report comment */
       card.querySelectorAll('[data-report-comment]').forEach(btn => {
         btn.addEventListener('click', function() {
           if (this.disabled) return;
@@ -721,7 +694,6 @@
         });
       });
 
-      /* Send comment */
       card.querySelector('.comm-comment-send').addEventListener('click', async () => {
         const ta        = card.querySelector('.comm-comment-input');
         const nameInput = card.querySelector('.comm-comment-name-input');
@@ -738,8 +710,15 @@
         sendBtn.disabled = true;
         sendBtn.textContent = '…';
 
-        const limit = await canComment();
-        if (!limit.ok) {
+        const limitCheck = await canComment();
+        if (limitCheck.error) {
+          rejectEl.textContent = '⚠️ Could not verify comment limit — try again.';
+          rejectEl.classList.add('show');
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Send';
+          return;
+        }
+        if (!limitCheck.ok) {
           rejectEl.textContent = `⚠️ You've reached the limit of ${COMMENT_LIMIT} comments per 2 days.`;
           rejectEl.classList.add('show');
           sendBtn.disabled = false;
@@ -751,14 +730,11 @@
           await updateDoc(doc(db, 'community_posts', id), {
             comments: arrayUnion({ author, text, ts: Date.now() })
           });
-
-          /* record for rate limiting */
           if (currentUser) {
-            await fsRecordAction(currentUser.uid, 'comment');
+            try { await fsRecordAction(currentUser.uid, 'comment'); } catch (e) {}
           } else {
             lsAddTime('comm_comments');
           }
-
           ta.value = '';
           nameInput.value = '';
         } catch(e) {
@@ -770,7 +746,6 @@
         sendBtn.textContent = 'Send';
       });
 
-      /* Delete post */
       const delBtn = card.querySelector('[data-delete]');
       if (delBtn) {
         delBtn.addEventListener('click', async () => {
@@ -786,7 +761,6 @@
       return card;
     }
 
-    /* ─── Sort buttons ─── */
     document.querySelectorAll('.sort-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
