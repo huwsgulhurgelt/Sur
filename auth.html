@@ -285,6 +285,24 @@ import {
     onAuthStateChanged,
     signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    async function ensureUserDocument(user) {
+    if (!user) return;
+
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        await setDoc(userRef, {
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            rank: 'user',
+            nameChanges: [],
+            postTimes: [],
+            commentTimes: [],
+            createdAt: serverTimestamp()
+        });
+    }
+}
 
 import {
     doc,
