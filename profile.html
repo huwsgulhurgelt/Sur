@@ -9,6 +9,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="study-style.css">
   <style>
+    .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    border: 1px solid currentColor;
+}
+
+.rank-user {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.10);
+}
+
+.rank-member {
+    color: #eab308;
+    background: rgba(234, 179, 8, 0.10);
+}
+
+.rank-developer {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.10);
+}
     .profile-wrap {
       max-width: 600px;
       margin: 0 auto;
@@ -230,7 +256,7 @@
         <div class="profile-info">
           <div class="profile-display-name" id="headerName">—</div>
           <div class="profile-email"        id="headerEmail">—</div>
-          <span class="profile-badge">✦ Member</span>
+         <span class="profile-badge" id="profileRank">✦ User</span>
         </div>
       </div>
 
@@ -484,6 +510,10 @@
         window.location.href = 'index.html';
       });
     });
+    import {
+    getUserRank,
+    getRankLabel
+} from './rank-config.js';
   </script>
 
   <script src="page-transition.js"></script>
