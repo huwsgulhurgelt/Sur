@@ -9,6 +9,36 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="study-style.css">
   <style>
+    .comm-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    margin-left: 6px;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    line-height: 1.4;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    vertical-align: middle;
+}
+
+.comm-rank-user {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.10);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.comm-rank-member {
+    color: #eab308;
+    background: rgba(234, 179, 8, 0.10);
+    border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.comm-rank-developer {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.10);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
     .write-box {
       background: var(--surface);
       border: var(--bw) solid var(--border);
@@ -333,445 +363,1672 @@
     </div>
   </div>
 
-  <script type="module">
-    import { auth, db } from './firebase-config.js';
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      collection, addDoc, deleteDoc,
-      doc, query, orderBy, serverTimestamp, Timestamp,
-      onSnapshot, updateDoc, arrayUnion, where, getDocs
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+ <script type="module">
+  import {
+    getUserRank,
+    getRankLabel
+  } from './rank-config.js';
 
-    const TEN_DAYS_MS      = 10 * 24 * 60 * 60 * 1000;
-    const POSTS_COL        = collection(db, 'community_posts');
-    const REPORTS_COL      = collection(db, 'xn_reports');
+  import { auth, db } from './firebase-config.js';
 
-    const POST_LIMIT        = 3;
-    const POST_WINDOW_MS    = 7 * 24 * 60 * 60 * 1000;
-    const COMMENT_LIMIT     = 10;
-    const COMMENT_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
+  import {
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    let currentUser  = null;
-    let currentSort  = 'new';
+  import {
+    collection,
+    addDoc,
+    deleteDoc,
+    doc,
+    query,
+    orderBy,
+    serverTimestamp,
+    Timestamp,
+    onSnapshot,
+    updateDoc,
+    arrayUnion,
+    where,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    function lsGetTimes(key) {
-      try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+
+  /* =========================
+     CONSTANTS
+  ========================= */
+
+  const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
+
+  const POSTS_COL = collection(db, 'community_posts');
+  const REPORTS_COL = collection(db, 'xn_reports');
+
+  const POST_LIMIT = 3;
+  const POST_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+  const COMMENT_LIMIT = 10;
+  const COMMENT_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
+
+
+  /* =========================
+     STATE
+  ========================= */
+
+  let currentUser = null;
+  let currentSort = 'new';
+  let unsubscribe = null;
+
+
+  /* =========================
+     LOCAL STORAGE RATE LIMIT
+  ========================= */
+
+  function lsGetTimes(key) {
+    try {
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch (e) {
+      return [];
     }
-    function lsAddTime(key) {
-      const times = lsGetTimes(key).filter(t => t > Date.now() - Math.max(POST_WINDOW_MS, COMMENT_WINDOW_MS));
-      times.push(Date.now());
-      try { localStorage.setItem(key, JSON.stringify(times)); } catch(e) {}
-    }
-    function lsCountInWindow(key, windowMs) {
-      const cutoff = Date.now() - windowMs;
-      return lsGetTimes(key).filter(t => t > cutoff).length;
-    }
+  }
 
-    async function fsCountInWindow(uid, type, windowMs) {
-      const cutoff = Date.now() - windowMs;
-      const q = query(
-        collection(db, 'rate_limits'),
-        where('uid',  '==', uid),
-        where('type', '==', type),
-        where('tsMs', '>',  cutoff)
-      );
-      const snap = await getDocs(q);
-      return snap.size;
-    }
-    async function fsRecordAction(uid, type) {
-      await addDoc(collection(db, 'rate_limits'), {
-        uid, type, tsMs: Date.now()
-      });
-    }
 
-    async function countSignedInPostsThisWeek(uid) {
-      const cutoff = Date.now() - POST_WINDOW_MS;
-      const q = query(POSTS_COL, where('authorId', '==', uid));
-      const snap = await getDocs(q);
-      return snap.docs.filter(d => {
-        const created = d.data().createdAt;
-        if (!created || typeof created.toMillis !== 'function') return true;
-        return created.toMillis() > cutoff;
-      }).length;
-    }
+  function lsAddTime(key) {
+    const times = lsGetTimes(key).filter(
+      t => t > Date.now() - Math.max(
+        POST_WINDOW_MS,
+        COMMENT_WINDOW_MS
+      )
+    );
 
-    async function canPost() {
-      if (currentUser) {
-        try {
-          const count = await countSignedInPostsThisWeek(currentUser.uid);
-          return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count), error: false };
-        } catch (e) {
-          console.error('Post limit check failed:', e);
-          return { ok: false, remaining: 0, error: true };
-        }
+    times.push(Date.now());
+
+    try {
+      localStorage.setItem(key, JSON.stringify(times));
+    } catch (e) {}
+  }
+
+
+  function lsCountInWindow(key, windowMs) {
+    const cutoff = Date.now() - windowMs;
+
+    return lsGetTimes(key).filter(
+      t => t > cutoff
+    ).length;
+  }
+
+
+  /* =========================
+     FIRESTORE RATE LIMIT
+  ========================= */
+
+  async function fsCountInWindow(uid, type, windowMs) {
+    const cutoff = Date.now() - windowMs;
+
+    const q = query(
+      collection(db, 'rate_limits'),
+      where('uid', '==', uid),
+      where('type', '==', type),
+      where('tsMs', '>', cutoff)
+    );
+
+    const snap = await getDocs(q);
+
+    return snap.size;
+  }
+
+
+  async function fsRecordAction(uid, type) {
+    await addDoc(
+      collection(db, 'rate_limits'),
+      {
+        uid,
+        type,
+        tsMs: Date.now()
       }
-      const count = lsCountInWindow('comm_posts', POST_WINDOW_MS);
-      return { ok: count < POST_LIMIT, remaining: Math.max(0, POST_LIMIT - count), error: false };
-    }
+    );
+  }
 
-    async function canComment() {
-      if (currentUser) {
-        try {
-          const count = await fsCountInWindow(currentUser.uid, 'comment', COMMENT_WINDOW_MS);
-          return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count), error: false };
-        } catch (e) {
-          console.error('Comment limit check failed:', e);
-          return { ok: false, remaining: 0, error: true };
-        }
+
+  /* =========================
+     POST LIMIT
+  ========================= */
+
+  async function countSignedInPostsThisWeek(uid) {
+    const cutoff = Date.now() - POST_WINDOW_MS;
+
+    const q = query(
+      POSTS_COL,
+      where('authorId', '==', uid)
+    );
+
+    const snap = await getDocs(q);
+
+    return snap.docs.filter(d => {
+      const created = d.data().createdAt;
+
+      if (
+        !created ||
+        typeof created.toMillis !== 'function'
+      ) {
+        return true;
       }
-      const count = lsCountInWindow('comm_comments', COMMENT_WINDOW_MS);
-      return { ok: count < COMMENT_LIMIT, remaining: Math.max(0, COMMENT_LIMIT - count), error: false };
-    }
 
-    async function refreshRateInfo() {
-      const { remaining, error } = await canPost();
-      const el = document.getElementById('postRateInfo');
-      if (!el) return;
-      if (error) {
-        el.textContent = 'Could not check weekly limit';
-        return;
+      return created.toMillis() > cutoff;
+    }).length;
+  }
+
+
+  async function canPost() {
+    if (currentUser) {
+      try {
+        const count =
+          await countSignedInPostsThisWeek(
+            currentUser.uid
+          );
+
+        return {
+          ok: count < POST_LIMIT,
+          remaining: Math.max(
+            0,
+            POST_LIMIT - count
+          ),
+          error: false
+        };
+
+      } catch (e) {
+        console.error(
+          'Post limit check failed:',
+          e
+        );
+
+        return {
+          ok: false,
+          remaining: 0,
+          error: true
+        };
       }
-      el.textContent = remaining + ' post' + (remaining !== 1 ? 's' : '') + ' left this week';
     }
 
-    function escH(s) {
-      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    function timeAgo(ms) {
-      if (!ms) return '';
-      const diff = Date.now() - ms;
-      const m = Math.floor(diff / 60000);
-      if (m < 1)  return 'Just now';
-      if (m < 60) return m + 'm ago';
-      const h = Math.floor(m / 60);
-      if (h < 24) return h + 'h ago';
-      return Math.floor(h / 24) + 'd ago';
-    }
-    function daysLeft(ms) {
-      if (!ms) return 10;
-      return Math.max(0, Math.ceil((ms - Date.now()) / (24*60*60*1000)));
-    }
-    function initials(name) {
-      if (!name || name === 'Anonymous') return '?';
-      return name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    }
-    function toast(msg) {
-      const t = document.createElement('div');
-      t.textContent = msg;
-      Object.assign(t.style, {
-        position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
-        background:'var(--surface)', border:'1.5px solid var(--border)',
-        borderRadius:'12px', padding:'10px 20px', fontSize:'0.84rem',
-        fontWeight:'700', boxShadow:'0 8px 24px rgba(0,0,0,0.15)',
-        zIndex:'99999', color:'var(--text)', whiteSpace:'nowrap'
-      });
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 3000);
+    const count = lsCountInWindow(
+      'comm_posts',
+      POST_WINDOW_MS
+    );
+
+    return {
+      ok: count < POST_LIMIT,
+      remaining: Math.max(
+        0,
+        POST_LIMIT - count
+      ),
+      error: false
+    };
+  }
+
+
+  /* =========================
+     COMMENT LIMIT
+  ========================= */
+
+  async function canComment() {
+    if (currentUser) {
+      try {
+        const count =
+          await fsCountInWindow(
+            currentUser.uid,
+            'comment',
+            COMMENT_WINDOW_MS
+          );
+
+        return {
+          ok: count < COMMENT_LIMIT,
+          remaining: Math.max(
+            0,
+            COMMENT_LIMIT - count
+          ),
+          error: false
+        };
+
+      } catch (e) {
+        console.error(
+          'Comment limit check failed:',
+          e
+        );
+
+        return {
+          ok: false,
+          remaining: 0,
+          error: true
+        };
+      }
     }
 
-    onAuthStateChanged(auth, user => {
+    const count = lsCountInWindow(
+      'comm_comments',
+      COMMENT_WINDOW_MS
+    );
+
+    return {
+      ok: count < COMMENT_LIMIT,
+      remaining: Math.max(
+        0,
+        COMMENT_LIMIT - count
+      ),
+      error: false
+    };
+  }
+
+
+  /* =========================
+     RATE INFO
+  ========================= */
+
+  async function refreshRateInfo() {
+    const {
+      remaining,
+      error
+    } = await canPost();
+
+    const el =
+      document.getElementById('postRateInfo');
+
+    if (!el) return;
+
+    if (error) {
+      el.textContent =
+        'Could not check weekly limit';
+
+      return;
+    }
+
+    el.textContent =
+      remaining +
+      ' post' +
+      (remaining !== 1 ? 's' : '') +
+      ' left this week';
+  }
+
+
+  /* =========================
+     HTML ESCAPE
+  ========================= */
+
+  function escH(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+
+  /* =========================
+     TIME HELPERS
+  ========================= */
+
+  function timeAgo(ms) {
+    if (!ms) return '';
+
+    const diff = Date.now() - ms;
+
+    const m = Math.floor(
+      diff / 60000
+    );
+
+    if (m < 1) {
+      return 'Just now';
+    }
+
+    if (m < 60) {
+      return m + 'm ago';
+    }
+
+    const h = Math.floor(m / 60);
+
+    if (h < 24) {
+      return h + 'h ago';
+    }
+
+    return Math.floor(h / 24) + 'd ago';
+  }
+
+
+  function daysLeft(ms) {
+    if (!ms) return 10;
+
+    return Math.max(
+      0,
+      Math.ceil(
+        (ms - Date.now()) /
+        (24 * 60 * 60 * 1000)
+      )
+    );
+  }
+
+
+  /* =========================
+     INITIALS
+  ========================= */
+
+  function initials(name) {
+    if (
+      !name ||
+      name === 'Anonymous'
+    ) {
+      return '?';
+    }
+
+    return name
+      .trim()
+      .split(' ')
+      .map(w => w[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  }
+
+
+  /* =========================
+     RANK
+  ========================= */
+
+  function getAuthorRank(uid) {
+    return getUserRank(uid);
+  }
+
+
+  function createRankBadge(uid) {
+    if (!uid) {
+      return '';
+    }
+
+    const rank = getAuthorRank(uid);
+    const label = getRankLabel(rank);
+
+    return `
+      <span class="comm-rank-badge comm-rank-${rank}">
+        ✦ ${escH(label)}
+      </span>
+    `;
+  }
+
+
+  /* =========================
+     TOAST
+  ========================= */
+
+  function toast(msg) {
+    const t =
+      document.createElement('div');
+
+    t.textContent = msg;
+
+    Object.assign(
+      t.style,
+      {
+        position: 'fixed',
+        bottom: '24px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'var(--surface)',
+        border: '1.5px solid var(--border)',
+        borderRadius: '12px',
+        padding: '10px 20px',
+        fontSize: '0.84rem',
+        fontWeight: '700',
+        boxShadow:
+          '0 8px 24px rgba(0,0,0,0.15)',
+        zIndex: '99999',
+        color: 'var(--text)',
+        whiteSpace: 'nowrap'
+      }
+    );
+
+    document.body.appendChild(t);
+
+    setTimeout(
+      () => t.remove(),
+      3000
+    );
+  }
+
+
+  /* =========================
+     AUTH STATE
+  ========================= */
+
+  onAuthStateChanged(
+    auth,
+    user => {
       currentUser = user;
-      const avatar = document.getElementById('writeAvatar');
-      const name   = document.getElementById('writeName');
+
+      const avatar =
+        document.getElementById(
+          'writeAvatar'
+        );
+
+      const name =
+        document.getElementById(
+          'writeName'
+        );
+
       if (user) {
-        name.value    = user.displayName || '';
+
+        name.value =
+          user.displayName || '';
+
         name.disabled = true;
-        name.placeholder = user.displayName || 'Anonymous';
+
+        name.placeholder =
+          user.displayName ||
+          'Anonymous';
+
         if (user.photoURL) {
-          avatar.innerHTML = `<img src="${escH(user.photoURL)}" alt="">`;
+
+          avatar.innerHTML = `
+            <img
+              src="${escH(user.photoURL)}"
+              alt=""
+            >
+          `;
+
         } else {
-          avatar.textContent = initials(user.displayName);
+
+          avatar.textContent =
+            initials(
+              user.displayName
+            );
         }
+
       } else {
+
         name.disabled = false;
+
         avatar.textContent = '?';
       }
+
       refreshRateInfo();
-    });
 
-    const writeText = document.getElementById('writeText');
-    writeText.addEventListener('input', () => {
-      document.getElementById('writeChar').textContent = writeText.value.length + ' / 2000';
-    });
-
-    document.getElementById('writeSubmit').addEventListener('click', async () => {
-      const text   = writeText.value.trim();
-      const nameEl = document.getElementById('writeName');
-      const author = currentUser
-        ? (currentUser.displayName || 'Anonymous')
-        : (nameEl.value.trim() || 'Anonymous');
-
-      if (!text) {
-        writeText.focus();
-        writeText.style.borderColor = '#ef4444';
-        setTimeout(() => writeText.style.borderColor = '', 1200);
-        return;
-      }
-
-      const btn    = document.getElementById('writeSubmit');
-      const reject = document.getElementById('postReject');
-      reject.classList.remove('show');
-      btn.disabled = true;
-      btn.textContent = 'Checking…';
-
-      const limitCheck = await canPost();
-      if (limitCheck.error) {
-        reject.textContent = '⚠️ Could not verify your weekly post limit. Try again in a moment.';
-        reject.classList.add('show');
-        btn.disabled = false;
-        btn.textContent = 'Post';
-        return;
-      }
-      if (!limitCheck.ok) {
-        reject.textContent = `⚠️ You've reached the limit of ${POST_LIMIT} posts per week. Try again later.`;
-        reject.classList.add('show');
-        btn.disabled = false;
-        btn.textContent = 'Post';
-        return;
-      }
-
-      btn.textContent = 'Posting…';
-      try {
-        const now       = Date.now();
-        const expiresAt = new Timestamp(Math.floor((now + TEN_DAYS_MS) / 1000), 0);
-        await addDoc(POSTS_COL, {
-          author,
-          authorId:    currentUser ? currentUser.uid : null,
-          authorPhoto: currentUser ? (currentUser.photoURL || null) : null,
-          text,
-          comments:    [],
-          createdAt:   serverTimestamp(),
-          expiresAt,
-        });
-
-        if (!currentUser) lsAddTime('comm_posts');
-
-        writeText.value = '';
-        document.getElementById('writeChar').textContent = '0 / 2000';
-        if (!currentUser) nameEl.value = '';
-        await refreshRateInfo();
-      } catch(e) {
-        console.error('Post failed:', e);
-        reject.textContent = '⚠️ Could not post — check your connection and try again.';
-        reject.classList.add('show');
-      }
-      btn.disabled = false;
-      btn.textContent = 'Post';
-    });
-
-    let reportTarget = null;
-
-    document.getElementById('reportCancel').addEventListener('click', closeReport);
-    document.getElementById('reportModalBg').addEventListener('click', e => {
-      if (e.target === document.getElementById('reportModalBg')) closeReport();
-    });
-    document.getElementById('reportReasons').addEventListener('click', async e => {
-      const btn = e.target.closest('.report-reason-btn');
-      if (!btn || !reportTarget) return;
-      document.querySelectorAll('.report-reason-btn').forEach(b => b.disabled = true);
-      try {
-        await addDoc(REPORTS_COL, {
-          reason:       btn.dataset.reason,
-          postId:       reportTarget.postId,
-          commentIndex: reportTarget.commentIndex ?? null,
-          type:         reportTarget.type,
-          snippet:      reportTarget.snippet || '',
-          reportedBy:   currentUser ? currentUser.uid : 'guest',
-          reportedAt:   serverTimestamp(),
-          status:       'pending'
-        });
-        if (reportTarget.originBtn) {
-          reportTarget.originBtn.classList.add('reported');
-          reportTarget.originBtn.textContent = '⚑ Reported';
-          reportTarget.originBtn.disabled = true;
-        }
-        closeReport();
-        toast('Report submitted. Thank you! 👍');
-      } catch(err) {
-        closeReport();
-        toast('⚠️ Could not submit report.');
-      }
-      document.querySelectorAll('.report-reason-btn').forEach(b => b.disabled = false);
-    });
-    function openReport(target) { reportTarget = target; document.getElementById('reportModalBg').style.display = 'flex'; }
-    function closeReport() { document.getElementById('reportModalBg').style.display = 'none'; reportTarget = null; }
-
-    let unsubscribe = null;
-    function subscribe() {
-      if (unsubscribe) unsubscribe();
-      const q = query(POSTS_COL, orderBy('createdAt', currentSort === 'new' ? 'desc' : 'asc'));
-      unsubscribe = onSnapshot(q, snap => {
-        const feed = document.getElementById('commFeed');
-        feed.innerHTML = '';
-        const now  = Date.now();
-        const docs = snap.docs.filter(d => {
-          const data = d.data();
-          if (data.hidden) return false;
-          const exp = data.expiresAt;
-          return !exp || exp.toMillis() > now;
-        });
-        if (!docs.length) {
-          feed.innerHTML = '<div class="no-posts">No posts yet — be the first to share something! 👆</div>';
-          return;
-        }
-        docs.forEach(d => feed.appendChild(buildCard(d.id, d.data())));
-        refreshRateInfo();
-      }, err => {
-        console.error('Feed error:', err);
-        document.getElementById('commFeed').innerHTML =
-          '<div class="no-posts">Could not load posts. Check your connection.</div>';
-      });
+      /*
+       * Re-render the feed so rank information
+       * updates immediately after login/logout.
+       */
+      subscribe();
     }
+  );
 
-    function buildCard(id, data) {
-      const card = document.createElement('div');
-      card.className = 'comm-card';
-      card.dataset.id = id;
 
-      const createdMs = data.createdAt ? data.createdAt.toMillis() : Date.now();
-      const expiresMs = data.expiresAt ? data.expiresAt.toMillis() : (createdMs + TEN_DAYS_MS);
-      const left      = daysLeft(expiresMs);
-      const soonClass = left <= 2 ? 'expiry-pill soon' : 'expiry-pill';
-      const expLabel  = left === 0 ? 'expires today' : left === 1 ? '1 day left' : `${left}d left`;
-      const isOwner   = currentUser && currentUser.uid === data.authorId;
-      const comments  = data.comments || [];
+  /* =========================
+     WRITE CHARACTER COUNT
+  ========================= */
 
-      const avatarHtml = data.authorPhoto
-        ? `<div class="comm-author-dot"><img src="${escH(data.authorPhoto)}" alt=""></div>`
-        : `<div class="comm-author-dot">${escH(initials(data.author))}</div>`;
+  const writeText =
+    document.getElementById(
+      'writeText'
+    );
 
-      card.innerHTML = `
-        <div class="comm-card-top">
-          ${avatarHtml}
-          <div class="comm-author-info">
-            <div class="comm-author-name">${escH(data.author || 'Anonymous')}</div>
-            <div class="comm-author-meta">
-              ${timeAgo(createdMs)}
-              <span class="${soonClass}">${expLabel}</span>
-            </div>
-          </div>
-        </div>
-        <div class="comm-content">${escH(data.text)}</div>
-        <div class="comm-footer">
-          <button class="comm-comment-btn" data-toggle="${id}">
-            ${comments.length ? comments.length + ' comment' + (comments.length !== 1 ? 's' : '') : 'Comment'}
-          </button>
-          <button class="comm-report-btn" data-report-post="${id}">⚑ Report</button>
-          ${isOwner ? `<button class="comm-delete-btn" data-delete="${id}">Delete</button>` : ''}
-        </div>
-        <div class="comm-comments" id="comments-${id}">
-          ${comments.map((c, i) => `
-            <div class="comm-comment-item">
-              <div class="comm-comment-name">${escH(c.author || 'Anonymous')}</div>
-              <div class="comm-comment-text">${escH(c.text)}</div>
-              <button class="comm-comment-report" data-report-comment="${id}" data-ci="${i}">⚑</button>
-            </div>
-          `).join('')}
-          <div class="comm-comment-form">
-            <input class="comm-comment-name-input" placeholder="Your name (optional)" maxlength="60">
-            <textarea class="comm-comment-input" placeholder="Write a comment…" maxlength="500" rows="2"></textarea>
-            <div class="comm-comment-row">
-              <span class="comm-comment-reject"></span>
-              <button class="comm-comment-send" data-post="${id}">Send</button>
-            </div>
-          </div>
-        </div>`;
+  writeText.addEventListener(
+    'input',
+    () => {
 
-      card.querySelector('[data-toggle]').addEventListener('click', () => {
-        card.querySelector(`#comments-${id}`).classList.toggle('open');
-      });
+      document.getElementById(
+        'writeChar'
+      ).textContent =
+        writeText.value.length +
+        ' / 2000';
+    }
+  );
 
-      card.querySelector('[data-report-post]').addEventListener('click', function() {
-        if (this.disabled) return;
-        openReport({ postId: id, type: 'post', snippet: data.text.slice(0, 120), originBtn: this });
-      });
 
-      card.querySelectorAll('[data-report-comment]').forEach(btn => {
-        btn.addEventListener('click', function() {
-          if (this.disabled) return;
-          const ci = parseInt(this.dataset.ci);
-          openReport({ postId: id, commentIndex: ci, type: 'comment', snippet: (comments[ci]?.text || '').slice(0, 120), originBtn: this });
-        });
-      });
+  /* =========================
+     CREATE POST
+  ========================= */
 
-      card.querySelector('.comm-comment-send').addEventListener('click', async () => {
-        const ta        = card.querySelector('.comm-comment-input');
-        const nameInput = card.querySelector('.comm-comment-name-input');
-        const rejectEl  = card.querySelector('.comm-comment-reject');
-        const sendBtn   = card.querySelector('.comm-comment-send');
-        const text      = ta.value.trim();
-        if (!text) return;
+  document
+    .getElementById('writeSubmit')
+    .addEventListener(
+      'click',
+      async () => {
 
-        const author = currentUser
-          ? (currentUser.displayName || 'Anonymous')
-          : (nameInput.value.trim() || 'Anonymous');
+        const text =
+          writeText.value.trim();
 
-        rejectEl.classList.remove('show');
-        sendBtn.disabled = true;
-        sendBtn.textContent = '…';
+        const nameEl =
+          document.getElementById(
+            'writeName'
+          );
 
-        const limitCheck = await canComment();
+        const author =
+          currentUser
+            ? (
+                currentUser.displayName ||
+                'Anonymous'
+              )
+            : (
+                nameEl.value.trim() ||
+                'Anonymous'
+              );
+
+
+        if (!text) {
+
+          writeText.focus();
+
+          writeText.style.borderColor =
+            '#ef4444';
+
+          setTimeout(
+            () =>
+              writeText.style.borderColor =
+                '',
+            1200
+          );
+
+          return;
+        }
+
+
+        const btn =
+          document.getElementById(
+            'writeSubmit'
+          );
+
+        const reject =
+          document.getElementById(
+            'postReject'
+          );
+
+
+        reject.classList.remove(
+          'show'
+        );
+
+        btn.disabled = true;
+
+        btn.textContent =
+          'Checking…';
+
+
+        const limitCheck =
+          await canPost();
+
+
         if (limitCheck.error) {
-          rejectEl.textContent = '⚠️ Could not verify comment limit — try again.';
-          rejectEl.classList.add('show');
-          sendBtn.disabled = false;
-          sendBtn.textContent = 'Send';
+
+          reject.textContent =
+            '⚠️ Could not verify your weekly post limit. Try again in a moment.';
+
+          reject.classList.add(
+            'show'
+          );
+
+          btn.disabled = false;
+
+          btn.textContent = 'Post';
+
           return;
         }
+
+
         if (!limitCheck.ok) {
-          rejectEl.textContent = `⚠️ You've reached the limit of ${COMMENT_LIMIT} comments per 2 days.`;
-          rejectEl.classList.add('show');
-          sendBtn.disabled = false;
-          sendBtn.textContent = 'Send';
+
+          reject.textContent =
+            `⚠️ You've reached the limit of ${POST_LIMIT} posts per week. Try again later.`;
+
+          reject.classList.add(
+            'show'
+          );
+
+          btn.disabled = false;
+
+          btn.textContent = 'Post';
+
           return;
         }
+
+
+        btn.textContent =
+          'Posting…';
+
 
         try {
-          await updateDoc(doc(db, 'community_posts', id), {
-            comments: arrayUnion({ author, text, ts: Date.now() })
-          });
-          if (currentUser) {
-            try { await fsRecordAction(currentUser.uid, 'comment'); } catch (e) {}
-          } else {
-            lsAddTime('comm_comments');
+
+          const now =
+            Date.now();
+
+          const expiresAt =
+            new Timestamp(
+              Math.floor(
+                (
+                  now +
+                  TEN_DAYS_MS
+                ) / 1000
+              ),
+              0
+            );
+
+
+          await addDoc(
+            POSTS_COL,
+            {
+              author,
+
+              authorId:
+                currentUser
+                  ? currentUser.uid
+                  : null,
+
+              authorPhoto:
+                currentUser
+                  ? (
+                      currentUser.photoURL ||
+                      null
+                    )
+                  : null,
+
+              text,
+
+              comments: [],
+
+              createdAt:
+                serverTimestamp(),
+
+              expiresAt
+            }
+          );
+
+
+          if (!currentUser) {
+            lsAddTime(
+              'comm_posts'
+            );
           }
-          ta.value = '';
-          nameInput.value = '';
-        } catch(e) {
-          console.error('Comment failed:', e);
-          rejectEl.textContent = '⚠️ Could not post comment — try again.';
-          rejectEl.classList.add('show');
+
+
+          writeText.value = '';
+
+          document.getElementById(
+            'writeChar'
+          ).textContent =
+            '0 / 2000';
+
+
+          if (!currentUser) {
+            nameEl.value = '';
+          }
+
+
+          await refreshRateInfo();
+
+        } catch (e) {
+
+          console.error(
+            'Post failed:',
+            e
+          );
+
+          reject.textContent =
+            '⚠️ Could not post — check your connection and try again.';
+
+          reject.classList.add(
+            'show'
+          );
         }
-        sendBtn.disabled = false;
-        sendBtn.textContent = 'Send';
-      });
 
-      const delBtn = card.querySelector('[data-delete]');
-      if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-          if (!confirm('Delete this post? This cannot be undone.')) return;
-          try {
-            await deleteDoc(doc(db, 'community_posts', id));
-          } catch(e) {
-            toast('Could not delete post.');
-          }
-        });
+
+        btn.disabled = false;
+
+        btn.textContent =
+          'Post';
       }
+    );
 
-      return card;
+
+  /* =========================
+     REPORT SYSTEM
+  ========================= */
+
+  let reportTarget = null;
+
+
+  document
+    .getElementById('reportCancel')
+    .addEventListener(
+      'click',
+      closeReport
+    );
+
+
+  document
+    .getElementById('reportModalBg')
+    .addEventListener(
+      'click',
+      e => {
+
+        if (
+          e.target ===
+          document.getElementById(
+            'reportModalBg'
+          )
+        ) {
+          closeReport();
+        }
+      }
+    );
+
+
+  document
+    .getElementById('reportReasons')
+    .addEventListener(
+      'click',
+      async e => {
+
+        const btn =
+          e.target.closest(
+            '.report-reason-btn'
+          );
+
+        if (
+          !btn ||
+          !reportTarget
+        ) {
+          return;
+        }
+
+
+        document
+          .querySelectorAll(
+            '.report-reason-btn'
+          )
+          .forEach(
+            b => b.disabled = true
+          );
+
+
+        try {
+
+          await addDoc(
+            REPORTS_COL,
+            {
+              reason:
+                btn.dataset.reason,
+
+              postId:
+                reportTarget.postId,
+
+              commentIndex:
+                reportTarget.commentIndex ??
+                null,
+
+              type:
+                reportTarget.type,
+
+              snippet:
+                reportTarget.snippet ||
+                '',
+
+              reportedBy:
+                currentUser
+                  ? currentUser.uid
+                  : 'guest',
+
+              reportedAt:
+                serverTimestamp(),
+
+              status:
+                'pending'
+            }
+          );
+
+
+          if (
+            reportTarget.originBtn
+          ) {
+
+            reportTarget.originBtn
+              .classList
+              .add('reported');
+
+            reportTarget.originBtn
+              .textContent =
+              '⚑ Reported';
+
+            reportTarget.originBtn.disabled =
+              true;
+          }
+
+
+          closeReport();
+
+          toast(
+            'Report submitted. Thank you! 👍'
+          );
+
+        } catch (err) {
+
+          console.error(
+            'Report failed:',
+            err
+          );
+
+          closeReport();
+
+          toast(
+            '⚠️ Could not submit report.'
+          );
+        }
+
+
+        document
+          .querySelectorAll(
+            '.report-reason-btn'
+          )
+          .forEach(
+            b => b.disabled = false
+          );
+      }
+    );
+
+
+  function openReport(target) {
+
+    reportTarget =
+      target;
+
+    document.getElementById(
+      'reportModalBg'
+    ).style.display =
+      'flex';
+  }
+
+
+  function closeReport() {
+
+    document.getElementById(
+      'reportModalBg'
+    ).style.display =
+      'none';
+
+    reportTarget =
+      null;
+  }
+
+
+  /* =========================
+     COMMUNITY FEED
+  ========================= */
+
+  function subscribe() {
+
+    if (unsubscribe) {
+      unsubscribe();
     }
 
-    document.querySelectorAll('.sort-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentSort = btn.dataset.sort;
-        subscribe();
-      });
-    });
 
-    subscribe();
-  </script>
+    const q =
+      query(
+        POSTS_COL,
+        orderBy(
+          'createdAt',
+          currentSort === 'new'
+            ? 'desc'
+            : 'asc'
+        )
+      );
+
+
+    unsubscribe =
+      onSnapshot(
+        q,
+        snap => {
+
+          const feed =
+            document.getElementById(
+              'commFeed'
+            );
+
+          feed.innerHTML = '';
+
+
+          const now =
+            Date.now();
+
+
+          const docs =
+            snap.docs.filter(
+              d => {
+
+                const data =
+                  d.data();
+
+                if (
+                  data.hidden
+                ) {
+                  return false;
+                }
+
+
+                const exp =
+                  data.expiresAt;
+
+
+                return (
+                  !exp ||
+                  exp.toMillis() > now
+                );
+              }
+            );
+
+
+          if (!docs.length) {
+
+            feed.innerHTML =
+              '<div class="no-posts">No posts yet — be the first to share something! 👆</div>';
+
+            return;
+          }
+
+
+          docs.forEach(
+            d => {
+
+              feed.appendChild(
+                buildCard(
+                  d.id,
+                  d.data()
+                )
+              );
+            }
+          );
+
+
+          refreshRateInfo();
+
+        },
+        err => {
+
+          console.error(
+            'Feed error:',
+            err
+          );
+
+          document.getElementById(
+            'commFeed'
+          ).innerHTML =
+            '<div class="no-posts">Could not load posts. Check your connection.</div>';
+        }
+      );
+  }
+
+
+  /* =========================
+     BUILD POST CARD
+  ========================= */
+
+  function buildCard(
+    id,
+    data
+  ) {
+
+    const card =
+      document.createElement(
+        'div'
+      );
+
+    card.className =
+      'comm-card';
+
+    card.dataset.id =
+      id;
+
+
+    const createdMs =
+      data.createdAt
+        ? data.createdAt.toMillis()
+        : Date.now();
+
+
+    const expiresMs =
+      data.expiresAt
+        ? data.expiresAt.toMillis()
+        : (
+            createdMs +
+            TEN_DAYS_MS
+          );
+
+
+    const left =
+      daysLeft(expiresMs);
+
+
+    const soonClass =
+      left <= 2
+        ? 'expiry-pill soon'
+        : 'expiry-pill';
+
+
+    const expLabel =
+      left === 0
+        ? 'expires today'
+        : left === 1
+          ? '1 day left'
+          : `${left}d left`;
+
+
+    const isOwner =
+      currentUser &&
+      currentUser.uid ===
+      data.authorId;
+
+
+    const comments =
+      data.comments || [];
+
+
+    /* =========================
+       POST RANK
+    ========================= */
+
+    const rankBadge =
+      createRankBadge(
+        data.authorId
+      );
+
+
+    /* =========================
+       AVATAR
+    ========================= */
+
+    const avatarHtml =
+      data.authorPhoto
+
+        ? `
+          <div class="comm-author-dot">
+            <img
+              src="${escH(data.authorPhoto)}"
+              alt=""
+            >
+          </div>
+        `
+
+        : `
+          <div class="comm-author-dot">
+            ${escH(
+              initials(
+                data.author
+              )
+            )}
+          </div>
+        `;
+
+
+    /* =========================
+       POST HTML
+    ========================= */
+
+    card.innerHTML = `
+
+      <div class="comm-card-top">
+
+        ${avatarHtml}
+
+        <div class="comm-author-info">
+
+          <div class="comm-author-name">
+            ${escH(
+              data.author ||
+              'Anonymous'
+            )}
+            ${rankBadge}
+          </div>
+
+          <div class="comm-author-meta">
+
+            ${timeAgo(createdMs)}
+
+            <span class="${soonClass}">
+              ${expLabel}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="comm-content">
+        ${escH(data.text)}
+      </div>
+
+
+      <div class="comm-footer">
+
+        <button
+          class="comm-comment-btn"
+          data-toggle="${id}"
+        >
+          ${
+            comments.length
+              ? comments.length +
+                ' comment' +
+                (
+                  comments.length !== 1
+                    ? 's'
+                    : ''
+                )
+              : 'Comment'
+          }
+        </button>
+
+
+        <button
+          class="comm-report-btn"
+          data-report-post="${id}"
+        >
+          ⚑ Report
+        </button>
+
+
+        ${
+          isOwner
+            ? `
+              <button
+                class="comm-delete-btn"
+                data-delete="${id}"
+              >
+                Delete
+              </button>
+            `
+            : ''
+        }
+
+      </div>
+
+
+      <div
+        class="comm-comments"
+        id="comments-${id}"
+      >
+
+        ${
+          comments.map(
+            (c, i) => {
+
+              const commentRankBadge =
+                c.authorId
+                  ? createRankBadge(
+                      c.authorId
+                    )
+                  : '';
+
+              return `
+                <div class="comm-comment-item">
+
+                  <div class="comm-comment-name">
+
+                    ${escH(
+                      c.author ||
+                      'Anonymous'
+                    )}
+
+                    ${commentRankBadge}
+
+                  </div>
+
+
+                  <div class="comm-comment-text">
+                    ${escH(c.text)}
+                  </div>
+
+
+                  <button
+                    class="comm-comment-report"
+                    data-report-comment="${id}"
+                    data-ci="${i}"
+                  >
+                    ⚑
+                  </button>
+
+                </div>
+              `;
+            }
+          ).join('')
+        }
+
+
+        <div class="comm-comment-form">
+
+          <input
+            class="comm-comment-name-input"
+            placeholder="Your name (optional)"
+            maxlength="60"
+          >
+
+
+          <textarea
+            class="comm-comment-input"
+            placeholder="Write a comment…"
+            maxlength="500"
+            rows="2"
+          ></textarea>
+
+
+          <div class="comm-comment-row">
+
+            <span
+              class="comm-comment-reject"
+            ></span>
+
+            <button
+              class="comm-comment-send"
+              data-post="${id}"
+            >
+              Send
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+
+    /* =========================
+       COMMENT TOGGLE
+    ========================= */
+
+    card
+      .querySelector(
+        '[data-toggle]'
+      )
+      .addEventListener(
+        'click',
+        () => {
+
+          card
+            .querySelector(
+              `#comments-${id}`
+            )
+            .classList
+            .toggle('open');
+        }
+      );
+
+
+    /* =========================
+       REPORT POST
+    ========================= */
+
+    card
+      .querySelector(
+        '[data-report-post]'
+      )
+      .addEventListener(
+        'click',
+        function () {
+
+          if (this.disabled) {
+            return;
+          }
+
+
+          openReport(
+            {
+              postId: id,
+              type: 'post',
+              snippet:
+                data.text
+                  .slice(0, 120),
+              originBtn: this
+            }
+          );
+        }
+      );
+
+
+    /* =========================
+       REPORT COMMENTS
+    ========================= */
+
+    card
+      .querySelectorAll(
+        '[data-report-comment]'
+      )
+      .forEach(
+        btn => {
+
+          btn.addEventListener(
+            'click',
+            function () {
+
+              if (this.disabled) {
+                return;
+              }
+
+
+              const ci =
+                parseInt(
+                  this.dataset.ci
+                );
+
+
+              openReport(
+                {
+                  postId: id,
+                  commentIndex: ci,
+                  type: 'comment',
+
+                  snippet:
+                    (
+                      comments[ci]?.text ||
+                      ''
+                    ).slice(0, 120),
+
+                  originBtn: this
+                }
+              );
+            }
+          );
+        }
+      );
+
+
+    /* =========================
+       SEND COMMENT
+    ========================= */
+
+    card
+      .querySelector(
+        '.comm-comment-send'
+      )
+      .addEventListener(
+        'click',
+        async () => {
+
+          const ta =
+            card.querySelector(
+              '.comm-comment-input'
+            );
+
+
+          const nameInput =
+            card.querySelector(
+              '.comm-comment-name-input'
+            );
+
+
+          const rejectEl =
+            card.querySelector(
+              '.comm-comment-reject'
+            );
+
+
+          const sendBtn =
+            card.querySelector(
+              '.comm-comment-send'
+            );
+
+
+          const text =
+            ta.value.trim();
+
+
+          if (!text) {
+            return;
+          }
+
+
+          const author =
+            currentUser
+
+              ? (
+                  currentUser.displayName ||
+                  'Anonymous'
+                )
+
+              : (
+                  nameInput.value.trim() ||
+                  'Anonymous'
+                );
+
+
+          rejectEl.classList.remove(
+            'show'
+          );
+
+
+          sendBtn.disabled =
+            true;
+
+          sendBtn.textContent =
+            '…';
+
+
+          const limitCheck =
+            await canComment();
+
+
+          if (limitCheck.error) {
+
+            rejectEl.textContent =
+              '⚠️ Could not verify comment limit — try again.';
+
+            rejectEl.classList.add(
+              'show'
+            );
+
+
+            sendBtn.disabled =
+              false;
+
+            sendBtn.textContent =
+              'Send';
+
+            return;
+          }
+
+
+          if (!limitCheck.ok) {
+
+            rejectEl.textContent =
+              `⚠️ You've reached the limit of ${COMMENT_LIMIT} comments per 2 days.`;
+
+            rejectEl.classList.add(
+              'show'
+            );
+
+
+            sendBtn.disabled =
+              false;
+
+            sendBtn.textContent =
+              'Send';
+
+            return;
+          }
+
+
+          try {
+
+            await updateDoc(
+              doc(
+                db,
+                'community_posts',
+                id
+              ),
+              {
+
+                comments:
+                  arrayUnion(
+                    {
+                      author,
+
+                      authorId:
+                        currentUser
+                          ? currentUser.uid
+                          : null,
+
+                      text,
+
+                      ts:
+                        Date.now()
+                    }
+                  )
+              }
+            );
+
+
+            if (currentUser) {
+
+              try {
+
+                await fsRecordAction(
+                  currentUser.uid,
+                  'comment'
+                );
+
+              } catch (e) {}
+              
+            } else {
+
+              lsAddTime(
+                'comm_comments'
+              );
+            }
+
+
+            ta.value = '';
+
+            nameInput.value = '';
+
+          } catch (e) {
+
+            console.error(
+              'Comment failed:',
+              e
+            );
+
+
+            rejectEl.textContent =
+              '⚠️ Could not post comment — try again.';
+
+            rejectEl.classList.add(
+              'show'
+            );
+          }
+
+
+          sendBtn.disabled =
+            false;
+
+          sendBtn.textContent =
+            'Send';
+        }
+      );
+
+
+    /* =========================
+       DELETE POST
+    ========================= */
+
+    const delBtn =
+      card.querySelector(
+        '[data-delete]'
+      );
+
+
+    if (delBtn) {
+
+      delBtn.addEventListener(
+        'click',
+        async () => {
+
+          if (
+            !confirm(
+              'Delete this post? This cannot be undone.'
+            )
+          ) {
+            return;
+          }
+
+
+          try {
+
+            await deleteDoc(
+              doc(
+                db,
+                'community_posts',
+                id
+              )
+            );
+
+          } catch (e) {
+
+            console.error(
+              'Delete failed:',
+              e
+            );
+
+            toast(
+              'Could not delete post.'
+            );
+          }
+        }
+      );
+    }
+
+
+    return card;
+  }
+
+
+  /* =========================
+     SORT BUTTONS
+  ========================= */
+
+  document
+    .querySelectorAll('.sort-btn')
+    .forEach(
+      btn => {
+
+        btn.addEventListener(
+          'click',
+          () => {
+
+            document
+              .querySelectorAll(
+                '.sort-btn'
+              )
+              .forEach(
+                b =>
+                  b.classList.remove(
+                    'active'
+                  )
+              );
+
+
+            btn.classList.add(
+              'active'
+            );
+
+
+            currentSort =
+              btn.dataset.sort;
+
+
+            subscribe();
+          }
+        );
+      }
+    );
+
+
+  /* =========================
+     START FEED
+  ========================= */
+
+  subscribe();
+
+</script>
 
   <script src="page-transition.js"></script>
   <script src="nav.js"></script>
