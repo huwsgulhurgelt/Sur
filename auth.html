@@ -130,7 +130,7 @@
     }
     .auth-success.show { display: block; }
 
-    /* logged-in view */
+    /* logged in view */
     .profile-card {
       display: none; flex-direction: column; align-items: center;
       gap: 16px; padding: 36px; text-align: center;
@@ -191,7 +191,7 @@
   <div class="auth-wrap">
     <div class="auth-card">
 
-      <!-- ── logged in ── -->
+      <!-- logged in -->
       <div class="profile-card" id="profileCard">
         <div class="profile-av" id="profileAv">?</div>
         <div>
@@ -204,7 +204,7 @@
         </div>
       </div>
 
-      <!-- ── forms ── -->
+      <!--forms-->
       <div id="authForms">
         <div class="auth-tabs">
           <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
@@ -288,7 +288,7 @@
     const provider = new GoogleAuthProvider();
     let avatarDataUrl = null;
 
-    /* ── avatar preview ── */
+    /* avatar preview */
     document.getElementById('avatarRing').addEventListener('click', function() {
       document.getElementById('avatarInput').click();
     });
@@ -349,7 +349,7 @@
       return map[code] || ('Error: ' + (code || 'unknown'));
     }
 
-    /* ── Sign In ── */
+    /*Sign In  */
     document.getElementById('siBtn').addEventListener('click', async function() {
       const email = document.getElementById('siEmail').value.trim();
       const pass  = document.getElementById('siPass').value;
@@ -366,7 +366,7 @@
       }
     });
 
-    /* ── Sign Up ── */
+    /*Sign Up */
     document.getElementById('suBtn').addEventListener('click', async function() {
       const name  = document.getElementById('suName').value.trim();
       const email = document.getElementById('suEmail').value.trim();
@@ -389,7 +389,7 @@
       }
     });
 
-    /* ── Google ── */
+    /*Google */
     async function doGoogle(errId) {
       clearErrors();
       try {
@@ -404,12 +404,12 @@
     document.getElementById('siGoogleBtn').addEventListener('click', function() { doGoogle('siError'); });
     document.getElementById('suGoogleBtn').addEventListener('click', function() { doGoogle('suError'); });
 
-    /* ── Sign Out ── */
+    /* Sign Outt*/
     document.getElementById('signOutBtn').addEventListener('click', async function() {
       await signOut(auth);
     });
 
-    /* ── Auth state ── */
+    /*Auth state*/
     onAuthStateChanged(auth, function(user) {
       const profileCard = document.getElementById('profileCard');
       const authForms   = document.getElementById('authForms');
@@ -432,7 +432,7 @@
       }
     });
 
-    /* ── Enter key shortcuts ── */
+    /*Enter key shortcuts*/
     document.getElementById('siPass').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') document.getElementById('siBtn').click();
     });
