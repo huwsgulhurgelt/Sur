@@ -363,19 +363,19 @@
     </div>
   </div>
 
- <script type="module">
-  import {
+<script type="module">
+import {
     getUserRank,
     getRankLabel
-  } from './rank-config.js';
+} from './rank-config.js';
 
-  import { auth, db } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 
-  import {
+import {
     onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  import {
+import {
     collection,
     addDoc,
     deleteDoc,
@@ -389,1644 +389,807 @@
     arrayUnion,
     where,
     getDocs
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
-  /* =========================
-     CONSTANTS
-  ========================= */
+/* =========================================================
+   BASIC STATE
+========================================================= */
 
-  const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
+let currentUser = null;
+let unsubscribePosts = null;
 
-  const POSTS_COL = collection(db, 'community_posts');
-  const REPORTS_COL = collection(db, 'xn_reports');
+const postsContainer = document.getElementById('communityPosts');
 
-  const POST_LIMIT = 3;
-  const POST_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-  const COMMENT_LIMIT = 10;
-  const COMMENT_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
 
+function escH(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
-  /* =========================
-     STATE
-  ========================= */
 
-  let currentUser = null;
-  let currentSort = 'new';
-  let unsubscribe = null;
+/* =========================================================
+   RANK SYSTEM
+   Rank comes ONLY from rank-config.js
+========================================================= */
 
-
-  /* =========================
-     LOCAL STORAGE RATE LIMIT
-  ========================= */
-
-  function lsGetTimes(key) {
-    try {
-      return JSON.parse(localStorage.getItem(key) || '[]');
-    } catch (e) {
-      return [];
-    }
-  }
-
-
-  function lsAddTime(key) {
-    const times = lsGetTimes(key).filter(
-      t => t > Date.now() - Math.max(
-        POST_WINDOW_MS,
-        COMMENT_WINDOW_MS
-      )
-    );
-
-    times.push(Date.now());
-
-    try {
-      localStorage.setItem(key, JSON.stringify(times));
-    } catch (e) {}
-  }
-
-
-  function lsCountInWindow(key, windowMs) {
-    const cutoff = Date.now() - windowMs;
-
-    return lsGetTimes(key).filter(
-      t => t > cutoff
-    ).length;
-  }
-
-
-  /* =========================
-     FIRESTORE RATE LIMIT
-  ========================= */
-
-  async function fsCountInWindow(uid, type, windowMs) {
-    const cutoff = Date.now() - windowMs;
-
-    const q = query(
-      collection(db, 'rate_limits'),
-      where('uid', '==', uid),
-      where('type', '==', type),
-      where('tsMs', '>', cutoff)
-    );
-
-    const snap = await getDocs(q);
-
-    return snap.size;
-  }
-
-
-  async function fsRecordAction(uid, type) {
-    await addDoc(
-      collection(db, 'rate_limits'),
-      {
-        uid,
-        type,
-        tsMs: Date.now()
-      }
-    );
-  }
-
-
-  /* =========================
-     POST LIMIT
-  ========================= */
-
-  async function countSignedInPostsThisWeek(uid) {
-    const cutoff = Date.now() - POST_WINDOW_MS;
-
-    const q = query(
-      POSTS_COL,
-      where('authorId', '==', uid)
-    );
-
-    const snap = await getDocs(q);
-
-    return snap.docs.filter(d => {
-      const created = d.data().createdAt;
-
-      if (
-        !created ||
-        typeof created.toMillis !== 'function'
-      ) {
-        return true;
-      }
-
-      return created.toMillis() > cutoff;
-    }).length;
-  }
-
-
-  async function canPost() {
-    if (currentUser) {
-      try {
-        const count =
-          await countSignedInPostsThisWeek(
-            currentUser.uid
-          );
-
-        return {
-          ok: count < POST_LIMIT,
-          remaining: Math.max(
-            0,
-            POST_LIMIT - count
-          ),
-          error: false
-        };
-
-      } catch (e) {
-        console.error(
-          'Post limit check failed:',
-          e
-        );
-
-        return {
-          ok: false,
-          remaining: 0,
-          error: true
-        };
-      }
-    }
-
-    const count = lsCountInWindow(
-      'comm_posts',
-      POST_WINDOW_MS
-    );
-
-    return {
-      ok: count < POST_LIMIT,
-      remaining: Math.max(
-        0,
-        POST_LIMIT - count
-      ),
-      error: false
-    };
-  }
-
-
-  /* =========================
-     COMMENT LIMIT
-  ========================= */
-
-  async function canComment() {
-    if (currentUser) {
-      try {
-        const count =
-          await fsCountInWindow(
-            currentUser.uid,
-            'comment',
-            COMMENT_WINDOW_MS
-          );
-
-        return {
-          ok: count < COMMENT_LIMIT,
-          remaining: Math.max(
-            0,
-            COMMENT_LIMIT - count
-          ),
-          error: false
-        };
-
-      } catch (e) {
-        console.error(
-          'Comment limit check failed:',
-          e
-        );
-
-        return {
-          ok: false,
-          remaining: 0,
-          error: true
-        };
-      }
-    }
-
-    const count = lsCountInWindow(
-      'comm_comments',
-      COMMENT_WINDOW_MS
-    );
-
-    return {
-      ok: count < COMMENT_LIMIT,
-      remaining: Math.max(
-        0,
-        COMMENT_LIMIT - count
-      ),
-      error: false
-    };
-  }
-
-
-  /* =========================
-     RATE INFO
-  ========================= */
-
-  async function refreshRateInfo() {
-    const {
-      remaining,
-      error
-    } = await canPost();
-
-    const el =
-      document.getElementById('postRateInfo');
-
-    if (!el) return;
-
-    if (error) {
-      el.textContent =
-        'Could not check weekly limit';
-
-      return;
-    }
-
-    el.textContent =
-      remaining +
-      ' post' +
-      (remaining !== 1 ? 's' : '') +
-      ' left this week';
-  }
-
-
-  /* =========================
-     HTML ESCAPE
-  ========================= */
-
-  function escH(s) {
-    return String(s || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-
-  /* =========================
-     TIME HELPERS
-  ========================= */
-
-  function timeAgo(ms) {
-    if (!ms) return '';
-
-    const diff = Date.now() - ms;
-
-    const m = Math.floor(
-      diff / 60000
-    );
-
-    if (m < 1) {
-      return 'Just now';
-    }
-
-    if (m < 60) {
-      return m + 'm ago';
-    }
-
-    const h = Math.floor(m / 60);
-
-    if (h < 24) {
-      return h + 'h ago';
-    }
-
-    return Math.floor(h / 24) + 'd ago';
-  }
-
-
-  function daysLeft(ms) {
-    if (!ms) return 10;
-
-    return Math.max(
-      0,
-      Math.ceil(
-        (ms - Date.now()) /
-        (24 * 60 * 60 * 1000)
-      )
-    );
-  }
-
-
-  /* =========================
-     INITIALS
-  ========================= */
-
-  function initials(name) {
-    if (
-      !name ||
-      name === 'Anonymous'
-    ) {
-      return '?';
-    }
-
-    return name
-      .trim()
-      .split(' ')
-      .map(w => w[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-  }
-
-
-  /* =========================
-     RANK
-  ========================= */
-
-  function getAuthorRank(uid) {
+function getAuthorRank(uid) {
     return getUserRank(uid);
-  }
+}
 
-
-  function createRankBadge(uid) {
+function createRankBadge(uid) {
     if (!uid) {
-      return '';
+        return '';
     }
 
     const rank = getAuthorRank(uid);
     const label = getRankLabel(rank);
 
     return `
-      <span class="comm-rank-badge comm-rank-${rank}">
-        ✦ ${escH(label)}
-      </span>
+        <span class="comm-rank-badge comm-rank-${escH(rank)}">
+            ✦ ${escH(label)}
+        </span>
     `;
-  }
+}
 
 
-  /* =========================
-     TOAST
-  ========================= */
+/* =========================================================
+   DATE / TIME
+========================================================= */
 
-  function toast(msg) {
-    const t =
-      document.createElement('div');
+function formatTime(timestamp) {
+    if (!timestamp) {
+        return '';
+    }
 
-    t.textContent = msg;
+    try {
+        let date;
 
-    Object.assign(
-      t.style,
-      {
-        position: 'fixed',
-        bottom: '24px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'var(--surface)',
-        border: '1.5px solid var(--border)',
-        borderRadius: '12px',
-        padding: '10px 20px',
-        fontSize: '0.84rem',
-        fontWeight: '700',
-        boxShadow:
-          '0 8px 24px rgba(0,0,0,0.15)',
-        zIndex: '99999',
-        color: 'var(--text)',
-        whiteSpace: 'nowrap'
-      }
-    );
-
-    document.body.appendChild(t);
-
-    setTimeout(
-      () => t.remove(),
-      3000
-    );
-  }
-
-
-  /* =========================
-     AUTH STATE
-  ========================= */
-
-  onAuthStateChanged(
-    auth,
-    user => {
-      currentUser = user;
-
-      const avatar =
-        document.getElementById(
-          'writeAvatar'
-        );
-
-      const name =
-        document.getElementById(
-          'writeName'
-        );
-
-      if (user) {
-
-        name.value =
-          user.displayName || '';
-
-        name.disabled = true;
-
-        name.placeholder =
-          user.displayName ||
-          'Anonymous';
-
-        if (user.photoURL) {
-
-          avatar.innerHTML = `
-            <img
-              src="${escH(user.photoURL)}"
-              alt=""
-            >
-          `;
-
+        if (timestamp instanceof Timestamp) {
+            date = timestamp.toDate();
+        } else if (timestamp?.toDate) {
+            date = timestamp.toDate();
+        } else if (timestamp instanceof Date) {
+            date = timestamp;
+        } else if (typeof timestamp === 'number') {
+            date = new Date(timestamp);
         } else {
-
-          avatar.textContent =
-            initials(
-              user.displayName
-            );
+            return '';
         }
 
-      } else {
-
-        name.disabled = false;
-
-        avatar.textContent = '?';
-      }
-
-      refreshRateInfo();
-
-      /*
-       * Re-render the feed so rank information
-       * updates immediately after login/logout.
-       */
-      subscribe();
+        return date.toLocaleString();
+    } catch (error) {
+        console.error('Could not format time:', error);
+        return '';
     }
-  );
+}
 
 
-  /* =========================
-     WRITE CHARACTER COUNT
-  ========================= */
+/* =========================================================
+   CURRENT USER
+========================================================= */
 
-  const writeText =
-    document.getElementById(
-      'writeText'
+onAuthStateChanged(auth, (user) => {
+    currentUser = user || null;
+
+    updateAuthUI();
+
+    if (unsubscribePosts) {
+        unsubscribePosts();
+        unsubscribePosts = null;
+    }
+
+    loadPosts();
+});
+
+
+/* =========================================================
+   AUTH UI
+========================================================= */
+
+function updateAuthUI() {
+    const userStatus =
+        document.getElementById('userStatus');
+
+    if (!userStatus) {
+        return;
+    }
+
+    if (!currentUser) {
+        userStatus.textContent = 'Not signed in';
+        return;
+    }
+
+    const rank = getUserRank(currentUser.uid);
+    const label = getRankLabel(rank);
+
+    userStatus.innerHTML = `
+        ${escH(currentUser.displayName || currentUser.email || 'User')}
+        <span class="comm-rank-badge comm-rank-${escH(rank)}">
+            ✦ ${escH(label)}
+        </span>
+    `;
+}
+
+
+/* =========================================================
+   LOAD POSTS
+========================================================= */
+
+function loadPosts() {
+    if (!postsContainer) {
+        console.error('communityPosts element not found.');
+        return;
+    }
+
+    const postsQuery = query(
+        collection(db, 'community_posts'),
+        orderBy('createdAt', 'desc')
     );
 
-  writeText.addEventListener(
-    'input',
-    () => {
+    unsubscribePosts = onSnapshot(
+        postsQuery,
+        (snapshot) => {
+            postsContainer.innerHTML = '';
 
-      document.getElementById(
-        'writeChar'
-      ).textContent =
-        writeText.value.length +
-        ' / 2000';
-    }
-  );
-
-
-  /* =========================
-     CREATE POST
-  ========================= */
-
-  document
-    .getElementById('writeSubmit')
-    .addEventListener(
-      'click',
-      async () => {
-
-        const text =
-          writeText.value.trim();
-
-        const nameEl =
-          document.getElementById(
-            'writeName'
-          );
-
-        const author =
-          currentUser
-            ? (
-                currentUser.displayName ||
-                'Anonymous'
-              )
-            : (
-                nameEl.value.trim() ||
-                'Anonymous'
-              );
-
-
-        if (!text) {
-
-          writeText.focus();
-
-          writeText.style.borderColor =
-            '#ef4444';
-
-          setTimeout(
-            () =>
-              writeText.style.borderColor =
-                '',
-            1200
-          );
-
-          return;
-        }
-
-
-        const btn =
-          document.getElementById(
-            'writeSubmit'
-          );
-
-        const reject =
-          document.getElementById(
-            'postReject'
-          );
-
-
-        reject.classList.remove(
-          'show'
-        );
-
-        btn.disabled = true;
-
-        btn.textContent =
-          'Checking…';
-
-
-        const limitCheck =
-          await canPost();
-
-
-        if (limitCheck.error) {
-
-          reject.textContent =
-            '⚠️ Could not verify your weekly post limit. Try again in a moment.';
-
-          reject.classList.add(
-            'show'
-          );
-
-          btn.disabled = false;
-
-          btn.textContent = 'Post';
-
-          return;
-        }
-
-
-        if (!limitCheck.ok) {
-
-          reject.textContent =
-            `⚠️ You've reached the limit of ${POST_LIMIT} posts per week. Try again later.`;
-
-          reject.classList.add(
-            'show'
-          );
-
-          btn.disabled = false;
-
-          btn.textContent = 'Post';
-
-          return;
-        }
-
-
-        btn.textContent =
-          'Posting…';
-
-
-        try {
-
-          const now =
-            Date.now();
-
-          const expiresAt =
-            new Timestamp(
-              Math.floor(
-                (
-                  now +
-                  TEN_DAYS_MS
-                ) / 1000
-              ),
-              0
-            );
-
-
-          await addDoc(
-            POSTS_COL,
-            {
-              author,
-
-              authorId:
-                currentUser
-                  ? currentUser.uid
-                  : null,
-
-              authorPhoto:
-                currentUser
-                  ? (
-                      currentUser.photoURL ||
-                      null
-                    )
-                  : null,
-
-              text,
-
-              comments: [],
-
-              createdAt:
-                serverTimestamp(),
-
-              expiresAt
+            if (snapshot.empty) {
+                postsContainer.innerHTML = `
+                    <div class="empty-state">
+                        No posts yet.
+                    </div>
+                `;
+                return;
             }
-          );
 
+            snapshot.forEach((postDoc) => {
+                const data = postDoc.data();
 
-          if (!currentUser) {
-            lsAddTime(
-              'comm_posts'
-            );
-          }
-
-
-          writeText.value = '';
-
-          document.getElementById(
-            'writeChar'
-          ).textContent =
-            '0 / 2000';
-
-
-          if (!currentUser) {
-            nameEl.value = '';
-          }
-
-
-          await refreshRateInfo();
-
-        } catch (e) {
-
-          console.error(
-            'Post failed:',
-            e
-          );
-
-          reject.textContent =
-            '⚠️ Could not post — check your connection and try again.';
-
-          reject.classList.add(
-            'show'
-          );
-        }
-
-
-        btn.disabled = false;
-
-        btn.textContent =
-          'Post';
-      }
-    );
-
-
-  /* =========================
-     REPORT SYSTEM
-  ========================= */
-
-  let reportTarget = null;
-
-
-  document
-    .getElementById('reportCancel')
-    .addEventListener(
-      'click',
-      closeReport
-    );
-
-
-  document
-    .getElementById('reportModalBg')
-    .addEventListener(
-      'click',
-      e => {
-
-        if (
-          e.target ===
-          document.getElementById(
-            'reportModalBg'
-          )
-        ) {
-          closeReport();
-        }
-      }
-    );
-
-
-  document
-    .getElementById('reportReasons')
-    .addEventListener(
-      'click',
-      async e => {
-
-        const btn =
-          e.target.closest(
-            '.report-reason-btn'
-          );
-
-        if (
-          !btn ||
-          !reportTarget
-        ) {
-          return;
-        }
-
-
-        document
-          .querySelectorAll(
-            '.report-reason-btn'
-          )
-          .forEach(
-            b => b.disabled = true
-          );
-
-
-        try {
-
-          await addDoc(
-            REPORTS_COL,
-            {
-              reason:
-                btn.dataset.reason,
-
-              postId:
-                reportTarget.postId,
-
-              commentIndex:
-                reportTarget.commentIndex ??
-                null,
-
-              type:
-                reportTarget.type,
-
-              snippet:
-                reportTarget.snippet ||
-                '',
-
-              reportedBy:
-                currentUser
-                  ? currentUser.uid
-                  : 'guest',
-
-              reportedAt:
-                serverTimestamp(),
-
-              status:
-                'pending'
-            }
-          );
-
-
-          if (
-            reportTarget.originBtn
-          ) {
-
-            reportTarget.originBtn
-              .classList
-              .add('reported');
-
-            reportTarget.originBtn
-              .textContent =
-              '⚑ Reported';
-
-            reportTarget.originBtn.disabled =
-              true;
-          }
-
-
-          closeReport();
-
-          toast(
-            'Report submitted. Thank you! 👍'
-          );
-
-        } catch (err) {
-
-          console.error(
-            'Report failed:',
-            err
-          );
-
-          closeReport();
-
-          toast(
-            '⚠️ Could not submit report.'
-          );
-        }
-
-
-        document
-          .querySelectorAll(
-            '.report-reason-btn'
-          )
-          .forEach(
-            b => b.disabled = false
-          );
-      }
-    );
-
-
-  function openReport(target) {
-
-    reportTarget =
-      target;
-
-    document.getElementById(
-      'reportModalBg'
-    ).style.display =
-      'flex';
-  }
-
-
-  function closeReport() {
-
-    document.getElementById(
-      'reportModalBg'
-    ).style.display =
-      'none';
-
-    reportTarget =
-      null;
-  }
-
-
-  /* =========================
-     COMMUNITY FEED
-  ========================= */
-
-  function subscribe() {
-
-    if (unsubscribe) {
-      unsubscribe();
-    }
-
-
-    const q =
-      query(
-        POSTS_COL,
-        orderBy(
-          'createdAt',
-          currentSort === 'new'
-            ? 'desc'
-            : 'asc'
-        )
-      );
-
-
-    unsubscribe =
-      onSnapshot(
-        q,
-        snap => {
-
-          const feed =
-            document.getElementById(
-              'commFeed'
-            );
-
-          feed.innerHTML = '';
-
-
-          const now =
-            Date.now();
-
-
-          const docs =
-            snap.docs.filter(
-              d => {
-
-                const data =
-                  d.data();
-
-                if (
-                  data.hidden
-                ) {
-                  return false;
-                }
-
-
-                const exp =
-                  data.expiresAt;
-
-
-                return (
-                  !exp ||
-                  exp.toMillis() > now
+                postsContainer.appendChild(
+                    buildPostCard(postDoc.id, data)
                 );
-              }
-            );
-
-
-          if (!docs.length) {
-
-            feed.innerHTML =
-              '<div class="no-posts">No posts yet — be the first to share something! 👆</div>';
-
-            return;
-          }
-
-
-          docs.forEach(
-            d => {
-
-              feed.appendChild(
-                buildCard(
-                  d.id,
-                  d.data()
-                )
-              );
-            }
-          );
-
-
-          refreshRateInfo();
-
+            });
         },
-        err => {
+        (error) => {
+            console.error('Could not load community posts:', error);
 
-          console.error(
-            'Feed error:',
-            err
-          );
-
-          document.getElementById(
-            'commFeed'
-          ).innerHTML =
-            '<div class="no-posts">Could not load posts. Check your connection.</div>';
+            postsContainer.innerHTML = `
+                <div class="empty-state">
+                    Could not load posts.
+                </div>
+            `;
         }
-      );
-  }
+    );
+}
 
 
-  /* =========================
-     BUILD POST CARD
-  ========================= */
+/* =========================================================
+   BUILD POST
+========================================================= */
 
-  function buildCard(
-    id,
-    data
-  ) {
+function buildPostCard(id, data) {
+    const card = document.createElement('article');
 
-    const card =
-      document.createElement(
-        'div'
-      );
+    card.className = 'community-post';
 
-    card.className =
-      'comm-card';
+    const author = data.author || 'Anonymous';
+    const authorId = data.authorId || null;
 
-    card.dataset.id =
-      id;
+    const rankBadge = createRankBadge(authorId);
 
+    const text = escH(data.text || '');
 
-    const createdMs =
-      data.createdAt
-        ? data.createdAt.toMillis()
-        : Date.now();
+    const createdTime = formatTime(data.createdAt);
 
+    const comments = Array.isArray(data.comments)
+        ? data.comments
+        : [];
 
-    const expiresMs =
-      data.expiresAt
-        ? data.expiresAt.toMillis()
-        : (
-            createdMs +
-            TEN_DAYS_MS
-          );
-
-
-    const left =
-      daysLeft(expiresMs);
-
-
-    const soonClass =
-      left <= 2
-        ? 'expiry-pill soon'
-        : 'expiry-pill';
-
-
-    const expLabel =
-      left === 0
-        ? 'expires today'
-        : left === 1
-          ? '1 day left'
-          : `${left}d left`;
-
+    const commentHtml = comments
+        .map((comment, index) => {
+            return buildCommentHtml(comment, index);
+        })
+        .join('');
 
     const isOwner =
-      currentUser &&
-      currentUser.uid ===
-      data.authorId;
+        currentUser &&
+        authorId &&
+        currentUser.uid === authorId;
 
+    const isDeveloper =
+        currentUser &&
+        getUserRank(currentUser.uid) === 'developer';
 
-    const comments =
-      data.comments || [];
-
-
-    /* =========================
-       POST RANK
-    ========================= */
-
-    const rankBadge =
-      createRankBadge(
-        data.authorId
-      );
-
-
-    /* =========================
-       AVATAR
-    ========================= */
-
-    const avatarHtml =
-      data.authorPhoto
-
-        ? `
-          <div class="comm-author-dot">
-            <img
-              src="${escH(data.authorPhoto)}"
-              alt=""
-            >
-          </div>
-        `
-
-        : `
-          <div class="comm-author-dot">
-            ${escH(
-              initials(
-                data.author
-              )
-            )}
-          </div>
-        `;
-
-
-    /* =========================
-       POST HTML
-    ========================= */
+    const deleteButton =
+        isOwner || isDeveloper
+            ? `
+                <button
+                    class="comm-delete-post"
+                    data-post-id="${escH(id)}"
+                    type="button"
+                >
+                    Delete
+                </button>
+              `
+            : '';
 
     card.innerHTML = `
+        <div class="comm-post-header">
+            <div class="comm-author">
+                <div class="comm-author-name">
+                    ${escH(author)}
+                    ${rankBadge}
+                </div>
 
-      <div class="comm-card-top">
+                <div class="comm-post-time">
+                    ${escH(createdTime)}
+                </div>
+            </div>
 
-        ${avatarHtml}
-
-        <div class="comm-author-info">
-
-          <div class="comm-author-name">
-            ${escH(
-              data.author ||
-              'Anonymous'
-            )}
-            ${rankBadge}
-          </div>
-
-          <div class="comm-author-meta">
-
-            ${timeAgo(createdMs)}
-
-            <span class="${soonClass}">
-              ${expLabel}
-            </span>
-
-          </div>
-
+            ${deleteButton}
         </div>
 
-      </div>
+        <div class="comm-post-text">
+            ${text}
+        </div>
 
-
-      <div class="comm-content">
-        ${escH(data.text)}
-      </div>
-
-
-      <div class="comm-footer">
-
-        <button
-          class="comm-comment-btn"
-          data-toggle="${id}"
-        >
-          ${
-            comments.length
-              ? comments.length +
-                ' comment' +
-                (
-                  comments.length !== 1
-                    ? 's'
-                    : ''
-                )
-              : 'Comment'
-          }
-        </button>
-
-
-        <button
-          class="comm-report-btn"
-          data-report-post="${id}"
-        >
-          ⚑ Report
-        </button>
-
-
-        ${
-          isOwner
-            ? `
-              <button
-                class="comm-delete-btn"
-                data-delete="${id}"
-              >
-                Delete
-              </button>
-            `
-            : ''
-        }
-
-      </div>
-
-
-      <div
-        class="comm-comments"
-        id="comments-${id}"
-      >
-
-        ${
-          comments.map(
-            (c, i) => {
-
-              const commentRankBadge =
-                c.authorId
-                  ? createRankBadge(
-                      c.authorId
-                    )
-                  : '';
-
-              return `
-                <div class="comm-comment-item">
-
-                  <div class="comm-comment-name">
-
-                    ${escH(
-                      c.author ||
-                      'Anonymous'
-                    )}
-
-                    ${commentRankBadge}
-
-                  </div>
-
-
-                  <div class="comm-comment-text">
-                    ${escH(c.text)}
-                  </div>
-
-
-                  <button
-                    class="comm-comment-report"
-                    data-report-comment="${id}"
-                    data-ci="${i}"
-                  >
-                    ⚑
-                  </button>
-
-                </div>
-              `;
-            }
-          ).join('')
-        }
-
+        <div class="comm-comments">
+            ${commentHtml}
+        </div>
 
         <div class="comm-comment-form">
-
-          <input
-            class="comm-comment-name-input"
-            placeholder="Your name (optional)"
-            maxlength="60"
-          >
-
-
-          <textarea
-            class="comm-comment-input"
-            placeholder="Write a comment…"
-            maxlength="500"
-            rows="2"
-          ></textarea>
-
-
-          <div class="comm-comment-row">
-
-            <span
-              class="comm-comment-reject"
-            ></span>
+            <input
+                type="text"
+                class="comm-comment-input"
+                placeholder="Write a comment..."
+                maxlength="1000"
+                data-post-id="${escH(id)}"
+            >
 
             <button
-              class="comm-comment-send"
-              data-post="${id}"
+                class="comm-comment-btn"
+                type="button"
+                data-post-id="${escH(id)}"
             >
-              Send
+                Comment
             </button>
-
-          </div>
-
         </div>
-
-      </div>
     `;
 
+    const deleteButtonElement =
+        card.querySelector('.comm-delete-post');
 
-    /* =========================
-       COMMENT TOGGLE
-    ========================= */
-
-    card
-      .querySelector(
-        '[data-toggle]'
-      )
-      .addEventListener(
-        'click',
-        () => {
-
-          card
-            .querySelector(
-              `#comments-${id}`
-            )
-            .classList
-            .toggle('open');
-        }
-      );
-
-
-    /* =========================
-       REPORT POST
-    ========================= */
-
-    card
-      .querySelector(
-        '[data-report-post]'
-      )
-      .addEventListener(
-        'click',
-        function () {
-
-          if (this.disabled) {
-            return;
-          }
-
-
-          openReport(
-            {
-              postId: id,
-              type: 'post',
-              snippet:
-                data.text
-                  .slice(0, 120),
-              originBtn: this
-            }
-          );
-        }
-      );
-
-
-    /* =========================
-       REPORT COMMENTS
-    ========================= */
-
-    card
-      .querySelectorAll(
-        '[data-report-comment]'
-      )
-      .forEach(
-        btn => {
-
-          btn.addEventListener(
+    if (deleteButtonElement) {
+        deleteButtonElement.addEventListener(
             'click',
-            function () {
-
-              if (this.disabled) {
-                return;
-              }
-
-
-              const ci =
-                parseInt(
-                  this.dataset.ci
-                );
-
-
-              openReport(
-                {
-                  postId: id,
-                  commentIndex: ci,
-                  type: 'comment',
-
-                  snippet:
-                    (
-                      comments[ci]?.text ||
-                      ''
-                    ).slice(0, 120),
-
-                  originBtn: this
-                }
-              );
-            }
-          );
-        }
-      );
-
-
-    /* =========================
-       SEND COMMENT
-    ========================= */
-
-    card
-      .querySelector(
-        '.comm-comment-send'
-      )
-      .addEventListener(
-        'click',
-        async () => {
-
-          const ta =
-            card.querySelector(
-              '.comm-comment-input'
-            );
-
-
-          const nameInput =
-            card.querySelector(
-              '.comm-comment-name-input'
-            );
-
-
-          const rejectEl =
-            card.querySelector(
-              '.comm-comment-reject'
-            );
-
-
-          const sendBtn =
-            card.querySelector(
-              '.comm-comment-send'
-            );
-
-
-          const text =
-            ta.value.trim();
-
-
-          if (!text) {
-            return;
-          }
-
-
-          const author =
-            currentUser
-
-              ? (
-                  currentUser.displayName ||
-                  'Anonymous'
-                )
-
-              : (
-                  nameInput.value.trim() ||
-                  'Anonymous'
-                );
-
-
-          rejectEl.classList.remove(
-            'show'
-          );
-
-
-          sendBtn.disabled =
-            true;
-
-          sendBtn.textContent =
-            '…';
-
-
-          const limitCheck =
-            await canComment();
-
-
-          if (limitCheck.error) {
-
-            rejectEl.textContent =
-              '⚠️ Could not verify comment limit — try again.';
-
-            rejectEl.classList.add(
-              'show'
-            );
-
-
-            sendBtn.disabled =
-              false;
-
-            sendBtn.textContent =
-              'Send';
-
-            return;
-          }
-
-
-          if (!limitCheck.ok) {
-
-            rejectEl.textContent =
-              `⚠️ You've reached the limit of ${COMMENT_LIMIT} comments per 2 days.`;
-
-            rejectEl.classList.add(
-              'show'
-            );
-
-
-            sendBtn.disabled =
-              false;
-
-            sendBtn.textContent =
-              'Send';
-
-            return;
-          }
-
-
-          try {
-
-            await updateDoc(
-              doc(
-                db,
-                'community_posts',
-                id
-              ),
-              {
-
-                comments:
-                  arrayUnion(
-                    {
-                      author,
-
-                      authorId:
-                        currentUser
-                          ? currentUser.uid
-                          : null,
-
-                      text,
-
-                      ts:
-                        Date.now()
-                    }
-                  )
-              }
-            );
-
-
-            if (currentUser) {
-
-              try {
-
-                await fsRecordAction(
-                  currentUser.uid,
-                  'comment'
-                );
-
-              } catch (e) {}
-              
-            } else {
-
-              lsAddTime(
-                'comm_comments'
-              );
-            }
-
-
-            ta.value = '';
-
-            nameInput.value = '';
-
-          } catch (e) {
-
-            console.error(
-              'Comment failed:',
-              e
-            );
-
-
-            rejectEl.textContent =
-              '⚠️ Could not post comment — try again.';
-
-            rejectEl.classList.add(
-              'show'
-            );
-          }
-
-
-          sendBtn.disabled =
-            false;
-
-          sendBtn.textContent =
-            'Send';
-        }
-      );
-
-
-    /* =========================
-       DELETE POST
-    ========================= */
-
-    const delBtn =
-      card.querySelector(
-        '[data-delete]'
-      );
-
-
-    if (delBtn) {
-
-      delBtn.addEventListener(
-        'click',
-        async () => {
-
-          if (
-            !confirm(
-              'Delete this post? This cannot be undone.'
-            )
-          ) {
-            return;
-          }
-
-
-          try {
-
-            await deleteDoc(
-              doc(
-                db,
-                'community_posts',
-                id
-              )
-            );
-
-          } catch (e) {
-
-            console.error(
-              'Delete failed:',
-              e
-            );
-
-            toast(
-              'Could not delete post.'
-            );
-          }
-        }
-      );
+            () => deletePost(id)
+        );
     }
 
+    const commentButton =
+        card.querySelector('.comm-comment-btn');
+
+    if (commentButton) {
+        commentButton.addEventListener(
+            'click',
+            () => submitComment(id, card)
+        );
+    }
+
+    const commentInput =
+        card.querySelector('.comm-comment-input');
+
+    if (commentInput) {
+        commentInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitComment(id, card);
+            }
+        });
+    }
+
+    const reportButtons =
+        card.querySelectorAll('.comm-report-comment');
+
+    reportButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const commentIndex =
+                Number(button.dataset.commentIndex);
+
+            reportComment(id, commentIndex, comments[commentIndex]);
+        });
+    });
 
     return card;
-  }
+}
 
 
-  /* =========================
-     SORT BUTTONS
-  ========================= */
+/* =========================================================
+   BUILD COMMENT
+========================================================= */
 
-  document
-    .querySelectorAll('.sort-btn')
-    .forEach(
-      btn => {
+function buildCommentHtml(comment, index) {
+    const author =
+        comment?.author || 'Anonymous';
 
-        btn.addEventListener(
-          'click',
-          () => {
+    const authorId =
+        comment?.authorId || null;
 
-            document
-              .querySelectorAll(
-                '.sort-btn'
-              )
-              .forEach(
-                b =>
-                  b.classList.remove(
-                    'active'
-                  )
-              );
+    const text =
+        comment?.text || '';
+
+    const time =
+        comment?.ts
+            ? formatTime(comment.ts)
+            : '';
+
+    const rankBadge =
+        createRankBadge(authorId);
+
+    return `
+        <div class="comm-comment">
+            <div class="comm-comment-header">
+                <div class="comm-comment-author">
+                    ${escH(author)}
+                    ${rankBadge}
+                </div>
+
+                <div class="comm-comment-time">
+                    ${escH(time)}
+                </div>
+            </div>
+
+            <div class="comm-comment-text">
+                ${escH(text)}
+            </div>
+
+            <button
+                type="button"
+                class="comm-report-comment"
+                data-comment-index="${index}"
+            >
+                Report
+            </button>
+        </div>
+    `;
+}
 
 
-            btn.classList.add(
-              'active'
+/* =========================================================
+   CREATE POST
+========================================================= */
+
+async function createPost(text) {
+    if (!currentUser) {
+        alert('You need to sign in first.');
+        return;
+    }
+
+    const cleanText = text.trim();
+
+    if (!cleanText) {
+        return;
+    }
+
+    if (cleanText.length > 2000) {
+        alert('Post is too long.');
+        return;
+    }
+
+    try {
+        await addDoc(
+            collection(db, 'community_posts'),
+            {
+                text: cleanText,
+
+                author:
+                    currentUser.displayName ||
+                    currentUser.email ||
+                    'Anonymous',
+
+                authorId: currentUser.uid,
+
+                comments: [],
+
+                createdAt: serverTimestamp()
+            }
+        );
+    } catch (error) {
+        console.error('Could not create post:', error);
+
+        alert('Could not create post.');
+    }
+}
+
+
+/* =========================================================
+   POST FORM
+========================================================= */
+
+const postForm =
+    document.getElementById('communityPostForm');
+
+if (postForm) {
+    postForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const textarea =
+            postForm.querySelector(
+                'textarea'
             );
 
+        if (!textarea) {
+            return;
+        }
 
-            currentSort =
-              btn.dataset.sort;
+        const button =
+            postForm.querySelector(
+                'button[type="submit"]'
+            );
+
+        const originalText =
+            button?.textContent || 'Post';
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Posting...';
+        }
+
+        try {
+            await createPost(textarea.value);
+
+            textarea.value = '';
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+    });
+}
 
 
-            subscribe();
-          }
+/* =========================================================
+   COMMENT RATE LIMIT
+========================================================= */
+
+async function canComment() {
+    if (!currentUser) {
+        return false;
+    }
+
+    try {
+        const limitRef = doc(
+            db,
+            'rate_limits',
+            `${currentUser.uid}_comment`
         );
-      }
+
+        const snapshot =
+            await getDocs(
+                query(
+                    collection(db, 'rate_limits'),
+                    where(
+                        'uid',
+                        '==',
+                        currentUser.uid
+                    ),
+                    where(
+                        'type',
+                        '==',
+                        'comment'
+                    )
+                )
+            );
+
+        const now = Date.now();
+
+        for (const item of snapshot.docs) {
+            const data = item.data();
+
+            if (
+                typeof data.tsMs === 'number' &&
+                now - data.tsMs < 5000
+            ) {
+                return false;
+            }
+        }
+
+        await addDoc(
+            collection(db, 'rate_limits'),
+            {
+                uid: currentUser.uid,
+                type: 'comment',
+                tsMs: now
+            }
+        );
+
+        return true;
+    } catch (error) {
+        console.error(
+            'Comment rate limit error:',
+            error
+        );
+
+        return true;
+    }
+}
+
+
+/* =========================================================
+   SUBMIT COMMENT
+========================================================= */
+
+async function submitComment(postId, card) {
+    if (!currentUser) {
+        alert('You need to sign in first.');
+        return;
+    }
+
+    const input =
+        card.querySelector('.comm-comment-input');
+
+    const button =
+        card.querySelector('.comm-comment-btn');
+
+    if (!input) {
+        return;
+    }
+
+    const text =
+        input.value.trim();
+
+    if (!text) {
+        return;
+    }
+
+    if (text.length > 1000) {
+        alert('Comment is too long.');
+        return;
+    }
+
+    const allowed =
+        await canComment();
+
+    if (!allowed) {
+        alert(
+            'Please wait a few seconds before commenting again.'
+        );
+        return;
+    }
+
+    if (button) {
+        button.disabled = true;
+        button.textContent = 'Posting...';
+    }
+
+    try {
+        await updateDoc(
+            doc(
+                db,
+                'community_posts',
+                postId
+            ),
+            {
+                comments: arrayUnion({
+                    author:
+                        currentUser.displayName ||
+                        currentUser.email ||
+                        'Anonymous',
+
+                    authorId:
+                        currentUser.uid,
+
+                    text: text,
+
+                    ts: Date.now()
+                })
+            }
+        );
+
+        input.value = '';
+    } catch (error) {
+        console.error(
+            'Could not create comment:',
+            error
+        );
+
+        alert('Could not post comment.');
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Comment';
+        }
+    }
+}
+
+
+/* =========================================================
+   DELETE POST
+========================================================= */
+
+async function deletePost(postId) {
+    if (!currentUser) {
+        return;
+    }
+
+    try {
+        const postRef =
+            doc(
+                db,
+                'community_posts',
+                postId
+            );
+
+        const snapshot =
+            await getDocs(
+                query(
+                    collection(db, 'community_posts'),
+                    where(
+                        '__name__',
+                        '==',
+                        postRef
+                    )
+                )
+            );
+
+        const developer =
+            getUserRank(
+                currentUser.uid
+            ) === 'developer';
+
+        if (developer) {
+            await deleteDoc(postRef);
+            return;
+        }
+
+        /*
+         * The Firestore rules also verify ownership.
+         * This keeps the client-side behavior convenient
+         * without making it the security mechanism.
+         */
+
+        await deleteDoc(postRef);
+
+    } catch (error) {
+        console.error(
+            'Could not delete post:',
+            error
+        );
+
+        alert(
+            'Could not delete this post.'
+        );
+    }
+}
+
+
+/* =========================================================
+   REPORT COMMENT
+========================================================= */
+
+async function reportComment(
+    postId,
+    commentIndex,
+    comment
+) {
+    if (!comment) {
+        return;
+    }
+
+    const reason =
+        prompt(
+            'Why are you reporting this comment?'
+        );
+
+    if (reason === null) {
+        return;
+    }
+
+    const cleanReason =
+        reason.trim();
+
+    if (!cleanReason) {
+        return;
+    }
+
+    if (cleanReason.length > 200) {
+        alert(
+            'Report reason is too long.'
+        );
+        return;
+    }
+
+    try {
+        await addDoc(
+            collection(db, 'xn_reports'),
+            {
+                type: 'comment',
+
+                postId: postId,
+
+                commentIndex:
+                    commentIndex,
+
+                reason:
+                    cleanReason,
+
+                snippet:
+                    String(
+                        comment.text || ''
+                    ).slice(0, 120),
+
+                reportedBy:
+                    currentUser
+                        ? currentUser.uid
+                        : 'anonymous',
+
+                status: 'pending',
+
+                createdAt:
+                    serverTimestamp()
+            }
+        );
+
+        alert(
+            'Report submitted.'
+        );
+    } catch (error) {
+        console.error(
+            'Could not submit report:',
+            error
+        );
+
+        alert(
+            'Could not submit report.'
+        );
+    }
+}
+
+
+/* =========================================================
+   OPTIONAL COMMUNITY CONTROLS
+========================================================= */
+
+const signInLinks =
+    document.querySelectorAll(
+        '[data-requires-auth]'
     );
 
+signInLinks.forEach((element) => {
+    element.addEventListener(
+        'click',
+        (event) => {
+            if (!currentUser) {
+                event.preventDefault();
 
-  /* =========================
-     START FEED
-  ========================= */
+                window.location.href =
+                    'auth.html';
+            }
+        }
+    );
+});
 
-  subscribe();
+
+/* =========================================================
+   GLOBAL DEBUG
+========================================================= */
+
+window.communityRank = function(uid) {
+    return {
+        rank: getUserRank(uid),
+        label: getRankLabel(
+            getUserRank(uid)
+        )
+    };
+};
 
 </script>
 
