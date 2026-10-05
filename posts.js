@@ -7,14 +7,14 @@
 
    FIELDS:
      id          — unique string, no spaces (e.g. "tips-003")          REQUIRED
-     category    — "informations" | "tips" | "advices"                  REQUIRED
+     category    — "informations" | "tips" | "advices"                 REQUIRED
      sub         — subcategory for informations page (see list below)   optional
                    "scholarship-mongolia" | "scholarship-abroad"
                    "career-path" | "anti-bullying-bad" | "anti-bullying-stop"
      title       — headline                                             REQUIRED
-     description — full content. Use \n for line breaks                REQUIRED
-     author      — name shown on the card                              optional
-     date        — "YYYY-MM-DD"                                        optional
+     description — full content. Use \n for line breaks                 REQUIRED
+     author      — name shown on the card                               optional
+     date        — "YYYY-MM-DD"                                         optional
    ============================================================================= */
 
 var POSTS = [
@@ -22,109 +22,13 @@ var POSTS = [
   /* ── SCHOLARSHIP IN MONGOLIA ────────────────────────────────────────────── */
   {
     id:          "info-schol-mn-001",
-    category:    "tips",
+    category:    "informations",
     sub:         "scholarship-mongolia",
     title:       "Ерөнхийлөгчийн тэтгэлэг",
     description: "Монгол Улсын Ерөнхийлөгчийн нэрэмжит тэтгэлэг нь онцгой амжилт гаргасан оюутнуудад олгогддог.\n\nШалгуур:\n- ЭЕШ-д өндөр оноо авсан байх\n- Нийгмийн идэвхтэй оролцоо\n- Санхүүгийн хэрэгцээ\n\nДэлгэрэнгүй мэдээллийг Боловсролын яамны веб сайтаас авна уу.",
     author:      "Team",
     date:        "2025-02-01",
   },
-/* ── CAREER PATH ────────────────────────────────────────────────────────── */
-  {
-    id:          "info-career-004",
-    category:    "informations",
-    sub:         "career-path",
-    title:       "Мэргэжил ба Хичээл сонголт",
-    description: "Мэргэжил сонголт ба Хөдөлмөрийн зах зээл:\n\n" +
-                 "• Ойрын 10–20 жилийн эрэлт хэрэгцээ ба AI-ийн нөлөө:\n" +
-                 "Мэдээллийн технологи (программист, дата аналист, кибер аюулгүй байдал), сэргээгдэх эрчим хүч, биотехнологи болон эрүүл мэндийн салбарын эрэлт тогтвортой өснө. Давтагддаг сургалт, дата оруулах, захиргааны ажлууд хиймэл интеллектод (AI) орлогдох эрсдэлтэй бөгөөд бүтээлч сэтгэлгээ, шийдвэр гаргалт, сэтгэл зүйн харилцаа шаардсан ажил байр сууриа орлогдох аюулгүй хадгална.\n\n" +
-                 "• Цалин ба Гадаад/Дотоодод ажиллах боломж:\n" +
-                 "IT, инженерийн салбарт зайнаас (remote) болон гадаадад ажиллах боломж хамгийн өндөр байдаг. Монголд уул уурхай, банк санхүү, IT салбарын цалингийн төвшин тэргүүлж байна.\n\n" +
-                 "• Сонирхол ба Чадвараа ажилд хөрвүүлэх:\n" +
-                 "Өөрийн сонирхдог хоббиг код бичих, дизайн хийх, маркетингийн контент бэлтгэх зэрэг зах зээлийн бодит чадвар (hard skill) болгон хөгжүүлэх шаардлагатай.\n\n" +
-                 "• Нийгэм/Байгальд тустай байдал:\n" +
-                 "Тогтвортой хөгжил, ногоон эдийн засаг, байгаль орчны инженерчлэл, сэтгэл зүй болон нийгмийн ажилтан гэх мэт мэргэжлүүд нийгэмд шууд эерэг нөлөө үзүүлдэг.\n\n" +
-                 "• Тохирсон сургуулиа олох:\n" +
-                 "Сургуулийн рейтингээс гадна тухайн сургуулийн лабораторийн бааз, багшлах бүрэлдэхүүн, төгсөгчдийн ажилд орсон хувь хэмжээг харах нь чухал.",
-    author:      "Team",
-    date:        "2026-10-05",
-  },
-  {
-    id:          "info-career-005",
-    category:    "informations",
-    sub:         "career-path",
-    title:       "Хичээл сонголт ба ЭЕШ-ын бэлтгэл",
-    description: "Салбар хоорондын ялгаа ба ЭЕШ-ын онцлогууд:\n\n" +
-                 "1. Салбар хоорондын ялгаа:\n" +
-                 "- STEM: Шинжлэх ухаан, технологи, инженерчлэл, математик (Логик ба аналитик сэтгэлгээ).\n" +
-                 "- Humanities: Хүмүүнлэг (Хэл, уран зохиол, түүх, гүн ухаан).\n" +
-                 "- Social Sciences: Нийгмийн шинжлэх ухаан (Эдийн засаг, сэтгэл судлал, социологи).\n\n" +
-                 "2. ЭЕШ-ын босго ба Суурь хичээлүүд:\n" +
-                 "- Инженер / IT / STEM: Математик, Физик, Англи хэл.\n" +
-                 "- Анагаах / Биологи: Биологи, Хими.\n" +
-                 "- Нийгэм / Бизнес: Математик, Нийгэм судлал, Англи хэл.\n" +
-                 "- Онооны босго: Топ сургуулиудын ЭЕШ-ын босго оноо ихэвчлэн 500–600 байдаг ба гол салбаруудад 650-аас дээш оноо шаардагдах нь олонтаа.\n\n" +
-                 "3. Улсын ба Хувийн сургуулийн ялгаа:\n" +
-                 "- Улсын сургууль: Сургалтын орчин дадлагажсан, академик суурь сайтай, төлбөр харьцангуй боломжийн (МУИС, ШУТИС, АШУҮИС).\n" +
-                 "- Хувийн сургууль: Жижиг анги, практик болон англи хэлний орчин сайн, гадаад хамтын ажиллагаа ихтэй.",
-    author:      "Team",
-    date:        "2026-10-05",
-  },
-
-  /* ── SCHOLARSHIP IN MONGOLIA ────────────────────────────────────────────── */
-  {
-    id:          "info-schol-mn-004",
-    category:    "informations",
-    sub:         "scholarship-mongolia",
-    title:       "Дотоодын болон Засгийн газрын бүрэн тэтгэлгүүд",
-    description: "Монгол Улсад жил бүр зарлагддаг гол тэтгэлэгт хөтөлбөрүүд:\n\n" +
-                 "• Монгол Улсын Ерөнхийлөгчийн 'Илгээлт 2100' (Бакалавр)\n" +
-                 "• Монгол Улсын Засгийн газрын 'Ирээдүйн эзэд / Сургалтын төлбөрийн тэтгэлэг'\n\n" +
-                 "Аймаг, нийслэлийн болон бусад төрийн сангийн тэтгэлгүүдэд хугацаанд нь амжиж бүртгүүлээрэй.",
-    author:      "Team",
-    date:        "2026-10-05",
-  },
-
-  /* ── SCHOLARSHIP ABROAD ─────────────────────────────────────────────────── */
-  {
-    id:          "info-schol-ab-004",
-    category:    "informations",
-    sub:         "scholarship-abroad",
-    title:       "Гадаад орнуудын Засгийн газрын тэтгэлгүүдийн жагсаалт",
-    description: "Дэлхийн томоохон орнуудын Засгийн газраас зарладаг бүрэн тэтгэлэгт хөтөлбөрүүд:\n\n" +
-                 "• USA: Global UGRAD, Fulbright\n" +
-                 "• Japan: MEXT\n" +
-                 "• Korea: GKS (Global Korea Scholarship)\n" +
-                 "• Hungary: Stipendium Hungaricum\n" +
-                 "• China: CSC (China Scholarship Council)\n" +
-                 "• UK: Chevening\n" +
-                 "• Australia: Australia Awards\n\n" +
-                 "Бүртгэл ихэвчлэн 9-өөс 1-р сарын хооронд явагддаг тул эртнээс бэлтгэлээ хангаарай.",
-    author:      "Team",
-    date:        "2026-10-05",
-  },
-
-  /* ── SCHOLARSHIP TIPS & REQUIREMENTS ───────────────────────────────────── */
-  {
-    id:          "tips-003",
-    category:    "tips",
-    sub:         "scholarship-abroad",
-    title:       "Тэтгэлгийн шаардлага ба Бүрдүүлэх зүйлс (Guide & Checklist)",
-    description: "Тэтгэлэгт өрсөлдөхөд шаардагдах үндсэн шалгуурууд болон бэлтгэх алхмууд:\n\n" +
-                 "Шаардлагууд (Requirements):\n" +
-                 "- Академик дүн (GPA): Бакалаврт 3.0+, Магистрт 3.2+ байх нь давуу тал болно.\n" +
-                 "- Хэлний оноо: IELTS (6.5+), TOEFL iBT (80+), эсвэл тухайн орны хэлний төвшин (HSK, TOPIK, JLPT).\n" +
-                 "- Эсээ ба Тодорхойлох захидал (SOP / Recommendation Letter): Өөрийн зорилго, нийгмийн оролцоо, яагаад тухайн мэргэжлийг сонгосон бэ гэдгээ тодорхойлох 1-2 эсээ.\n" +
-                 "- Нийгмийн идэвхи (Extracurriculars): Волонтер, сайн дурын ажил, төсөл хөтөлбөрийн туршлага.\n\n" +
-                 "Хэрэгжүүлэх Алхмууд (Checklist):\n" +
-                 "1. Бакалавр эсвэл Магистрын түвшнээ тодорхойлох.\n" +
-                 "2. Жил бүрийн Засгийн газрын болон сургуулийн тэтгэлгийн хугацааг (Deadline) календарь дээрээ тэмдэглэх (Ихэнх нь 9–1-р сарын хооронд зарлагддаг).\n" +
-                 "3. Хэлний бэлтгэлээ хагас эсвэл нэг жилийн өмнөөс хангаж эхлэх.",
-    author:      "Team",
-    date:        "2026-10-05",
-  }
-
-];
   {
     id:          "info-schol-mn-002",
     category:    "informations",
@@ -142,6 +46,15 @@ var POSTS = [
     description: "Орон нутгийн засаг захиргааны байгууллагуудаас тухайн аймаг, дүүргийнхнээ дэмжих зорилгоор олгодог тэтгэлэгүүд.\n\nДавуу тал:\n- Өрсөлдөөн бага\n- Орон нутгийн оюутнуудад давуу эрх\n\nАймгийнхаа Засаг даргын тамгын газарт хандана уу.",
     author:      "Team",
     date:        "2025-02-08",
+  },
+  {
+    id:          "info-schol-mn-004",
+    category:    "informations",
+    sub:         "scholarship-mongolia",
+    title:       "Дотоодын болон Засгийн газрын бүрэн тэтгэлгүүд",
+    description: "Монгол Улсад жил бүр зарлагддаг гол тэтгэлэгт хөтөлбөрүүд:\n\n• Монгол Улсын Ерөнхийлөгчийн 'Илгээлт 2100' (Бакалавр)\n• Монгол Улсын Засгийн газрын 'Ирээдүйн эзэд / Сургалтын төлбөрийн тэтгэлэг'\n\nАймаг, нийслэлийн болон бусад төрийн сангийн тэтгэлгүүдэд хугацаанд нь амжиж бүртгүүлээрэй.",
+    author:      "Team",
+    date:        "2026-10-05",
   },
 
   /* ── SCHOLARSHIP ABROAD ─────────────────────────────────────────────────── */
@@ -172,6 +85,24 @@ var POSTS = [
     author:      "Team",
     date:        "2025-02-18",
   },
+  {
+    id:          "info-schol-ab-004",
+    category:    "informations",
+    sub:         "scholarship-abroad",
+    title:       "Гадаад орнуудын Засгийн газрын тэтгэлгүүдийн жагсаалт",
+    description: "Дэлхийн томоохон орнуудын Засгийн газраас зарладаг бүрэн тэтгэлэгт хөтөлбөрүүд:\n\n• USA: Global UGRAD, Fulbright\n• Japan: MEXT\n• Korea: GKS (Global Korea Scholarship)\n• Hungary: Stipendium Hungaricum\n• China: CSC (China Scholarship Council)\n• UK: Chevening\n• Australia: Australia Awards\n\nБүртгэл ихэвчлэн 9-өөс 1-р сарын хооронд явагддаг тул эртнээс бэлтгэлээ хангаарай.",
+    author:      "Team",
+    date:        "2026-10-05",
+  },
+  {
+    id:          "info-schol-ab-005",
+    category:    "informations",
+    sub:         "scholarship-abroad",
+    title:       "Харвардын Их Сургуулийн Бүрэн Тэтгэлэг (Harvard HFAI)",
+    description: "Сургууль: Harvard University (АНУ, Cambridge, MA)\nТэтгэлэг: Harvard Financial Aid Initiative (HFAI / Need-Based Aid)\nТөрөл: Бүрэн тэтгэлэг (Need-Blind Admission & Full Need Covered - Жилд $85,000+)\nТүвшин: Бакалавр (Bachelor of Arts in Economics г.м, 4 жил)\nХэл: Англи хэл\n\nТЭТГЭЛЭГТ ХАМРАГДАХ ЗҮЙЛС:\n- Сургалтын төлбөр: 100% бүрэн даана\n- Амьргааны зардал: $3,500 - $4,000\n- Байр болон хоол: Кампус доторх байр, хоол 100%\n- Замын зардал: Жилд 2 удаагийн ирэх, буцах нислэгийн тийз\n- Даатгал: Harvard Student Health Insurance Plan 100%\n\nБҮРДҮҮЛЭХ МАТЕРИАЛ БА ШААРДЛАГА:\n1. Анкет: Common Application / Coalition Application\n2. GPA: 3.9 - 4.0 (Unweighted) эсвэл 95%+\n3. Оноо: IELTS 7.5+, TOEFL iBT 100+, SAT 1490-1580\n4. Эссэ: Common App эссэ + Harvard Supplemental Essays\n5. Тодорхойлох захидал: 3 ширхэг (1 зөвлөх, 2 багш)\n6. Бусад: Манлайлал, сайн дурын ажил, олимпиад, портфолио\n7. Санхүү: CSS Profile ба эцэг эхийн орлогын тодорхойлолт\n\nХУГАЦАА:\n- Эхлэх: 8 сарын 1\n- Early Action (REA): 11 сарын 1 (Хариу: 12 сарын дунд)\n- Regular Decision (RD): 1 сарын 1 (Хариу: 3 сарын сүүлч)",
+    author:      "Team",
+    date:        "2026-10-05",
+  },
 
   /* ── CAREER PATH ────────────────────────────────────────────────────────── */
   {
@@ -201,6 +132,24 @@ var POSTS = [
     author:      "Team",
     date:        "2025-01-15",
   },
+  {
+    id:          "info-career-004",
+    category:    "informations",
+    sub:         "career-path",
+    title:       "Мэргэжил ба Хичээл сонголт",
+    description: "Мэргэжил сонголт ба Хөдөлмөрийн зах зээл:\n\n• Ойрын 10–20 жилийн эрэлт хэрэгцээ ба AI-ийн нөлөө:\nМэдээллийн технологи, сэргээгдэх эрчим хүч, биотехнологи болон эрүүл мэндийн салбарын эрэлт тогтвортой өснө. Давтагддаг ажиллагаатай салбарууд AI-д орлогдох эрсдэлтэй тул бүтээлч сэтгэлгээ, шийдвэр гаргах чадвараа бэхжүүлэх хэрэгтэй.\n\n• Цалин ба Гадаад/Дотоодод ажиллах боломж:\nIT, инженерийн салбарт зайнаас (remote) болон гадаадад ажиллах боломж хамгийн өндөр байдаг.\n\n• Сонирхол ба Чадвараа ажилд хөрвүүлэх:\nӨөрийн сонирхдог хоббиг зах зээлийн бодит чадвар (hard skill) болгон хөгжүүлэх шаардлагатай.\n\n• Тохирсон сургуулиа олох:\nСургуулийн рейтингээс гадна тухайн сургуулийн лабораторийн бааз, багшлах бүрэлдэхүүн, төгсөгчдийн ажилд орсон хувь хэмжээг харах нь чухал.",
+    author:      "Team",
+    date:        "2026-10-05",
+  },
+  {
+    id:          "info-career-005",
+    category:    "informations",
+    sub:         "career-path",
+    title:       "Хичээл сонголт ба ЭЕШ-ын бэлтгэл",
+    description: "Салбар хоорондын ялгаа ба ЭЕШ-ын онцлогууд:\n\n1. Салбар хоорондын ялгаа:\n- STEM: Шинжлэх ухаан, технологи, инженерчлэл, математик.\n- Humanities: Хүмүүнлэг (Хэл, уран зохиол, түүх).\n- Social Sciences: Нийгмийн шинжлэх ухаан (Эдийн засаг, сэтгэл судлал).\n\n2. ЭЕШ-ын босго ба Суурь хичээлүүд:\n- Инженер / IT / STEM: Математик, Физик, Англи хэл.\n- Анагаах / Биологи: Биологи, Хими.\n- Нийгэм / Бизнес: Математик, Нийгэм судлал, Англи хэл.\n\n3. Улсын ба Хувийн сургуулийн ялгаа:\n- Улсын сургууль: Сургалтын орчин дадлагажсан, академик суурь сайтай.\n- Хувийн сургууль: Жижиг анги, практик болон англи хэлний орчин сайн.",
+    author:      "Team",
+    date:        "2026-10-05",
+  },
 
   /* ── ANTI BULLYING — BAD RESULTS ────────────────────────────────────────── */
   {
@@ -208,7 +157,7 @@ var POSTS = [
     category:    "informations",
     sub:         "anti-bullying-bad",
     title:       "Mental health consequences",
-    description: "Bullying causes serious and lasting mental health damage to victims.\n\nCommon effects:\n- Anxiety and chronic stress\n- Depression and low self-worth\n- Social withdrawal and isolation\n- Post-traumatic stress symptoms\n- Difficulty trusting others\n\nThese effects can persist well into adulthood if not addressed. Taking bullying seriously is not optional.",
+    description: "Bullying causes serious and lasting mental health damage to victims.\n\nCommon effects:\n- Anxiety and chronic stress\n- Depression and low self-worth\n- Social withdrawal and isolation\n- Post-traumatic stress symptoms\n- Difficulty trusting others\n\nThese effects can persist well into adulthood if not addressed.",
     author:      "Team",
     date:        "2025-03-01",
   },
@@ -217,7 +166,7 @@ var POSTS = [
     category:    "informations",
     sub:         "anti-bullying-bad",
     title:       "Impact on academic performance",
-    description: "Students who experience bullying consistently perform worse academically.\n\nResearch shows:\n- Difficulty concentrating in class\n- Increased absenteeism to avoid bullies\n- Reduced participation and engagement\n- Long-term disruption to educational attainment\n\nSchools have a responsibility to create safe environments. If you are struggling, talk to a trusted adult.",
+    description: "Students who experience bullying consistently perform worse academically.\n\nResearch shows:\n- Difficulty concentrating in class\n- Increased absenteeism to avoid bullies\n- Reduced participation and engagement\n- Long-term disruption to educational attainment",
     author:      "Team",
     date:        "2025-03-05",
   },
@@ -228,7 +177,7 @@ var POSTS = [
     category:    "informations",
     sub:         "anti-bullying-stop",
     title:       "Speak up and report",
-    description: "Silence allows bullying to continue. Speaking up is the most powerful first step.\n\nWhat you can do:\n- Tell a teacher, counselor, or trusted adult immediately\n- Document incidents with dates and details\n- Encourage bystanders to report what they see\n- Use anonymous reporting systems if available\n\nYou are not a snitch. You are protecting someone.",
+    description: "Silence allows bullying to continue. Speaking up is the most powerful first step.\n\nWhat you can do:\n- Tell a teacher, counselor, or trusted adult immediately\n- Document incidents with dates and details\n- Encourage bystanders to report what they see\n- Use anonymous reporting systems if available",
     author:      "Team",
     date:        "2025-03-08",
   },
@@ -237,7 +186,7 @@ var POSTS = [
     category:    "informations",
     sub:         "anti-bullying-stop",
     title:       "Build a supportive community",
-    description: "The best prevention for bullying is a culture where everyone feels they belong.\n\nPractical steps:\n- Include classmates who seem isolated\n- Celebrate differences instead of mocking them\n- Be the person who steps in when you see something wrong\n- Build friendships across different social groups\n\nOne kind action can change someone's day — or their life.",
+    description: "The best prevention for bullying is a culture where everyone feels they belong.\n\nPractical steps:\n- Include classmates who seem isolated\n- Celebrate differences instead of mocking them\n- Be the person who steps in when you see something wrong\n- Build friendships across different social groups",
     author:      "Team",
     date:        "2025-03-12",
   },
@@ -259,6 +208,15 @@ var POSTS = [
     author:      "Team",
     date:        "2025-01-12",
   },
+  {
+    id:          "tips-003",
+    category:    "tips",
+    sub:         "scholarship-abroad",
+    title:       "Тэтгэлгийн шаардлага ба Бүрдүүлэх зүйлс (Guide & Checklist)",
+    description: "Тэтгэлэгт өрсөлдөхөд шаардагдах үндсэн шалгуурууд болон бэлтгэх алхмууд:\n\nШаардлагууд (Requirements):\n- Академик дүн (GPA): Бакалаврт 3.0+, Магистрт 3.2+ байх нь давуу тал болно.\n- Хэлний оноо: IELTS (6.5+), TOEFL iBT (80+), эсвэл тухайн орны хэлний төвшин (HSK, TOPIK, JLPT).\n- Эсээ ба Тодорхойлох захидал (SOP / Recommendation Letter): Өөрийн зорилго, нийгмийн оролцоо, яагаад тухайн мэргэжлийг сонгосон бэ гэдгээ тодорхойлох 1-2 эсээ.\n- Нийгмийн идэвхи (Extracurriculars): Волонтер, сайн дурын ажил, төсөл хөтөлбөрийн туршлага.\n\nХэрэгжүүлэх Алхмууд (Checklist):\n1. Бакалавр эсвэл Магистрын түвшнээ тодорхойлох.\n2. Жил бүрийн Засгийн газрын болон сургуулийн тэтгэлгийн хугацааг (Deadline) календарь дээрээ тэмдэглэх.\n3. Хэлний бэлтгэлээ хагас эсвэл нэг жилийн өмнөөс хангаж эхлэх.",
+    author:      "Team",
+    date:        "2026-10-05",
+  },
 
   /* ── ADVICES ────────────────────────────────────────────────────────────── */
   {
@@ -276,31 +234,13 @@ var POSTS = [
     description: "Motivation comes and goes. Habits are what keep you going when motivation is low.\n\nStart small. Commit to just 15 minutes of focused study at the same time each day. Once the habit is formed, gradually increase the duration.\n\nEnvironment matters too — a dedicated, tidy study space signals to your brain that it is time to focus.",
     author:      "Team",
     date:        "2025-01-20",
-  },
+  }
 
-  /* ── FOR TEACHERS ───────────────────────────────────────────────────────── */
-
-  /*
-  ── ADD A NEW POST — copy this block ────────────────────────────────────────
-
-  {
-    id:          "",        // unique, no spaces   e.g. "tips-003"
-    category:    "",        // informations | tips | advices | teachers
-    sub:         "",        // for informations only:
-                            //   scholarship-mongolia | scholarship-abroad
-                            //   career-path | anti-bullying-bad | anti-bullying-stop
-    title:       "",
-    description: "",        // use \n for line breaks
-    author:      "",
-    date:        "",        // YYYY-MM-DD
-  },
-
-  ──────────────────────────────────────────────────────────────────────────── */
 ];
 
 /*
-   SHARED HELPERS — do not edit below
-  */
+    SHARED HELPERS — do not edit below
+*/
 
 var CAT_LABELS = {
   informations: "Informations",
