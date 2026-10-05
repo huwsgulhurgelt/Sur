@@ -18,8 +18,8 @@
   --accent2:       #4f7cff;
   --accent3:       #7c3aed;
   --accent-rgb:    45,58,140;
-  --radius:        16px;
-  --radius-lg:     22px;
+  --radius:        10px;
+  --radius-lg:     14px;
   --bw:            1px;
   --nav-h:         64px;
   --max-w:         1200px;
@@ -100,7 +100,7 @@
   --accent2:       #ffe135;
   --accent3:       #7c3aed;
   --accent-rgb:    247,0,142;
-  --radius:        24px; --radius-lg: 30px;
+  --radius:        12px; --radius-lg: 16px;
   --font-main:     'Fredoka One', 'Nunito', cursive;
   --card-shine:    linear-gradient(135deg, rgba(247,0,142,0.1) 0%, transparent 50%, rgba(255,225,53,0.08) 100%);
   --hero-bg:       linear-gradient(135deg, #ffe0f5 0%, #fff9d0 50%, #ffd6f0 100%);
@@ -128,7 +128,7 @@
   --accent2:       #ffd600;
   --accent3:       #56f0c0;
   --accent-rgb:    192,132,252;
-  --radius:        24px; --radius-lg: 30px;
+  --radius:        12px; --radius-lg: 16px;
   --font-main:     'Fredoka One', 'Nunito', cursive;
   --card-shine:    linear-gradient(135deg, rgba(192,132,252,0.12) 0%, transparent 50%, rgba(255,214,0,0.08) 100%);
   --hero-bg:       linear-gradient(135deg, #200d38 0%, #1a0c30 50%, #0e1830 100%);
@@ -156,7 +156,7 @@
   --accent2:       #f472b6;
   --accent3:       #67e8f9;
   --accent-rgb:    168,85,247;
-  --radius:        24px; --radius-lg: 30px;
+  --radius:        12px; --radius-lg: 16px;
   --font-main:     'Fredoka One', 'Nunito', cursive;
   --card-shine:    linear-gradient(135deg, rgba(168,85,247,0.09) 0%, transparent 50%, rgba(244,114,182,0.07) 100%);
   --hero-bg:       linear-gradient(135deg, #f3d8ff 0%, #ffd6f0 50%, #d8f0ff 100%);
@@ -185,7 +185,7 @@
   --accent2:       #ff8ec4;
   --accent3:       #f97316;
   --accent-rgb:    216,34,122;
-  --radius:        18px; --radius-lg: 26px;
+  --radius:        11px; --radius-lg: 15px;
   --font-main:     'Cormorant Garamond', Georgia, serif;
   --card-shine:    linear-gradient(135deg, rgba(255,142,196,0.1) 0%, transparent 50%, rgba(216,34,122,0.06) 100%);
   --hero-bg:       linear-gradient(135deg, #ffd6ec 0%, #ffe8f4 50%, #ffd0e8 100%);
@@ -212,7 +212,7 @@
   --accent2:       #38bdf8;
   --accent3:       #8b5cf6;
   --accent-rgb:    26,79,214;
-  --radius:        18px; --radius-lg: 26px;
+  --radius:        11px; --radius-lg: 15px;
   --font-main:     'Cormorant Garamond', Georgia, serif;
   --card-shine:    linear-gradient(135deg, rgba(56,189,248,0.09) 0%, transparent 50%, rgba(139,92,246,0.06) 100%);
   --hero-bg:       linear-gradient(135deg, #d0e4ff 0%, #ddf4ff 50%, #e4d8ff 100%);
@@ -239,7 +239,7 @@
   --accent2:       #444444;
   --accent3:       #888888;
   --accent-rgb:    14,14,14;
-  --radius:        18px; --radius-lg: 26px;
+  --radius:        11px; --radius-lg: 15px;
   --font-main:     'Cormorant Garamond', Georgia, serif;
   --card-shine:    linear-gradient(135deg, rgba(0,0,0,0.03) 0%, transparent 50%, rgba(0,0,0,0.02) 100%);
   --hero-bg:       linear-gradient(135deg, #e8e8e5 0%, #f0f0ee 50%, #e4e4e2 100%);
