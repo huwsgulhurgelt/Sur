@@ -293,7 +293,7 @@
       <div class="write-box-top">
         <div class="write-avatar" id="writeAvatar">?</div>
         <div class="write-inputs">
-          <input class="write-name" id="writeName" placeholder="Your name (optional — defaults to Anonymous)" maxlength="60">
+          <div class="write-account-name" id="writeAccountName">Sign in to post — your account name will be used automatically.</div>
           <textarea class="write-textarea" id="writeText" placeholder="Share something you learned, ask a question, or help someone out…" maxlength="2000"></textarea>
         </div>
       </div>
@@ -368,7 +368,7 @@ let currentSort = 'new';
 const postsContainer = document.getElementById('commFeed');
 const writeSubmitBtn = document.getElementById('writeSubmit');
 const writeTextarea = document.getElementById('writeText');
-const writeNameInput = document.getElementById('writeName');
+const writeNameInput = null;
 const writeCharCounter = document.getElementById('writeChar');
 const postRejectMsg = document.getElementById('postReject');
 
@@ -443,12 +443,26 @@ onAuthStateChanged(auth, (user) => {
 
 function updateAuthUI() {
     const avatar = document.getElementById('writeAvatar');
+    const accountName = document.getElementById('writeAccountName');
+    const submit = document.getElementById('writeSubmit');
+    const text = document.getElementById('writeText');
+    const commentForms = document.querySelectorAll('.comm-comment-form');
+
     if (!currentUser) {
         if (avatar) avatar.textContent = '?';
+        if (accountName) accountName.textContent = 'Sign in to post — your account name will be used automatically.';
+        if (submit) { submit.disabled = true; submit.title = 'Sign in to create a post'; }
+        if (text) text.disabled = true;
+        commentForms.forEach(form => form.style.display = 'none');
         return;
     }
-    const name = currentUser.displayName || currentUser.email || 'U';
+
+    const name = currentUser.displayName || currentUser.email || 'User';
     if (avatar) avatar.textContent = name.charAt(0).toUpperCase();
+    if (accountName) accountName.textContent = `Posting as ${name}`;
+    if (submit) { submit.disabled = false; submit.title = ''; }
+    if (text) text.disabled = false;
+    commentForms.forEach(form => form.style.display = 'flex');
 }
 
 /* =========================================================
@@ -466,7 +480,10 @@ if (writeSubmitBtn) {
         if (!writeTextarea) return;
         
         const text = writeTextarea.value.trim();
-        const customName = writeNameInput ? writeNameInput.value.trim() : '';
+        if (!currentUser) {
+            alert('You need to sign in to create a community post.');
+            return;
+        }
 
         if (!text) return;
 
@@ -475,7 +492,7 @@ if (writeSubmitBtn) {
         if (postRejectMsg) postRejectMsg.classList.remove('show');
 
         try {
-            await createPost(text, customName);
+            await createPost(text);
             writeTextarea.value = '';
             if (writeNameInput) writeNameInput.value = '';
             if (writeCharCounter) writeCharCounter.textContent = '0 / 2000';
@@ -556,7 +573,7 @@ function buildPostCard(id, data) {
     const card = document.createElement('article');
     card.className = 'comm-card';
 
-    const author = data.author || 'Anonymous';
+    const author = data.author || 'User';
     const authorId = data.authorId || null;
     const rankBadge = createRankBadge(authorId);
     const text = escH(data.text || '');
@@ -622,6 +639,11 @@ function buildPostCard(id, data) {
         deleteButtonElement.addEventListener('click', () => deletePost(id));
     }
 
+    const commentForm = card.querySelector('.comm-comment-form');
+    if (commentForm && !currentUser) {
+        commentForm.style.display = 'none';
+    }
+
     const commentSendBtn = card.querySelector('.comm-comment-send');
     if (commentSendBtn) {
         commentSendBtn.addEventListener('click', () => submitComment(id, card));
@@ -642,7 +664,7 @@ function buildPostCard(id, data) {
    BUILD COMMENT
 ========================================================= */
 function buildCommentHtml(comment, index) {
-    const author = comment?.author || 'Anonymous';
+    const author = comment?.author || 'User';
     const authorId = comment?.authorId || null;
     const text = comment?.text || '';
     const time = comment?.ts ? formatTime(comment.ts) : '';
@@ -666,7 +688,7 @@ function buildCommentHtml(comment, index) {
 /* =========================================================
    CREATE POST
 ========================================================= */
-async function createPost(text, customName) {
+async function createPost(text) {
     if (!currentUser) {
         alert('You need to sign in first.');
         throw new Error('Not signed in');
@@ -675,7 +697,7 @@ async function createPost(text, customName) {
     const cleanText = text.trim();
     if (!cleanText || cleanText.length > 2000) return;
 
-    const authorName = customName || currentUser.displayName || currentUser.email || 'Anonymous';
+    const authorName = currentUser.displayName || currentUser.email || 'User';
 
     await addDoc(collection(db, 'community_posts'), {
         text: cleanText,
@@ -748,7 +770,7 @@ async function submitComment(postId, card) {
     try {
         await updateDoc(doc(db, 'community_posts', postId), {
             comments: arrayUnion({
-                author: currentUser.displayName || currentUser.email || 'Anonymous',
+                author: currentUser.displayName || currentUser.email || 'User',
                 authorId: currentUser.uid,
                 text: text,
                 ts: Date.now()
