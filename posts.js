@@ -306,13 +306,100 @@ function excerpt(str, max) {
   return s.length > max ? s.slice(0, max).trimEnd() + '...' : s;
 }
 
-/* ── localStorage comments ── */
-function getComments(postId) {
-  try { return JSON.parse(localStorage.getItem('comments_' + postId)) || []; }
-  catch(e) { return []; }
+/* ── Firebase comments ── */
+var _commentsDb = null;
+var _commentsAuth = null;
+var _commentsAuthReady = null;
+var _commentsCurrentUser = null;
+
+async function initCommentsFirebase() {
+  if (_commentsAuthReady) return _commentsAuthReady;
+
+  _commentsAuthReady = (async function() {
+    var config = await import('./firebase-config.js');
+    var authModule = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    var firestore = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+
+    _commentsDb = config.db;
+    _commentsAuth = config.auth;
+
+    return await new Promise(function(resolve) {
+      var unsubscribe = authModule.onAuthStateChanged(_commentsAuth, function(user) {
+        _commentsCurrentUser = user || null;
+        unsubscribe();
+        resolve(_commentsCurrentUser);
+      });
+
+      authModule.onAuthStateChanged(_commentsAuth, function(user) {
+        _commentsCurrentUser = user || null;
+      });
+    });
+  })();
+
+  return _commentsAuthReady;
 }
-function saveComments(postId, comments) {
-  try { localStorage.setItem('comments_' + postId, JSON.stringify(comments)); } catch(e) {}
+
+async function getCurrentCommentUser() {
+  await initCommentsFirebase();
+  return _commentsCurrentUser || (_commentsAuth ? _commentsAuth.currentUser : null);
+}
+
+async function loadComments(postId) {
+  var list = document.getElementById('commentsList');
+  if (!list) return [];
+
+  try {
+    await initCommentsFirebase();
+    var firestore = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    var snapshot = await firestore.getDocs(
+      firestore.query(
+        firestore.collection(_commentsDb, 'article_comments'),
+        firestore.where('postId', '==', postId)
+      )
+    );
+
+    var comments = snapshot.docs.map(function(doc) {
+      return Object.assign({ id: doc.id }, doc.data());
+    });
+
+    comments.sort(function(a, b) {
+      var aTime = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      var bTime = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return aTime - bTime;
+    });
+
+    renderCommentsList(comments);
+    return comments;
+  } catch (e) {
+    console.error('Could not load comments:', e);
+    list.innerHTML = '<div class="no-comments">Could not load comments.</div>';
+    return [];
+  }
+}
+
+function renderCommentsList(comments) {
+  var list = document.getElementById('commentsList');
+  if (!list) return;
+
+  if (!comments.length) {
+    list.innerHTML = '<div class="no-comments">Сэтгэгдэл байхгүй байна.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  comments.forEach(function(c) {
+    var item = document.createElement('div');
+    item.className = 'comment-item';
+    var dateText = '';
+    if (c.createdAt && c.createdAt.toDate) {
+      dateText = c.createdAt.toDate().toLocaleDateString();
+    }
+    item.innerHTML =
+      '<div class="comment-name">' + escHtml(c.name || 'User') + '</div>' +
+      '<div class="comment-text">' + escHtml(c.text || '') + '</div>' +
+      '<div class="comment-date">' + escHtml(dateText) + '</div>';
+    list.appendChild(item);
+  });
 }
 
 /* ── Build card element ── */
@@ -345,43 +432,50 @@ function openModal(post) {
   if (post.date)   meta += (post.author ? ' — ' : '') + formatDate(post.date);
   document.getElementById('modalMeta').textContent    = meta;
   document.getElementById('modalContent').textContent = post.description;
-  renderComments(post.id);
+  loadComments(post.id);
 
   var form = document.getElementById('commentForm');
-  form.onsubmit = function(e) {
-    e.preventDefault();
-    var name = document.getElementById('commentName').value.trim();
-    var text = document.getElementById('commentText').value.trim();
-    if (!name || !text) return;
-    var comments = getComments(post.id);
-    comments.push({ name: name, text: text, date: new Date().toISOString() });
-    saveComments(post.id, comments);
-    renderComments(post.id);
-    form.reset();
-  };
+  if (form) {
+    form.onsubmit = async function(e) {
+      e.preventDefault();
+
+      var user = await getCurrentCommentUser();
+      if (!user) {
+        alert('You need to sign in to comment.');
+        return;
+      }
+
+      var textEl = document.getElementById('commentText');
+      var text = textEl ? textEl.value.trim() : '';
+      if (!text || text.length > 1000) return;
+
+      var button = form.querySelector('button[type="submit"]');
+      if (button) { button.disabled = true; button.textContent = 'Posting...'; }
+
+      try {
+        var firestore = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+        await firestore.addDoc(firestore.collection(_commentsDb, 'article_comments'), {
+          postId: post.id,
+          category: post.category || '',
+          authorId: user.uid,
+          name: user.displayName || user.email || 'User',
+          text: text,
+          createdAt: firestore.serverTimestamp()
+        });
+
+        form.reset();
+        await loadComments(post.id);
+      } catch (err) {
+        console.error('Could not post comment:', err);
+        alert('Could not post comment.');
+      } finally {
+        if (button) { button.disabled = false; button.textContent = 'Post comment'; }
+      }
+    };
+  }
 
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
-}
-
-function renderComments(postId) {
-  var list = document.getElementById('commentsList');
-  if (!list) return;
-  var comments = getComments(postId);
-  if (!comments.length) {
-    list.innerHTML = '<div class="no-comments">Сэтгэгдэл байхгүй байна.</div>';
-    return;
-  }
-  list.innerHTML = '';
-  comments.forEach(function(c) {
-    var item = document.createElement('div');
-    item.className = 'comment-item';
-    item.innerHTML =
-      '<div class="comment-name">' + escHtml(c.name) + '</div>' +
-      '<div class="comment-text">' + escHtml(c.text) + '</div>' +
-      '<div class="comment-date">' + (c.date ? formatDate(c.date.split('T')[0]) : '') + '</div>';
-    list.appendChild(item);
-  });
 }
 
 function closeModal() {
