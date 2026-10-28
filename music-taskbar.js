@@ -12,7 +12,7 @@
   taskbar.id = 'erdemfox-music-taskbar';
   taskbar.innerHTML = `
     <div class="taskbar-header" id="taskbar-drag-handle">
-      <span class="taskbar-title">🎵 ErdemFox Player</span>
+      <span class="taskbar-title"> ErdemFox Player</span>
       <div class="taskbar-actions">
         <button class="taskbar-btn" id="tb-file-btn" title="Select Audio Files">📂</button>
         <button class="taskbar-btn" id="tb-min-btn" title="Minimize">_</button>
