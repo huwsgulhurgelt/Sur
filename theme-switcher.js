@@ -41,9 +41,11 @@
   /* ── State ── */
   var raw = null;
   try { raw = JSON.parse(localStorage.getItem('site-theme') || 'null'); } catch(e){}
-  var state = raw || { theme:'normal', variant:'custom', customColor:'#2d3a8c', stickers:[] };
+  var state = raw || { theme:'normal', variant:'custom', customColor:'#2d3a8c', customBg:'#f2f4f8', customText:'#172033', stickers:[] };
   if (state.theme === 'normal') state.variant = 'custom';
   if (!state.customColor || !/^#[0-9a-f]{6}$/i.test(state.customColor)) state.customColor = '#2d3a8c';
+  if (!state.customBg || !/^#[0-9a-f]{6}$/i.test(state.customBg)) state.customBg = '#f2f4f8';
+  if (!state.customText || !/^#[0-9a-f]{6}$/i.test(state.customText)) state.customText = '#172033';
   if (!Array.isArray(state.stickers)) state.stickers = [];
 
   var stickerData = state.stickers; // image stickers only (video stickers handled separately)
@@ -58,23 +60,37 @@
 
   function applyTheme() {
     var html = document.documentElement;
-    html.setAttribute('data-theme',   state.theme);
+    html.setAttribute('data-theme', state.theme);
     html.setAttribute('data-variant', state.variant);
     if (state.theme === 'normal') {
-      var color = state.customColor || '#2d3a8c';
-      html.style.setProperty('--accent', color);
-      html.style.setProperty('--accent-rgb', hexToRgb(color));
-      html.style.setProperty('--accent2', 'color-mix(in srgb, ' + color + ' 72%, white)');
-      html.style.setProperty('--accent3', 'color-mix(in srgb, ' + color + ' 55%, #8b5cf6)');
-      html.style.setProperty('--ring', '0 0 0 3px color-mix(in srgb, ' + color + ' 18%, transparent)');
-      html.style.setProperty('--hero-bg', 'linear-gradient(135deg, color-mix(in srgb, ' + color + ' 9%, white), #ffffff 72%)');
-      html.style.setProperty('--body-bg', 'linear-gradient(160deg, #ffffff 0%, color-mix(in srgb, ' + color + ' 5%, white) 100%)');
-      html.style.setProperty('--hero-orb1', 'color-mix(in srgb, ' + color + ' 18%, transparent)');
-      html.style.setProperty('--hero-orb2', 'color-mix(in srgb, ' + color + ' 10%, transparent)');
+      var accent = state.customColor || '#2d3a8c';
+      var bg = state.customBg || '#f2f4f8';
+      var textColor = state.customText || '#172033';
+      html.style.setProperty('--accent', accent);
+      html.style.setProperty('--accent-rgb', hexToRgb(accent));
+      html.style.setProperty('--accent2', 'color-mix(in srgb, ' + accent + ' 68%, white)');
+      html.style.setProperty('--accent3', 'color-mix(in srgb, ' + accent + ' 45%, #8b5cf6)');
+      html.style.setProperty('--ring', '0 0 0 3px color-mix(in srgb, ' + accent + ' 20%, transparent)');
+      html.style.setProperty('--bg', bg);
+      html.style.setProperty('--bg-soft', 'color-mix(in srgb, ' + bg + ' 82%, white)');
+      html.style.setProperty('--surface', 'color-mix(in srgb, ' + bg + ' 68%, white)');
+      html.style.setProperty('--surface2', 'color-mix(in srgb, ' + bg + ' 88%, white)');
+      html.style.setProperty('--border', 'color-mix(in srgb, ' + textColor + ' 13%, transparent)');
+      html.style.setProperty('--border-strong', 'color-mix(in srgb, ' + textColor + ' 24%, transparent)');
+      html.style.setProperty('--text', textColor);
+      html.style.setProperty('--muted', 'color-mix(in srgb, ' + textColor + ' 70%, ' + bg + ')');
+      html.style.setProperty('--muted2', 'color-mix(in srgb, ' + textColor + ' 48%, ' + bg + ')');
+      html.style.setProperty('--hero-bg', 'linear-gradient(135deg, color-mix(in srgb, ' + accent + ' 10%, ' + bg + '), color-mix(in srgb, ' + bg + ' 75%, white) 78%)');
+      html.style.setProperty('--body-bg', 'linear-gradient(155deg, ' + bg + ' 0%, color-mix(in srgb, ' + bg + ' 91%, ' + accent + ') 100%)');
+      html.style.setProperty('--hero-orb1', 'color-mix(in srgb, ' + accent + ' 15%, transparent)');
+      html.style.setProperty('--hero-orb2', 'color-mix(in srgb, ' + accent + ' 8%, transparent)');
+      html.style.setProperty('--card-shine', 'linear-gradient(135deg, color-mix(in srgb, ' + accent + ' 7%, transparent) 0%, transparent 58%)');
     } else {
-      ['--accent','--accent-rgb','--accent2','--accent3','--ring','--hero-bg','--body-bg','--hero-orb1','--hero-orb2'].forEach(function(v){ html.style.removeProperty(v); });
+      ['--accent','--accent-rgb','--accent2','--accent3','--ring','--hero-bg','--body-bg','--hero-orb1','--hero-orb2','--bg','--bg-soft','--surface','--surface2','--border','--border-strong','--text','--muted','--muted2','--card-shine'].forEach(function(v){ html.style.removeProperty(v); });
     }
-    renderFlowerDecor();
+    // Flower imagery is intentionally disabled for now; keep the variants available for later.
+    var oldScene = document.querySelector('.flower-scene');
+    if (oldScene) oldScene.remove();
     var layer = document.querySelector('.sticker-layer');
     if (layer) layer.style.display = state.theme === 'funky' ? 'block' : 'none';
     if (state.theme === 'funky') renderVideoStickers();
@@ -88,66 +104,10 @@
     return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
   }
 
-  function flowerSvg(color, size) {
-    var petals = '';
-    for (var i = 0; i < 8; i++) petals += '<ellipse cx="50" cy="25" rx="12" ry="23" fill="' + color + '" transform="rotate(' + (i * 45) + ' 50 50)" />';
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 100 100" aria-hidden="true">' + petals + '<circle cx="50" cy="50" r="13" fill="#f6cf52" stroke="rgba(80,50,20,.2)" stroke-width="2"/><path d="M50 61 C48 75 54 84 48 96" fill="none" stroke="#43834d" stroke-width="5" stroke-linecap="round"/><path d="M50 79 C35 67 28 77 42 84" fill="#5a9c5b"/><path d="M51 87 C65 75 73 83 58 91" fill="#5a9c5b"/></svg>';
-  }
-
   function renderFlowerDecor() {
+    // Flower artwork is disabled while the visual direction is being redesigned.
     var old = document.querySelector('.flower-scene');
     if (old) old.remove();
-    if (state.theme !== 'flower') return;
-    var scene = document.createElement('div');
-    scene.className = 'flower-scene flower-scene-' + state.variant;
-    scene.setAttribute('aria-hidden', 'true');
-    var color = state.variant === 'pink' ? '#ec4899' : state.variant === 'blue' ? '#1d4ed8' : '#242424';
-    if (state.variant === 'pink') {
-      for (var i = 0; i < 9; i++) {
-        var f = document.createElement('div'); f.className = 'scene-flower pink-float';
-        f.style.left = (5 + ((i * 37) % 90)) + '%';
-        f.style.top = (8 + ((i * 23) % 78)) + 'vh';
-        f.style.setProperty('--float-delay', (-i * 1.7) + 's');
-        f.style.setProperty('--float-duration', (8 + (i % 5) * 1.7) + 's');
-        f.innerHTML = flowerSvg(color, 34 + (i % 4) * 13); scene.appendChild(f);
-      }
-    } else if (state.variant === 'blue') {
-      var grass = document.createElement('div'); grass.className = 'blue-grass';
-      grass.innerHTML = '<svg viewBox="0 0 1200 180" preserveAspectRatio="none"><path d="M0 85 Q150 15 310 75 T650 70 T950 50 T1200 80 L1200 180 L0 180Z" fill="#78a85a"/><path d="M0 112 Q230 65 430 105 T820 90 T1200 108 L1200 180 L0 180Z" fill="#4d8542"/></svg>';
-      scene.appendChild(grass);
-      for (var j = 0; j < 7; j++) {
-        var bf = document.createElement('div'); bf.className = 'scene-flower blue-page-flower';
-        bf.style.left = (8 + j * 13) + '%';
-        bf.setAttribute('data-flower-index', String(j));
-        bf.innerHTML = flowerSvg(color, 44 + (j % 3) * 12); scene.appendChild(bf);
-      }
-      function updateBlueFlowers() {
-        if (!scene.isConnected || state.theme !== 'flower' || state.variant !== 'blue') return;
-        var step = 240; var scroll = window.scrollY || 0;
-        scene.querySelectorAll('.blue-page-flower').forEach(function(el) {
-          var idx = Number(el.getAttribute('data-flower-index'));
-          var progress = Math.max(0, Math.min(1, (scroll - idx * step) / 190));
-          var active = scroll >= idx * step;
-          el.style.opacity = active ? String(Math.min(1, progress * 1.5)) : '0';
-          el.style.transform = 'translate3d(0,' + ((1 - progress) * 150) + 'px,0) perspective(500px) rotateX(' + ((1 - progress) * 82) + 'deg) rotateY(' + ((1 - progress) * -35) + 'deg)';
-        });
-        grass.style.opacity = String(Math.min(1, 0.35 + scroll / 400));
-      }
-      window.addEventListener('scroll', updateBlueFlowers, { passive:true });
-      window.addEventListener('resize', updateBlueFlowers);
-      updateBlueFlowers();
-    } else {
-      scene.classList.add('flower-scene-static');
-      scene.style.height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) + 'px';
-      for (var k = 0; k < 7; k++) {
-        var sf = document.createElement('div'); sf.className = 'scene-flower bw-still';
-        sf.style.left = (6 + ((k * 29) % 88)) + '%';
-        sf.style.top = (170 + k * 330) + 'px';
-        sf.style.transform = 'rotate(' + ((k % 2 ? 1 : -1) * (8 + k * 3)) + 'deg)';
-        sf.innerHTML = flowerSvg(color, 36 + (k % 3) * 14); scene.appendChild(sf);
-      }
-    }
-    document.body.appendChild(scene);
   }
 
   function setEditMode(on) {
@@ -336,17 +296,16 @@
       .ts-custom-color.show { display:flex; }
       #ts-color-picker { width:42px; height:34px; padding:2px; border:1px solid var(--border); border-radius:8px; background:var(--surface); cursor:pointer; }
       .ts-color-help { color:var(--muted); font-size:0.68rem; font-weight:500; }
-      .flower-scene { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
-      .scene-flower { position:absolute; width:auto; height:auto; filter:drop-shadow(0 5px 8px rgba(20,30,40,.12)); will-change:transform; }
-      .pink-float { animation: flowerFloat var(--float-duration,10s) ease-in-out var(--float-delay,0s) infinite alternate; }
-      @keyframes flowerFloat { 0% { translate:0 12px; rotate:-12deg; } 50% { translate:14px -18px; rotate:7deg; } 100% { translate:-10px -34px; rotate:-5deg; } }
-      .flower-scene-blue { perspective:900px; }
-      .blue-grass { position:absolute; left:0; right:0; bottom:-2px; height:150px; opacity:.7; transition:opacity .3s; }
-      .blue-grass svg { width:100%; height:100%; display:block; }
-      .blue-page-flower { bottom:35px; top:auto; transform-origin:50% 100%; transition:opacity .18s linear, transform .12s linear; }
-      .flower-scene-static { position:absolute; inset:0 auto auto 0; width:100%; min-height:100vh; overflow:visible; z-index:0; }
-      .bw-still { opacity:.7; }
-      @media (prefers-reduced-motion: reduce) { .pink-float { animation:none !important; } .blue-page-flower { transition:none !important; } }
+      .ts-normal-colors { display:none; }
+      .ts-color-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:6px; margin:9px 0 10px; }
+      .ts-color-swatch { width:100%; aspect-ratio:1; min-width:0; border-radius:9px; border:1px solid rgba(20,25,35,.16); cursor:pointer; position:relative; box-shadow:inset 0 0 0 1px rgba(255,255,255,.15); transition:transform .14s,box-shadow .14s; }
+      .ts-color-swatch:hover { transform:translateY(-2px) scale(1.06); }
+      .ts-color-swatch.active { outline:2px solid var(--accent,#2d3a8c); outline-offset:2px; box-shadow:0 0 0 4px color-mix(in srgb,var(--accent,#2d3a8c) 18%,transparent); }
+      .ts-color-custom-row { display:grid; grid-template-columns:1fr 38px auto; gap:8px; align-items:center; margin:8px 0; font-size:.68rem; font-weight:700; color:var(--text,#111); }
+      .ts-color-custom-row input[type=color] { width:38px; height:30px; padding:2px; border:1px solid var(--border,rgba(0,0,0,.15)); border-radius:8px; background:var(--surface,#fff); cursor:pointer; }
+      .ts-color-custom-row span { font-size:.65rem; color:var(--muted,#777); font-variant-numeric:tabular-nums; }
+      .ts-label-spaced { margin-top:15px; }
+
 
       /* Edit mode hint badge */
       #ts-edit-hint {
@@ -377,7 +336,8 @@
       '<div id="ts-panel">' +
         '<div class="ts-head">Appearance</div>' +
         '<div class="ts-section"><div class="ts-label">Style</div><div class="ts-styles" id="ts-styles"></div></div>' +
-        '<div class="ts-section"><div class="ts-label" id="ts-color-label">Color</div><div class="ts-variants" id="ts-variants"></div><div class="ts-custom-color" id="ts-custom-color"><input type="color" id="ts-color-picker" value="#2d3a8c"><span id="ts-color-value">#2D3A8C</span><span class="ts-color-help">Choose any color</span></div></div>' +
+        '<div class="ts-section"><div class="ts-label" id="ts-color-label">Accent color</div><div class="ts-variants" id="ts-variants"></div><div class="ts-custom-color" id="ts-custom-color"><input type="color" id="ts-color-picker" value="#2d3a8c"><span id="ts-color-value">#2D3A8C</span><span class="ts-color-help">Accent & buttons</span></div></div>' +
+        '<div class="ts-section ts-normal-colors" id="ts-normal-colors"><div class="ts-label">Background & boxes</div><div class="ts-color-grid" id="ts-bg-grid"></div><div class="ts-color-custom-row"><label for="ts-bg-picker">Custom background</label><input type="color" id="ts-bg-picker" value="#f2f4f8"><span id="ts-bg-value">#F2F4F8</span></div><div class="ts-color-help">Boxes automatically adjust to stay distinct from the page.</div><div class="ts-label ts-label-spaced">Text color</div><div class="ts-color-grid" id="ts-text-grid"></div><div class="ts-color-custom-row"><label for="ts-text-picker">Custom text</label><input type="color" id="ts-text-picker" value="#172033"><span id="ts-text-value">#172033</span></div></div>' +
         '<div class="ts-section" id="ts-sticker-section">' +
           '<div class="ts-label">Stickers</div>' +
           '<div class="ts-sticker-actions">' +
@@ -685,12 +645,36 @@
     var picker = document.getElementById('ts-color-picker');
     var colorValue = document.getElementById('ts-color-value');
     var colorLabel = document.getElementById('ts-color-label');
+    var normalColors = document.getElementById('ts-normal-colors');
     c.innerHTML = '';
     if (pickerWrap) pickerWrap.classList.toggle('show', state.theme === 'normal');
+    if (normalColors) normalColors.style.display = state.theme === 'normal' ? 'block' : 'none';
     if (colorLabel) colorLabel.textContent = state.theme === 'normal' ? 'Accent color' : 'Color style';
     if (picker && state.theme === 'normal') picker.value = state.customColor || '#2d3a8c';
     if (colorValue && state.theme === 'normal') colorValue.textContent = (state.customColor || '#2d3a8c').toUpperCase();
-    if (state.theme === 'normal') return;
+    if (state.theme === 'normal') {
+      buildColorGrid('ts-bg-grid', [
+        '#ffffff','#f2f4f8','#e8edf5','#fdf6ef','#f8eee8','#fce7f3',
+        '#f3e8ff','#e9e7ff','#e0f2fe','#dbeafe','#dcfce7','#ecfccb',
+        '#fef3c7','#ffedd5','#fee2e2','#1f2937','#172033','#111827',
+        '#262626','#3f3f46','#334155','#0f172a'
+      ], 'customBg', '#ts-bg-picker', '#ts-bg-value');
+      buildColorGrid('ts-text-grid', [
+        '#111827','#172033','#334155','#475569','#1f2937','#3f3f46',
+        '#7f1d1d','#9a3412','#854d0e','#14532d','#166534','#115e59',
+        '#164e63','#1e40af','#312e81','#5b21b6','#701a75','#9d174d',
+        '#ffffff','#f8fafc','#e5e7eb','#a1a1aa'
+      ], 'customText', '#ts-text-picker', '#ts-text-value');
+      var bgPicker = document.getElementById('ts-bg-picker');
+      var textPicker = document.getElementById('ts-text-picker');
+      if (bgPicker) bgPicker.value = state.customBg || '#f2f4f8';
+      if (textPicker) textPicker.value = state.customText || '#172033';
+      var bgVal = document.getElementById('ts-bg-value');
+      var textVal = document.getElementById('ts-text-value');
+      if (bgVal) bgVal.textContent = (state.customBg || '#f2f4f8').toUpperCase();
+      if (textVal) textVal.textContent = (state.customText || '#172033').toUpperCase();
+      return;
+    }
     THEMES[state.theme].variants.forEach(function(v) {
       var btn = document.createElement('button');
       btn.className = 'ts-var-btn' + (state.variant === v.key ? ' active' : '');
@@ -702,10 +686,28 @@
     });
   }
 
-  function toggleStickers() {
-    var sec = document.getElementById('ts-sticker-section');
-    if (sec) sec.classList.toggle('show', state.theme === 'funky');
-    setEditMode(panelOpen);
+  function buildColorGrid(id, colors, stateKey, pickerSelector, valueSelector) {
+    var grid = document.getElementById(id);
+    if (!grid) return;
+    grid.innerHTML = '';
+    colors.forEach(function(color) {
+      var swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = 'ts-color-swatch' + (String(state[stateKey]).toLowerCase() === color.toLowerCase() ? ' active' : '');
+      swatch.style.backgroundColor = color;
+      swatch.title = color.toUpperCase();
+      swatch.setAttribute('aria-label', 'Choose ' + color);
+      swatch.addEventListener('click', function() {
+        state[stateKey] = color;
+        var picker = document.querySelector(pickerSelector);
+        var value = document.querySelector(valueSelector);
+        if (picker) picker.value = color;
+        if (value) value.textContent = color.toUpperCase();
+        applyTheme();
+        renderVariants();
+      });
+      grid.appendChild(swatch);
+    });
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -725,6 +727,18 @@
       state.customColor = colorPicker.value; state.variant = 'custom';
       var value = document.getElementById('ts-color-value'); if (value) value.textContent = state.customColor.toUpperCase();
       applyTheme();
+    });
+    var bgPicker = document.getElementById('ts-bg-picker');
+    bgPicker.addEventListener('input', function() {
+      state.customBg = bgPicker.value;
+      var value = document.getElementById('ts-bg-value'); if (value) value.textContent = state.customBg.toUpperCase();
+      applyTheme(); renderVariants();
+    });
+    var textPicker = document.getElementById('ts-text-picker');
+    textPicker.addEventListener('input', function() {
+      state.customText = textPicker.value;
+      var value = document.getElementById('ts-text-value'); if (value) value.textContent = state.customText.toUpperCase();
+      applyTheme(); renderVariants();
     });
 
     var btn   = document.getElementById('ts-btn');
