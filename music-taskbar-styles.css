@@ -1,0 +1,176 @@
+/* ErdemFox Floating Music Taskbar Styles */
+#erdemfox-music-taskbar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  background: var(--card-bg, #1e1e2f);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  font-family: inherit;
+  color: var(--text-color, #ffffff);
+  user-select: none;
+  transition: width 0.2s ease, height 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+#erdemfox-music-taskbar.minimized {
+  width: 180px;
+}
+
+#erdemfox-music-taskbar.minimized .taskbar-body,
+#erdemfox-music-taskbar.minimized .taskbar-progress-container,
+#erdemfox-music-taskbar.minimized .taskbar-controls-row {
+  display: none;
+}
+
+.taskbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  cursor: grab;
+}
+
+.taskbar-header:active {
+  cursor: grabbing;
+}
+
+.taskbar-title {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.taskbar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.taskbar-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.taskbar-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.taskbar-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.track-info {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.taskbar-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.taskbar-progress {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+
+.taskbar-progress::-webkit-slider-thumb {
+  appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-color, #4f46e5);
+}
+
+.taskbar-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.transport-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.control-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  color: inherit;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.control-btn:hover {
+  background: var(--primary-color, #4f46e5);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.volume-slider {
+  width: 50px;
+  height: 4px;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+}
