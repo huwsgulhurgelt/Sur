@@ -262,8 +262,8 @@ body {
   font-family: var(--font-main);
   min-height: 100vh;
   color: var(--text);
-  background: var(--body-bg);
-  background-attachment: fixed;
+  background-color: var(--bg);
+  
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background 0.4s ease, color 0.3s ease;
@@ -387,7 +387,7 @@ img.nav-logo { height: 36px; width: auto; border: none; padding: 0; background: 
   position: relative; overflow: hidden; isolation: isolate;
   border-radius: var(--radius-lg);
   border: var(--bw) solid var(--border-strong);
-  background: var(--hero-bg);
+  background: var(--bg-soft);
   box-shadow: var(--shadow);
 }
 .page-hero { margin-bottom: 36px; padding: 40px 36px 36px; }
