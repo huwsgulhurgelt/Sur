@@ -24,9 +24,7 @@
   /* ── Theme config ── */
   var THEMES = {
     normal: { label:'Normal', icon:'◻', variants:[
-      { key:'classic', label:'Classic', color:'#2d3a8c' },
-      { key:'warm',    label:'Warm',    color:'#b85c2c' },
-      { key:'cool',    label:'Cool',    color:'#1d56d8' },
+      { key:'custom', label:'Custom', color:'#2d3a8c' },
     ]},
     funky: { label:'Funky', icon:'★', variants:[
       { key:'colorful', label:'Colorful', color:'#f7008e' },
@@ -43,7 +41,9 @@
   /* ── State ── */
   var raw = null;
   try { raw = JSON.parse(localStorage.getItem('site-theme') || 'null'); } catch(e){}
-  var state = raw || { theme:'normal', variant:'classic', stickers:[] };
+  var state = raw || { theme:'normal', variant:'custom', customColor:'#2d3a8c', stickers:[] };
+  if (state.theme === 'normal') state.variant = 'custom';
+  if (!state.customColor || !/^#[0-9a-f]{6}$/i.test(state.customColor)) state.customColor = '#2d3a8c';
   if (!Array.isArray(state.stickers)) state.stickers = [];
 
   var stickerData = state.stickers; // image stickers only (video stickers handled separately)
@@ -60,6 +60,21 @@
     var html = document.documentElement;
     html.setAttribute('data-theme',   state.theme);
     html.setAttribute('data-variant', state.variant);
+    if (state.theme === 'normal') {
+      var color = state.customColor || '#2d3a8c';
+      html.style.setProperty('--accent', color);
+      html.style.setProperty('--accent-rgb', hexToRgb(color));
+      html.style.setProperty('--accent2', 'color-mix(in srgb, ' + color + ' 72%, white)');
+      html.style.setProperty('--accent3', 'color-mix(in srgb, ' + color + ' 55%, #8b5cf6)');
+      html.style.setProperty('--ring', '0 0 0 3px color-mix(in srgb, ' + color + ' 18%, transparent)');
+      html.style.setProperty('--hero-bg', 'linear-gradient(135deg, color-mix(in srgb, ' + color + ' 9%, white), #ffffff 72%)');
+      html.style.setProperty('--body-bg', 'linear-gradient(160deg, #ffffff 0%, color-mix(in srgb, ' + color + ' 5%, white) 100%)');
+      html.style.setProperty('--hero-orb1', 'color-mix(in srgb, ' + color + ' 18%, transparent)');
+      html.style.setProperty('--hero-orb2', 'color-mix(in srgb, ' + color + ' 10%, transparent)');
+    } else {
+      ['--accent','--accent-rgb','--accent2','--accent3','--ring','--hero-bg','--body-bg','--hero-orb1','--hero-orb2'].forEach(function(v){ html.style.removeProperty(v); });
+    }
+    renderFlowerDecor();
     var layer = document.querySelector('.sticker-layer');
     if (layer) layer.style.display = state.theme === 'funky' ? 'block' : 'none';
     if (state.theme === 'funky') renderVideoStickers();
@@ -67,6 +82,73 @@
   }
 
   function makeid() { return Math.random().toString(36).slice(2,9); }
+
+  function hexToRgb(hex) {
+    var n = parseInt(String(hex).replace('#',''), 16);
+    return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
+  }
+
+  function flowerSvg(color, size) {
+    var petals = '';
+    for (var i = 0; i < 8; i++) petals += '<ellipse cx="50" cy="25" rx="12" ry="23" fill="' + color + '" transform="rotate(' + (i * 45) + ' 50 50)" />';
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 100 100" aria-hidden="true">' + petals + '<circle cx="50" cy="50" r="13" fill="#f6cf52" stroke="rgba(80,50,20,.2)" stroke-width="2"/><path d="M50 61 C48 75 54 84 48 96" fill="none" stroke="#43834d" stroke-width="5" stroke-linecap="round"/><path d="M50 79 C35 67 28 77 42 84" fill="#5a9c5b"/><path d="M51 87 C65 75 73 83 58 91" fill="#5a9c5b"/></svg>';
+  }
+
+  function renderFlowerDecor() {
+    var old = document.querySelector('.flower-scene');
+    if (old) old.remove();
+    if (state.theme !== 'flower') return;
+    var scene = document.createElement('div');
+    scene.className = 'flower-scene flower-scene-' + state.variant;
+    scene.setAttribute('aria-hidden', 'true');
+    var color = state.variant === 'pink' ? '#ec4899' : state.variant === 'blue' ? '#1d4ed8' : '#242424';
+    if (state.variant === 'pink') {
+      for (var i = 0; i < 9; i++) {
+        var f = document.createElement('div'); f.className = 'scene-flower pink-float';
+        f.style.left = (5 + ((i * 37) % 90)) + '%';
+        f.style.top = (8 + ((i * 23) % 78)) + 'vh';
+        f.style.setProperty('--float-delay', (-i * 1.7) + 's');
+        f.style.setProperty('--float-duration', (8 + (i % 5) * 1.7) + 's');
+        f.innerHTML = flowerSvg(color, 34 + (i % 4) * 13); scene.appendChild(f);
+      }
+    } else if (state.variant === 'blue') {
+      var grass = document.createElement('div'); grass.className = 'blue-grass';
+      grass.innerHTML = '<svg viewBox="0 0 1200 180" preserveAspectRatio="none"><path d="M0 85 Q150 15 310 75 T650 70 T950 50 T1200 80 L1200 180 L0 180Z" fill="#78a85a"/><path d="M0 112 Q230 65 430 105 T820 90 T1200 108 L1200 180 L0 180Z" fill="#4d8542"/></svg>';
+      scene.appendChild(grass);
+      for (var j = 0; j < 7; j++) {
+        var bf = document.createElement('div'); bf.className = 'scene-flower blue-page-flower';
+        bf.style.left = (8 + j * 13) + '%';
+        bf.setAttribute('data-flower-index', String(j));
+        bf.innerHTML = flowerSvg(color, 44 + (j % 3) * 12); scene.appendChild(bf);
+      }
+      function updateBlueFlowers() {
+        if (!scene.isConnected || state.theme !== 'flower' || state.variant !== 'blue') return;
+        var step = 240; var scroll = window.scrollY || 0;
+        scene.querySelectorAll('.blue-page-flower').forEach(function(el) {
+          var idx = Number(el.getAttribute('data-flower-index'));
+          var progress = Math.max(0, Math.min(1, (scroll - idx * step) / 190));
+          var active = scroll >= idx * step;
+          el.style.opacity = active ? String(Math.min(1, progress * 1.5)) : '0';
+          el.style.transform = 'translate3d(0,' + ((1 - progress) * 150) + 'px,0) perspective(500px) rotateX(' + ((1 - progress) * 82) + 'deg) rotateY(' + ((1 - progress) * -35) + 'deg)';
+        });
+        grass.style.opacity = String(Math.min(1, 0.35 + scroll / 400));
+      }
+      window.addEventListener('scroll', updateBlueFlowers, { passive:true });
+      window.addEventListener('resize', updateBlueFlowers);
+      updateBlueFlowers();
+    } else {
+      scene.classList.add('flower-scene-static');
+      scene.style.height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) + 'px';
+      for (var k = 0; k < 7; k++) {
+        var sf = document.createElement('div'); sf.className = 'scene-flower bw-still';
+        sf.style.left = (6 + ((k * 29) % 88)) + '%';
+        sf.style.top = (170 + k * 330) + 'px';
+        sf.style.transform = 'rotate(' + ((k % 2 ? 1 : -1) * (8 + k * 3)) + 'deg)';
+        sf.innerHTML = flowerSvg(color, 36 + (k % 3) * 14); scene.appendChild(sf);
+      }
+    }
+    document.body.appendChild(scene);
+  }
 
   function setEditMode(on) {
     document.body.classList.toggle('sticker-editing', on && state.theme === 'funky');
@@ -250,6 +332,22 @@
       .ts-size-row input[type=range] { flex: 1; accent-color: var(--accent,#111); cursor: pointer; }
       .ts-size-val { font-size: 0.68rem; font-weight: 700; color: var(--muted,#888); min-width: 32px; text-align: right; }
 
+      .ts-custom-color { display:none; align-items:center; gap:9px; margin-top:4px; font-size:0.75rem; font-weight:700; color:var(--text,#111); }
+      .ts-custom-color.show { display:flex; }
+      #ts-color-picker { width:42px; height:34px; padding:2px; border:1px solid var(--border); border-radius:8px; background:var(--surface); cursor:pointer; }
+      .ts-color-help { color:var(--muted); font-size:0.68rem; font-weight:500; }
+      .flower-scene { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+      .scene-flower { position:absolute; width:auto; height:auto; filter:drop-shadow(0 5px 8px rgba(20,30,40,.12)); will-change:transform; }
+      .pink-float { animation: flowerFloat var(--float-duration,10s) ease-in-out var(--float-delay,0s) infinite alternate; }
+      @keyframes flowerFloat { 0% { translate:0 12px; rotate:-12deg; } 50% { translate:14px -18px; rotate:7deg; } 100% { translate:-10px -34px; rotate:-5deg; } }
+      .flower-scene-blue { perspective:900px; }
+      .blue-grass { position:absolute; left:0; right:0; bottom:-2px; height:150px; opacity:.7; transition:opacity .3s; }
+      .blue-grass svg { width:100%; height:100%; display:block; }
+      .blue-page-flower { bottom:35px; top:auto; transform-origin:50% 100%; transition:opacity .18s linear, transform .12s linear; }
+      .flower-scene-static { position:absolute; inset:0 auto auto 0; width:100%; min-height:100vh; overflow:visible; z-index:0; }
+      .bw-still { opacity:.7; }
+      @media (prefers-reduced-motion: reduce) { .pink-float { animation:none !important; } .blue-page-flower { transition:none !important; } }
+
       /* Edit mode hint badge */
       #ts-edit-hint {
         display: none; position: fixed;
@@ -279,7 +377,7 @@
       '<div id="ts-panel">' +
         '<div class="ts-head">Appearance</div>' +
         '<div class="ts-section"><div class="ts-label">Style</div><div class="ts-styles" id="ts-styles"></div></div>' +
-        '<div class="ts-section"><div class="ts-label">Color</div><div class="ts-variants" id="ts-variants"></div></div>' +
+        '<div class="ts-section"><div class="ts-label" id="ts-color-label">Color</div><div class="ts-variants" id="ts-variants"></div><div class="ts-custom-color" id="ts-custom-color"><input type="color" id="ts-color-picker" value="#2d3a8c"><span id="ts-color-value">#2D3A8C</span><span class="ts-color-help">Choose any color</span></div></div>' +
         '<div class="ts-section" id="ts-sticker-section">' +
           '<div class="ts-label">Stickers</div>' +
           '<div class="ts-sticker-actions">' +
@@ -583,7 +681,16 @@
 
   function renderVariants() {
     var c = document.getElementById('ts-variants');
+    var pickerWrap = document.getElementById('ts-custom-color');
+    var picker = document.getElementById('ts-color-picker');
+    var colorValue = document.getElementById('ts-color-value');
+    var colorLabel = document.getElementById('ts-color-label');
     c.innerHTML = '';
+    if (pickerWrap) pickerWrap.classList.toggle('show', state.theme === 'normal');
+    if (colorLabel) colorLabel.textContent = state.theme === 'normal' ? 'Accent color' : 'Color style';
+    if (picker && state.theme === 'normal') picker.value = state.customColor || '#2d3a8c';
+    if (colorValue && state.theme === 'normal') colorValue.textContent = (state.customColor || '#2d3a8c').toUpperCase();
+    if (state.theme === 'normal') return;
     THEMES[state.theme].variants.forEach(function(v) {
       var btn = document.createElement('button');
       btn.className = 'ts-var-btn' + (state.variant === v.key ? ' active' : '');
@@ -613,6 +720,12 @@
     renderStyles();
     renderVariants();
     toggleStickers();
+    var colorPicker = document.getElementById('ts-color-picker');
+    colorPicker.addEventListener('input', function() {
+      state.customColor = colorPicker.value; state.variant = 'custom';
+      var value = document.getElementById('ts-color-value'); if (value) value.textContent = state.customColor.toUpperCase();
+      applyTheme();
+    });
 
     var btn   = document.getElementById('ts-btn');
     var panel = document.getElementById('ts-panel');
