@@ -254,3 +254,22 @@
   }
 
 })();
+// === ErdemFox Music Taskbar Global Auto-Injector ===
+document.addEventListener('DOMContentLoaded', function() {
+  // 1. Inject Style sheet dynamically if missing
+  if (!document.getElementById('erdemfox-music-taskbar-styles')) {
+    const link = document.createElement('link');
+    link.id = 'erdemfox-music-taskbar-styles';
+    link.rel = 'stylesheet';
+    link.href = 'music-taskbar-styles.css';
+    document.head.appendChild(link);
+  }
+
+  // 2. Inject Taskbar Script dynamically if missing
+  if (!window.erdemFoxTaskbarInitialized && !document.getElementById('erdemfox-music-taskbar-script')) {
+    const script = document.createElement('script');
+    script.id = 'erdemfox-music-taskbar-script';
+    script.src = 'music-taskbar.js';
+    document.body.appendChild(script);
+  }
+});
