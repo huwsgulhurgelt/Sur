@@ -7,7 +7,7 @@
   let audio = new Audio();
   let isMinimized = false;
 
-  // Create UI Container
+  // Build Floating UI Widget
   const taskbar = document.createElement('div');
   taskbar.id = 'erdemfox-music-taskbar';
   taskbar.innerHTML = `
@@ -58,7 +58,7 @@
   const minBtn = document.getElementById('tb-min-btn');
   const closeBtn = document.getElementById('tb-close-btn');
 
-  // Draggable behavior
+  // Viewport-Bounded Dragging Logic
   let isDragging = false, startX, startY, initialX, initialY;
   header.addEventListener('mousedown', (e) => {
     isDragging = true;
@@ -77,19 +77,24 @@
     if (!isDragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    taskbar.style.left = `${initialX + dx}px`;
-    taskbar.style.top = `${initialY + dy}px`;
+    
+    // Bounds checking inside viewport
+    let newX = Math.max(10, Math.min(window.innerWidth - taskbar.offsetWidth - 10, initialX + dx));
+    let newY = Math.max(10, Math.min(window.innerHeight - taskbar.offsetHeight - 10, initialY + dy));
+
+    taskbar.style.left = `${newX}px`;
+    taskbar.style.top = `${newY}px`;
   });
 
   document.addEventListener('mouseup', () => { isDragging = false; });
 
-  // File Selection
+  // File Selection & Object URL Management
   fileBtn.addEventListener('click', () => hiddenFileInput.click());
   hiddenFileInput.addEventListener('change', (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // Clean up old object URLs to prevent memory leaks
+    // Revoke old Object URLs to prevent memory leaks
     playlist.forEach(item => URL.revokeObjectURL(item.url));
 
     playlist = files.map(file => ({
@@ -110,7 +115,7 @@
     titleEl.textContent = `${index + 1}. ${track.name}`;
   }
 
-  // Audio Control Events
+  // Playback Controls
   playBtn.addEventListener('click', () => {
     if (playlist.length === 0) {
       hiddenFileInput.click();
@@ -148,7 +153,7 @@
     audio.play();
   });
 
-  // Progress and Seek
+  // Timeline & Volume Synchronization
   audio.addEventListener('timeupdate', () => {
     if (audio.duration) {
       progressEl.value = (audio.currentTime / audio.duration) * 100;
@@ -173,7 +178,7 @@
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   }
 
-  // Minimize & Close
+  // Minimize & Close Controls
   minBtn.addEventListener('click', () => {
     isMinimized = !isMinimized;
     taskbar.classList.toggle('minimized', isMinimized);
@@ -187,7 +192,7 @@
     window.erdemFoxTaskbarInitialized = false;
   });
 
-  // Lifecycle Cleanup when exiting page
+  // Clean up Object URLs when exiting ErdemFox
   window.addEventListener('beforeunload', () => {
     audio.pause();
     playlist.forEach(item => URL.revokeObjectURL(item.url));
