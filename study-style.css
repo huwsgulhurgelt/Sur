@@ -208,17 +208,17 @@
   --text:          #0a1e3c;
   --muted:         #3e6494;
   --muted2:        #6888b0;
-  --accent:        #1a4fd6;
-  --accent2:       #38bdf8;
-  --accent3:       #8b5cf6;
-  --accent-rgb:    26,79,214;
+  --accent:        #1d4ed8;
+  --accent2:       #3b82f6;
+  --accent3:       #60a5fa;
+  --accent-rgb:    29,78,216;
   --radius:        11px; --radius-lg: 15px;
   --font-main:     'Cormorant Garamond', Georgia, serif;
-  --card-shine:    linear-gradient(135deg, rgba(56,189,248,0.09) 0%, transparent 50%, rgba(139,92,246,0.06) 100%);
-  --hero-bg:       linear-gradient(135deg, #d0e4ff 0%, #ddf4ff 50%, #e4d8ff 100%);
-  --hero-orb1:     rgba(56,189,248,0.26);
+  --card-shine:    linear-gradient(135deg, rgba(59,130,246,0.09) 0%, transparent 50%, rgba(29,78,216,0.04) 100%);
+  --hero-bg:       linear-gradient(135deg, #dbeafe 0%, #eff6ff 55%, #dbeafe 100%);
+  --hero-orb1:     rgba(59,130,246,0.22);
   --hero-orb2:     rgba(26,79,214,0.16);
-  --body-bg:       linear-gradient(160deg, #eef5ff 0%, #dceeff 50%, #e8e0ff 100%);
+  --body-bg:       linear-gradient(160deg, #eff6ff 0%, #dbeafe 55%, #e8efff 100%);
   --grid-color:    rgba(26,79,214,0.04);
   --shadow:        0 2px 4px rgba(26,79,214,0.05), 0 8px 24px rgba(26,79,214,0.09);
   --shadow-hover:  0 8px 16px rgba(26,79,214,0.09), 0 24px 48px rgba(26,79,214,0.14);
@@ -269,15 +269,7 @@ body {
   transition: background 0.4s ease, color 0.3s ease;
 }
 
-/* subtle grid overlay */
-body::before {
-  content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient(var(--grid-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-  background-size: 44px 44px;
-}
+/* No decorative page overlay: the background stays plain for the selected theme. */
 
 ::selection { background: rgba(var(--accent-rgb),0.2); }
 a { color: inherit; text-decoration: none; }
