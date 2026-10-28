@@ -64,7 +64,8 @@
     html.setAttribute('data-variant', state.variant);
     if (state.theme === 'normal') {
       var accent = state.customColor || '#2d3a8c';
-      var bg = state.customBg || '#f2f4f8';
+      var chosenBg = state.customBg || '#f2f4f8';
+      var bg = 'color-mix(in srgb, ' + chosenBg + ' 84%, white)';
       var textColor = state.customText || '#172033';
       html.style.setProperty('--accent', accent);
       html.style.setProperty('--accent-rgb', hexToRgb(accent));
@@ -80,10 +81,10 @@
       html.style.setProperty('--text', textColor);
       html.style.setProperty('--muted', 'color-mix(in srgb, ' + textColor + ' 70%, ' + bg + ')');
       html.style.setProperty('--muted2', 'color-mix(in srgb, ' + textColor + ' 48%, ' + bg + ')');
-      html.style.setProperty('--hero-bg', 'linear-gradient(135deg, color-mix(in srgb, ' + accent + ' 10%, ' + bg + '), color-mix(in srgb, ' + bg + ' 75%, white) 78%)');
-      html.style.setProperty('--body-bg', 'linear-gradient(155deg, ' + bg + ' 0%, color-mix(in srgb, ' + bg + ' 91%, ' + accent + ') 100%)');
-      html.style.setProperty('--hero-orb1', 'color-mix(in srgb, ' + accent + ' 15%, transparent)');
-      html.style.setProperty('--hero-orb2', 'color-mix(in srgb, ' + accent + ' 8%, transparent)');
+      html.style.setProperty('--hero-bg', 'color-mix(in srgb, ' + bg + ' 92%, white)');
+      html.style.setProperty('--body-bg', bg);
+      html.style.setProperty('--hero-orb1', 'transparent');
+      html.style.setProperty('--hero-orb2', 'transparent');
       html.style.setProperty('--card-shine', 'linear-gradient(135deg, color-mix(in srgb, ' + accent + ' 7%, transparent) 0%, transparent 58%)');
     } else {
       ['--accent','--accent-rgb','--accent2','--accent3','--ring','--hero-bg','--body-bg','--hero-orb1','--hero-orb2','--bg','--bg-soft','--surface','--surface2','--border','--border-strong','--text','--muted','--muted2','--card-shine'].forEach(function(v){ html.style.removeProperty(v); });
@@ -108,6 +109,12 @@
     // Flower artwork is disabled while the visual direction is being redesigned.
     var old = document.querySelector('.flower-scene');
     if (old) old.remove();
+  }
+
+  function toggleStickers() {
+    var sec = document.getElementById('ts-sticker-section');
+    if (sec) sec.classList.toggle('show', state.theme === 'funky');
+    setEditMode(panelOpen);
   }
 
   function setEditMode(on) {
@@ -729,13 +736,13 @@
       applyTheme();
     });
     var bgPicker = document.getElementById('ts-bg-picker');
-    bgPicker.addEventListener('input', function() {
+    if (bgPicker) bgPicker.addEventListener('input', function() {
       state.customBg = bgPicker.value;
       var value = document.getElementById('ts-bg-value'); if (value) value.textContent = state.customBg.toUpperCase();
       applyTheme(); renderVariants();
     });
     var textPicker = document.getElementById('ts-text-picker');
-    textPicker.addEventListener('input', function() {
+    if (textPicker) textPicker.addEventListener('input', function() {
       state.customText = textPicker.value;
       var value = document.getElementById('ts-text-value'); if (value) value.textContent = state.customText.toUpperCase();
       applyTheme(); renderVariants();
@@ -747,6 +754,7 @@
 
     /* panel toggle */
     btn.addEventListener('click', function(e) {
+      e.preventDefault();
       e.stopPropagation();
       panelOpen = !panelOpen;
       panel.classList.toggle('open', panelOpen);
@@ -755,8 +763,13 @@
       if (hint) hint.classList.toggle('show', panelOpen && state.theme === 'funky');
     });
 
+    panel.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+
     document.addEventListener('click', function(e) {
-      if (panelOpen && !panel.contains(e.target) && e.target !== btn) {
+      var clickedButton = e.target === btn || (e.target && e.target.closest && e.target.closest('#ts-btn'));
+      if (panelOpen && !panel.contains(e.target) && !clickedButton) {
         panelOpen = false;
         panel.classList.remove('open');
         btn.classList.remove('open');
